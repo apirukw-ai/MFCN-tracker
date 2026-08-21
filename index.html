@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MFC Provident Fund Dashboard - Live 6-Index & AI Smart OCR</title>
+    <title>MFC Provident Fund Dashboard - Live Tracker</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts (Prompt) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tesseract.js OCR Engine -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- Supabase JS Client for Realtime Cloud Sync -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -41,8 +39,8 @@
 </head>
 <body class="bg-mfc-darkBg text-slate-100 antialiased min-h-screen flex flex-col selection:bg-mfc-orange selection:text-white">
 
-    <!-- Sticky Header Section -->
-    <header class="bg-mfc-darkHeader text-white sticky top-0 z-40 border-b border-mfc-darkBorder shadow-2xl">
+    <!-- Regular Header Section (Unsticky / Scrolls with page) -->
+    <header class="bg-mfc-darkHeader text-white border-b border-mfc-darkBorder shadow-2xl relative">
         <div class="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 space-y-3">
             
             <!-- Top Controls Row -->
@@ -76,20 +74,15 @@
                         <span id="cloudStatusText">ตั้งค่า Cloud Sync</span>
                     </button>
 
-                    <!-- Hidden File Inputs -->
+                    <!-- Hidden File Input -->
                     <input type="file" id="importFileInput" accept=".json" class="hidden">
-                    <input type="file" id="ocrFileInput" accept="image/*" class="hidden">
 
                     <button type="button" id="btnImport" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-file-import text-amber-400"></i> Import
+                        <i class="fa-solid fa-file-import text-amber-400"></i> Import JSON
                     </button>
 
                     <button type="button" id="btnExport" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-download text-sky-400"></i> Export
-                    </button>
-
-                    <button type="button" id="btnOcr" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-sky-600/20 transition-all">
-                        <i class="fa-solid fa-robot"></i> AI สแกนสลิป
+                        <i class="fa-solid fa-download text-sky-400"></i> Export JSON
                     </button>
 
                     <button type="button" id="btnAddPlan" class="bg-mfc-orange hover:bg-mfc-hover text-white px-3 py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-mfc-orange/20 transition-all col-span-2 sm:col-span-1">
@@ -170,23 +163,6 @@
 
     <!-- Main Content Container -->
     <main class="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-4 flex-grow space-y-5">
-        
-        <!-- AI OCR Progress Bar -->
-        <div id="ocrStatus" class="hidden bg-slate-900 border border-sky-500/50 rounded-xl p-4 text-xs text-sky-400 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
-            <div class="flex items-center space-x-3 w-full sm:w-auto">
-                <i class="fa-solid fa-microchip animate-pulse text-2xl text-sky-400"></i>
-                <div>
-                    <p class="font-semibold text-sky-300 text-sm" id="ocrProgressTitle">กำลังเตรียมระบบ AI OCR...</p>
-                    <p class="text-xs text-slate-400" id="ocrProgressSub">กำลังขยายความคมชัดเพื่อสแกนตาราง...</p>
-                </div>
-            </div>
-            <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3">
-                <div class="w-full sm:w-32 bg-slate-800 h-2 rounded-full overflow-hidden">
-                    <div id="ocrProgressBar" class="bg-sky-400 h-full w-0 transition-all duration-200"></div>
-                </div>
-                <span id="ocrPercent" class="font-mono font-bold text-sky-300 text-sm bg-sky-950 px-2.5 py-1 rounded-lg border border-sky-800">0%</span>
-            </div>
-        </div>
 
         <!-- Portfolio Summary Cards -->
         <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden backdrop-blur-md">
@@ -200,22 +176,23 @@
                 </span>
             </div>
 
+            <!-- Summary Returns Cards displaying Amount & (%) -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5 pt-5 border-t border-slate-800 text-xs sm:text-sm">
                 <div class="bg-slate-950/50 border border-slate-800/80 p-3 rounded-xl">
                     <p class="text-slate-400 text-[11px]">กำไร/ขาดทุนสะสมรวม</p>
-                    <p class="text-base sm:text-xl font-bold text-emerald-400 mt-0.5" id="totalProfitPct">+0.00%</p>
-                </div>
-                <div class="bg-slate-950/50 border border-slate-800/80 p-3 rounded-xl">
-                    <p class="text-slate-400 text-[11px]">กำไรสะสม (บาท)</p>
-                    <p class="text-base sm:text-xl font-bold text-slate-100 mt-0.5" id="totalProfitAmt">฿0.00</p>
+                    <p class="text-sm sm:text-lg font-bold text-emerald-400 mt-0.5" id="totalProfitSummary">+฿0.00 (+0.00%)</p>
                 </div>
                 <div class="bg-slate-950/50 border border-slate-800/80 p-3 rounded-xl">
                     <p class="text-slate-400 text-[11px]">ผลตอบแทนรวมวันนี้</p>
-                    <p class="text-base sm:text-xl font-bold text-emerald-400 mt-0.5" id="totalDailyReturnPct">+0.00%</p>
+                    <p class="text-sm sm:text-lg font-bold text-emerald-400 mt-0.5" id="totalDailySummary">+฿0.00 (+0.00%)</p>
+                </div>
+                <div class="bg-slate-950/50 border border-slate-800/80 p-3 rounded-xl">
+                    <p class="text-slate-400 text-[11px]">ผลตอบแทน YTD รวม</p>
+                    <p class="text-sm sm:text-lg font-bold text-emerald-400 mt-0.5" id="totalYtdSummary">+฿0.00 (+0.00%)</p>
                 </div>
                 <div class="bg-slate-950/50 border border-slate-800/80 p-3 rounded-xl">
                     <p class="text-slate-400 text-[11px]">ต้นทุนสะสมรวม</p>
-                    <p class="text-base sm:text-xl font-semibold text-slate-300 mt-0.5" id="totalCostAmt">฿0.00</p>
+                    <p class="text-sm sm:text-lg font-semibold text-slate-300 mt-0.5" id="totalCostAmt">฿0.00</p>
                 </div>
             </div>
         </div>
@@ -238,11 +215,11 @@
                         <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-semibold">
                             <th class="p-3">แผน / นโยบาย</th>
                             <th class="p-3 text-center">จำนวนหน่วยรวม</th>
-                            <th class="p-3 text-right text-amber-400">NAV/หน่วย (บาท)*</th>
+                            <th class="p-3 text-right text-amber-400">NAV/หน่วย (บาท)</th>
                             <th class="p-3 text-right">มูลค่ารวมวันนี้ (บาท)</th>
-                            <th class="p-3 text-right">ผลตอบแทนวันนี้ (%)</th>
-                            <th class="p-3 text-right">กำไรสะสม (%)</th>
-                            <th class="p-3 text-right">YTD (%)</th>
+                            <th class="p-3 text-right">ผลตอบแทนวันนี้ (บาท & %)</th>
+                            <th class="p-3 text-right">กำไรสะสม (บาท & %)</th>
+                            <th class="p-3 text-right">YTD (บาท & %)</th>
                             <th class="p-3 text-center">จัดการ</th>
                         </tr>
                     </thead>
@@ -331,16 +308,6 @@
 
     <!-- Application Script -->
     <script>
-        // Dictionary ข้อมูลกองทุนมาตรฐาน
-        const FUND_MAP = {
-            'MPF07': 'IGOLD-G',
-            'MPF15': 'MGTECH',
-            'MPF18': 'M-EM',
-            'MPF19': 'MEURO-G',
-            'MPF23': 'MGFPVD',
-            'MPF27': 'M-ASIA'
-        };
-
         const initialDefaultData = [
             { id: 1, code: 'MPF07', name: 'IGOLD-G', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 11038.65 },
             { id: 2, code: 'MPF15', name: 'MGTECH', nav: 10.8043, ytd: 33.94, cost: 20718.06, units: 2254.7689, prevAmt: 24361.24 },
@@ -415,126 +382,6 @@
             }
         }
 
-        // Render Clean Image High-res Canvas without destructive Thresholding
-        function renderCleanCanvas(file) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = img.width * 2;
-                    canvas.height = img.height * 2;
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    resolve(canvas.toDataURL('image/png'));
-                };
-                img.src = URL.createObjectURL(file);
-            });
-        }
-
-        // AI OCR สแกนตารางสลิปเฉพาะภาษาอังกฤษ/ตัวเลข เพื่อความแม่นยำสูงสุด
-        async function processSlipWithAI(file) {
-            const ocrStatus = document.getElementById('ocrStatus');
-            const percentEl = document.getElementById('ocrPercent');
-            const progressBar = document.getElementById('ocrProgressBar');
-            const progressTitle = document.getElementById('ocrProgressTitle');
-
-            ocrStatus.classList.remove('hidden');
-            percentEl.innerText = '0%';
-            progressBar.style.width = '0%';
-            progressTitle.innerText = 'กำลังเตรียมภาพต้นฉบับคมชัดสูง...';
-
-            let worker = null;
-            try {
-                const cleanImageData = await renderCleanCanvas(file);
-
-                // ใช้ 'eng' เพื่อจับตัวอักษร MPF และตัวเลขตารางได้แม่นยำ 100% ไม่สับสนกับฟอนต์ไทย
-                worker = await Tesseract.createWorker('eng', 1, {
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            const pct = Math.round((m.progress || 0) * 100);
-                            percentEl.innerText = pct + '%';
-                            progressBar.style.width = pct + '%';
-                            progressTitle.innerText = `AI กำลังวิเคราะห์อ่านตาราง (${pct}%)...`;
-                        }
-                    }
-                });
-
-                const ret = await worker.recognize(cleanImageData);
-                await worker.terminate();
-
-                percentEl.innerText = '100%';
-                progressBar.style.width = '100%';
-
-                const rawText = ret.data.text;
-                const lines = rawText.split('\n');
-
-                let scannedPlans = [];
-                const targetCodes = ['MPF07', 'MPF10', 'MPF15', 'MPF17', 'MPF18', 'MPF19', 'MPF23', 'MPF25', 'MPF26', 'MPF27', 'MPF31'];
-
-                targetCodes.forEach(code => {
-                    const codeNum = code.replace('MPF', '');
-                    const lineIdx = lines.findIndex(l => new RegExp(`MPF\\s*${codeNum}`, 'i').test(l));
-
-                    if (lineIdx !== -1) {
-                        const lineBlock = lines.slice(lineIdx, lineIdx + 2).join(' ');
-                        const numMatches = lineBlock.match(/[-+]?\d[\d,]*\.?\d*/g);
-
-                        if (numMatches) {
-                            const nums = numMatches
-                                .map(n => parseFloat(n.replace(/,/g, '')))
-                                .filter(n => !isNaN(n));
-
-                            if (nums.length >= 3) {
-                                // ดึงหน่วยลงทุน (ค่าตัวเลขท้ายสุดในแถว)
-                                const unitsVal = nums[nums.length - 1];
-                                const totalAmtVal = nums[nums.length - 2] || (unitsVal * 10);
-                                const navVal = nums.find(n => n > 5 && n < 100) || (unitsVal > 0 ? totalAmtVal / unitsVal : 10);
-                                const ytdVal = nums.find(n => n >= -40 && n <= 100 && n !== navVal) || 0;
-
-                                // คัดกรองเฉพาะกองทุนที่มีหน่วยลงทุนจริง > 0.1 (กรองพวกเศษหน่วย -0.0824 ออก)
-                                if (unitsVal && unitsVal > 0.1) {
-                                    scannedPlans.push({
-                                        code: code,
-                                        name: FUND_MAP[code] || `MFC Policy ${code}`,
-                                        units: unitsVal,
-                                        nav: navVal,
-                                        ytd: ytdVal,
-                                        prevAmt: totalAmtVal,
-                                        cost: totalAmtVal * 0.85
-                                    });
-                                }
-                            }
-                        }
-                    }
-                });
-
-                if (scannedPlans.length > 0) {
-                    scannedPlans.forEach(scanned => {
-                        const existingIdx = policies.findIndex(p => p.code === scanned.code);
-                        if (existingIdx !== -1) {
-                            policies[existingIdx] = { ...policies[existingIdx], ...scanned };
-                        } else {
-                            policies.push({ id: Date.now() + Math.floor(Math.random()*1000), ...scanned });
-                        }
-                    });
-
-                    await syncData(policies);
-                    alert(`AI สแกนและอัปเดตสัดส่วนพอร์ตสำเร็จ (${scannedPlans.length} แผน): ${scannedPlans.map(p => p.code).join(', ')}`);
-                } else {
-                    alert('ไม่พบแถวรายการที่มีหน่วยลงทุนคงเหลือในรูปสลิป กรุณาตรวจสอบรูปภาพ');
-                }
-
-            } catch (err) {
-                console.error("OCR Error:", err);
-                alert('เกิดข้อผิดพลาดในการวิเคราะห์สลิป');
-            } finally {
-                if (worker) try { await worker.terminate(); } catch(e){}
-                ocrStatus.classList.add('hidden');
-            }
-        }
-
         // Fetch Real-time Market Indices (6 ช่อง)
         async function fetchLiveMarketData() {
             const symbols = [
@@ -589,9 +436,7 @@
                                 break;
                             }
                         }
-                    } catch (e) {
-                        // Try next proxy
-                    }
+                    } catch (e) {}
                 }
 
                 if (!success) {
@@ -610,7 +455,7 @@
             if (!tbody) return;
             
             tbody.innerHTML = '';
-            let totalBalToday = 0, totalBalPrev = 0, totalCostSum = 0, totalUnitsSum = 0;
+            let totalBalToday = 0, totalBalPrev = 0, totalCostSum = 0, totalUnitsSum = 0, totalYtdAmtSum = 0;
 
             document.getElementById('recordCount').innerText = policies.length + ' รายการ';
 
@@ -628,8 +473,24 @@
                 totalCostSum += item.cost || 0;
                 totalUnitsSum += item.units || 0;
 
-                const dailyReturnPct = item.totalAmt !== 0 ? (((item.totalAmt - item.prevAmt) * 100) / Math.abs(item.totalAmt)) : 0;
-                const profitPctFromCost = item.cost > 0 ? (((item.totalAmt - item.cost) * 100) / item.cost) : 0;
+                // คำนวณผลตอบแทนรายรายการ
+                const dailyReturnAmt = item.totalAmt - (item.prevAmt || item.totalAmt);
+                const dailyReturnPct = (item.prevAmt && item.prevAmt > 0) ? ((dailyReturnAmt / item.prevAmt) * 100) : 0;
+
+                const profitAmt = item.totalAmt - (item.cost || 0);
+                const profitPct = (item.cost && item.cost > 0) ? ((profitAmt / item.cost) * 100) : 0;
+
+                // คำนวณ YTD บาท = มูลค่าปัจจุบัน - (มูลค่าปัจจุบัน / (1 + YTD%))
+                const ytdValPct = item.ytd || 0;
+                const ytdAmt = ytdValPct !== 0 ? (item.totalAmt - (item.totalAmt / (1 + (ytdValPct / 100)))) : 0;
+                totalYtdAmtSum += ytdAmt;
+
+                // Helper Format HTML บาท + (%)
+                const fmtValPct = (amt, pct) => {
+                    const sign = amt >= 0 ? '+' : '';
+                    const color = amt >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                    return `<span class="${color}">${sign}฿${Math.abs(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pct.toFixed(2)}%)</span>`;
+                };
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-800/60 transition-colors border-b border-slate-800/80";
@@ -642,15 +503,9 @@
                     <td class="p-3 text-center font-mono font-medium">${Number(item.units).toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
                     <td class="p-3 text-right font-mono font-bold text-amber-400">${Number(item.nav).toFixed(4)}</td>
                     <td class="p-3 text-right font-bold text-slate-100">฿${Number(item.totalAmt).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td class="p-3 text-right font-bold ${dailyReturnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-                        ${dailyReturnPct >= 0 ? '+' : ''}${dailyReturnPct.toFixed(2)}%
-                    </td>
-                    <td class="p-3 text-right font-bold ${profitPctFromCost >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-                        ${profitPctFromCost >= 0 ? '+' : ''}${profitPctFromCost.toFixed(2)}%
-                    </td>
-                    <td class="p-3 text-right font-bold ${item.ytd >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-                        ${item.ytd >= 0 ? '+' : ''}${Number(item.ytd).toFixed(2)}%
-                    </td>
+                    <td class="p-3 text-right font-bold">${fmtValPct(dailyReturnAmt, dailyReturnPct)}</td>
+                    <td class="p-3 text-right font-bold">${fmtValPct(profitAmt, profitPct)}</td>
+                    <td class="p-3 text-right font-bold">${fmtValPct(ytdAmt, ytdValPct)}</td>
                     <td class="p-3 text-center space-x-1">
                         <button type="button" onclick="editPolicy(${item.id})" class="text-slate-400 hover:text-sky-400 p-1"><i class="fa-solid fa-pen"></i></button>
                         <button type="button" onclick="deletePolicy(${item.id})" class="text-slate-400 hover:text-rose-400 p-1"><i class="fa-solid fa-trash"></i></button>
@@ -659,15 +514,37 @@
                 tbody.appendChild(tr);
             });
 
+            // คำนวณยอดรวมสุทธิภาพรวมพอร์ต
             const totalProfitAmt = totalBalToday - totalCostSum;
             const overallProfitPct = totalCostSum > 0 ? (totalProfitAmt * 100) / totalCostSum : 0;
-            const overallDailyReturnPct = totalBalToday > 0 ? ((totalBalToday - totalBalPrev) * 100) / totalBalToday : 0;
 
+            const totalDailyAmt = totalBalToday - totalBalPrev;
+            const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
+
+            const overallYtdPct = (totalBalToday > 0 && (totalBalToday - totalYtdAmtSum) > 0) ? (totalYtdAmtSum / (totalBalToday - totalYtdAmtSum)) * 100 : 0;
+
+            // ฟังก์ชันจัดรูปแบบการ์ดสรุป
+            const formatCardText = (amt, pct) => {
+                const sign = amt >= 0 ? '+' : '';
+                return `${sign}฿${Math.abs(amt).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pct.toFixed(2)}%)`;
+            };
+
+            // อัปเดตการ์ดสรุป 4 กล่อง
             document.getElementById('portfolioBalance').innerText = '฿' + totalBalToday.toLocaleString('en-US', {minimumFractionDigits: 2});
             document.getElementById('totalUnitsBadge').innerText = totalUnitsSum.toLocaleString('en-US', {minimumFractionDigits: 4}) + ' Units';
-            document.getElementById('totalProfitPct').innerText = (overallProfitPct >= 0 ? '+' : '') + overallProfitPct.toFixed(2) + '%';
-            document.getElementById('totalProfitAmt').innerText = '฿' + totalProfitAmt.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('totalDailyReturnPct').innerText = (overallDailyReturnPct >= 0 ? '+' : '') + overallDailyReturnPct.toFixed(2) + '%';
+
+            const profEl = document.getElementById('totalProfitSummary');
+            profEl.innerText = formatCardText(totalProfitAmt, overallProfitPct);
+            profEl.className = `text-sm sm:text-lg font-bold ${totalProfitAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
+
+            const dailyEl = document.getElementById('totalDailySummary');
+            dailyEl.innerText = formatCardText(totalDailyAmt, overallDailyReturnPct);
+            dailyEl.className = `text-sm sm:text-lg font-bold ${totalDailyAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
+
+            const ytdEl = document.getElementById('totalYtdSummary');
+            ytdEl.innerText = formatCardText(totalYtdAmtSum, overallYtdPct);
+            ytdEl.className = `text-sm sm:text-lg font-bold ${totalYtdAmtSum >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
+
             document.getElementById('totalCostAmt').innerText = '฿' + totalCostSum.toLocaleString('en-US', {minimumFractionDigits: 2});
         }
 
@@ -730,11 +607,6 @@
                     };
                     reader.readAsText(e.target.files[0]);
                 }
-            });
-
-            document.getElementById('btnOcr').addEventListener('click', () => document.getElementById('ocrFileInput').click());
-            document.getElementById('ocrFileInput').addEventListener('change', (e) => {
-                if (e.target.files[0]) processSlipWithAI(e.target.files[0]);
             });
 
             document.getElementById('btnCloudSettings').addEventListener('click', () => {
