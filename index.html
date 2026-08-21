@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFC Provident Fund Dashboard</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS SDK via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-8 font-sans">
+
+  <!-- Config & Script -->
+  <script>
+    // ตั้งค่า Supabase Connection
+    const SUPABASE_URL = 'https://lproktvvetsbxmpptuj.supabase.co';
+    const SUPABASE_ANON_KEY = 'วาง_ANON_PUBLIC_KEY_ของคุณตรงนี้'; // <-- วาง anon key ตรงนี้
+    
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let policies = [];
+
+    // ดึงข้อมูลเมื่อโหลดหน้าเว็บ
+    document.addEventListener('DOMContentLoaded', fetchPolicies);
+
+    async function fetchPolicies() {
+      const loadingEl = document.getElementById('loading');
+      if (loadingEl) loadingEl.classList.remove('hidden');
+
+      const { data, error } = await db.from('policies').select('*').order('id', { ascending: true });
+      
+      if (loadingEl) loadingEl.classList.add('hidden');
+
+      if (error) {
+        console.error('Error fetching policies:', error);
+        alert('เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาเช็ก API Key');
+        return;
+      }
+
+      policies = data || [];
+      renderSummary();
+      renderTable();
+    }
+
+    function renderSummary() {
+      const totalBalance = policies.reduce((acc, item) => acc + (item.units * item.nav), 0);
+      const totalCost = policies.reduce((acc, item) => acc + Number(item.cost), 0);
+      const totalProfit = totalBalance - totalCost;
+      const totalProfitPct = totalCost > 0 ? (totalProfit * 100) / totalCost : 0;
+
+      document.getElementById('total-balance').innerText = '฿' + totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('total-cost').innerText = '฿' + totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      
+      const profitEl = document.getElementById('total-profit');
+      profitEl.innerText = `฿${totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })} (${totalProfitPct.toFixed(2)}%)`;
+      profitEl.className = `text-base font-bold mt-0.5 ${totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      if (policies.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500">ยังไม่มีข้อมูล กดปุ่ม + เพิ่มแผนการลงทุน ด้านบนได้เลย</td></tr>`;
+        return;
+      }
+
+      policies.forEach(item => {
+        const currentVal = item.units * item.nav;
+        const profitPct = item.cost > 0 ? ((currentVal - item.cost) * 100) / item.cost : 0;
+
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-800/40 transition-colors border-b border-slate-800/60';
+        row.innerHTML = `
+          <td class="py-3">
+            <span class="font-bold text-orange-500 block">${item.code}</span>
+            <span class="text-[10px] text-slate-400">${item.name}</span>
+          </td>
+          <td class="py-3 text-center font-mono">${Number(item.units).toLocaleString(undefined, { minimumFractionDigits: 4 })}</td>
+          <td class="py-3 text-right font-mono font-bold text-amber-400">${Number(item.nav).toFixed(4)}</td>
+          <td class="py-3 text-right font-bold">฿${currentVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td class="py-3 text-right font-bold ${profitPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+            ${profitPct >= 0 ? '+' : ''}${profitPct.toFixed(2)}%
+          </td>
+          <td class="py-3 text-right font-bold ${item.ytd >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+            ${item.ytd >= 0 ? '+' : ''}${Number(item.ytd).toFixed(2)}%
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function handleAddPolicy(e) {
+      e.preventDefault();
+      const code = document.getElementById('input-code').value;
+      const name = document.getElementById('input-name').value;
+      const units = parseFloat(document.getElementById('input-units').value) || 0;
+      const nav = parseFloat(document.getElementById('input-nav').value) || 0;
+      const cost = parseFloat(document.getElementById('input-cost').value) || 0;
+      const ytd = parseFloat(document.getElementById('input-ytd').value) || 0;
+
+      const { error } = await db.from('policies').insert([
+        { code, name, units, nav, prev_amt: 0, cost, ytd }
+      ]);
+
+      if (!error) {
+        toggleModal(false);
+        document.getElementById('add-form').reset();
+        fetchPolicies();
+      } else {
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      }
+    }
+
+    function toggleModal(show) {
+      const modal = document.getElementById('modal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
+    }
+  </script>
+
+  <!-- Header -->
+  <div class="max-w-7xl mx-auto flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-orange-500">MFC Provident Fund</h1>
+      <p class="text-xs text-slate-400">ระบบบันทึกพอร์ต NU DIY (HTML + Supabase Direct)</p>
+    </div>
+    <button onclick="toggleModal(true)" class="bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition-all">
+      + เพิ่มแผนการลงทุน
+    </button>
+  </div>
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Summary Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <p class="text-xs text-slate-400">มูลค่าทรัพย์สินสุทธิรวม</p>
+      <h2 id="total-balance" class="text-4xl font-extrabold text-white mt-1">฿0.00</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-4 border-t border-slate-800 text-xs sm:text-sm">
+        <div>
+          <p class="text-slate-400">ต้นทุนรวม</p>
+          <p id="total-cost" class="text-base font-semibold mt-0.5">฿0.00</p>
+        </div>
+        <div>
+          <p class="text-slate-400">กำไร/ขาดทุนสะสม</p>
+          <p id="total-profit" class="text-base font-bold mt-0.5 text-emerald-400">฿0.00 (0.00%)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl overflow-x-auto">
+      <div id="loading" class="text-center py-8 text-slate-400 text-sm">กำลังโหลดข้อมูลจาก Supabase...</div>
+      <table class="w-full text-xs sm:text-sm text-left">
+        <thead>
+          <tr class="border-b border-slate-800 text-slate-400 font-semibold">
+            <th class="pb-3">แผน/นโยบาย</th>
+            <th class="pb-3 text-center">จำนวนหน่วย</th>
+            <th class="pb-3 text-right text-amber-400">NAV/หน่วย (บาท)</th>
+            <th class="pb-3 text-right">มูลค่ารวมวันนี้ (บาท)</th>
+            <th class="pb-3 text-right">กำไร/ขาดทุน (%)</th>
+            <th class="pb-3 text-right">YTD (%)</th>
+          </tr>
+        </thead>
+        <tbody id="table-body" class="divide-y divide-slate-800/60 font-medium"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal สำหรับเพิ่มข้อมูล -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <h3 class="font-bold text-base mb-4 text-white">เพิ่มแผนการลงทุนใหม่</h3>
+      <form id="add-form" onsubmit="handleAddPolicy(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block mb-1 text-slate-300">รหัสแผน (เช่น MPF23)</label>
+          <input id="input-code" type="text" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white outline-none focus:border-orange-500">
+        </div>
+        <div>
+          <label class="block mb-1 text-slate-300">ชื่อกองทุน (เช่น MGFPVD)</label>
+          <input id="input-name" type="text" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white outline-none focus:border-orange-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block mb-1 text-slate-300">จำนวนหน่วย</label>
+            <input id="input-units" type="number" step="0.0001" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white outline-none focus:border-orange-500">
+          </div>
+          <div>
+            <label class="block mb-1 text-amber-400">NAV/หน่วย (บาท)</label>
+            <input id="input-nav" type="number" step="0.0001" required class="w-full bg-slate-800 border border-amber-500/50 rounded-lg p-2 text-white outline-none focus:border-amber-400">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block mb-1 text-slate-300">ต้นทุนรวม (บาท)</label>
+            <input id="input-cost" type="number" step="0.01" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white outline-none focus:border-orange-500">
+          </div>
+          <div>
+            <label class="block mb-1 text-slate-300">YTD (%)</label>
+            <input id="input-ytd" type="number" step="0.01" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white outline-none focus:border-orange-500">
+          </div>
+        </div>
+        <div class="flex justify-end space-x-2 pt-4 border-t border-slate-800 mt-2">
+          <button type="button" onclick="toggleModal(false)" class="px-4 py-2 rounded-lg text-slate-400 hover:text-white">ยกเลิก</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium shadow-lg">บันทึก</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>
