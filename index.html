@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MFC Provident Fund Dashboard - Live & Cloud Sync</title>
+    <title>MFC Provident Fund Dashboard - Live 6-Index & AI Smart OCR</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts (Prompt) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Real Tesseract.js OCR Engine -->
+    <!-- Tesseract.js OCR Engine -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- Supabase JS Client for Realtime Cloud Sync -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -43,7 +43,7 @@
 
     <!-- Sticky Header Section -->
     <header class="bg-mfc-darkHeader text-white sticky top-0 z-40 border-b border-mfc-darkBorder shadow-2xl">
-        <div class="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 space-y-2.5">
+        <div class="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 space-y-3">
             
             <!-- Top Controls Row -->
             <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
@@ -98,66 +98,68 @@
                 </div>
             </div>
 
-            <!-- Integrated Full-Width Real-time Market Indices Section -->
-            <div class="pt-2 border-t border-slate-800/80 space-y-2 text-[11px] w-full">
-                <!-- ดัชนีหลัก -->
-                <div class="flex flex-col lg:flex-row items-start lg:items-center gap-2 w-full">
-                    <div class="flex items-center justify-between w-full lg:w-48 shrink-0 font-semibold text-mfc-orange">
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line"></i> ดัชนีหลัก Real-time:</span>
-                        <span id="liveApiTimer" class="text-[9px] text-slate-500 font-mono font-normal">กำลังดึงข้อมูล...</span>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 w-full grow">
-                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80">
-                            <span class="text-slate-400 truncate">S&P 500 (^GSPC):</span>
-                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
-                                <span id="idx-sp500" class="font-medium text-slate-100">--</span>
-                                <span id="chg-sp500" class="text-slate-500 font-medium">0.00%</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80">
-                            <span class="text-slate-400 truncate">Nasdaq (^IXIC):</span>
-                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
-                                <span id="idx-nasdaq" class="font-medium text-slate-100">--</span>
-                                <span id="chg-nasdaq" class="text-slate-500 font-medium">0.00%</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80">
-                            <span class="text-slate-400 truncate">MSCI ACWI (ACWI):</span>
-                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
-                                <span id="idx-acwi" class="font-medium text-slate-100">--</span>
-                                <span id="chg-acwi" class="text-slate-500 font-medium">0.00%</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80">
-                            <span class="text-slate-400 truncate">MSCI EM (EEM):</span>
-                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
-                                <span id="idx-em" class="font-medium text-slate-100">--</span>
-                                <span id="chg-em" class="text-slate-500 font-medium">0.00%</span>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Full 6-Column Grid Real-time Market Indices Section -->
+            <div class="pt-2.5 border-t border-slate-800/80 space-y-2 text-[11px] w-full">
+                <div class="flex items-center justify-between text-slate-400 font-medium px-1">
+                    <span class="flex items-center gap-1.5 text-mfc-orange font-semibold">
+                        <i class="fa-solid fa-chart-line"></i> ดัชนีตลาดการลงทุน Real-time (6 ตลาดหลัก):
+                    </span>
+                    <span id="liveApiTimer" class="text-[10px] text-slate-500 font-mono">กำลังอัปเดต...</span>
                 </div>
 
-                <!-- ตลาดต่างประเทศ & โภคภัณฑ์ -->
-                <div class="flex flex-col lg:flex-row items-start lg:items-center gap-2 w-full">
-                    <div class="flex items-center space-x-1.5 font-semibold text-sky-400 shrink-0 lg:w-48">
-                        <i class="fa-solid fa-globe"></i>
-                        <span>ตลาดต่างประเทศ & โภคภัณฑ์:</span>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full grow">
-                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80">
-                            <span class="text-slate-400 truncate">Gold Spot (GC=F):</span>
-                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
-                                <span id="idx-gold" class="font-medium text-slate-100">--</span>
-                                <span id="chg-gold" class="text-slate-500 font-medium">0.00%</span>
-                            </div>
+                <!-- 6 Equal Boxes Grid Layout -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
+                    <!-- Box 1: S&P 500 -->
+                    <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
+                        <span class="text-slate-400 text-[10px] truncate">S&P 500 (^GSPC)</span>
+                        <div class="flex items-baseline justify-between font-mono mt-0.5">
+                            <span id="idx-sp500" class="font-bold text-slate-100 text-xs">--</span>
+                            <span id="chg-sp500" class="text-[10px] font-semibold text-slate-500">0.00%</span>
                         </div>
-                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80">
-                            <span class="text-slate-400 truncate">Euro Stoxx 50 (FEZ):</span>
-                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
-                                <span id="idx-stoxx" class="font-medium text-slate-100">--</span>
-                                <span id="chg-stoxx" class="text-slate-500 font-medium">0.00%</span>
-                            </div>
+                    </div>
+
+                    <!-- Box 2: Nasdaq -->
+                    <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14 border-sky-500/30">
+                        <span class="text-sky-300 text-[10px] font-medium truncate">Nasdaq (^IXIC)</span>
+                        <div class="flex items-baseline justify-between font-mono mt-0.5">
+                            <span id="idx-nasdaq" class="font-bold text-slate-100 text-xs">--</span>
+                            <span id="chg-nasdaq" class="text-[10px] font-semibold text-slate-500">0.00%</span>
+                        </div>
+                    </div>
+
+                    <!-- Box 3: MSCI ACWI -->
+                    <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
+                        <span class="text-slate-400 text-[10px] truncate">MSCI ACWI (ACWI)</span>
+                        <div class="flex items-baseline justify-between font-mono mt-0.5">
+                            <span id="idx-acwi" class="font-bold text-slate-100 text-xs">--</span>
+                            <span id="chg-acwi" class="text-[10px] font-semibold text-slate-500">0.00%</span>
+                        </div>
+                    </div>
+
+                    <!-- Box 4: MSCI EM -->
+                    <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
+                        <span class="text-slate-400 text-[10px] truncate">MSCI EM (EEM)</span>
+                        <div class="flex items-baseline justify-between font-mono mt-0.5">
+                            <span id="idx-em" class="font-bold text-slate-100 text-xs">--</span>
+                            <span id="chg-em" class="text-[10px] font-semibold text-slate-500">0.00%</span>
+                        </div>
+                    </div>
+
+                    <!-- Box 5: Gold Spot -->
+                    <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
+                        <span class="text-amber-400/90 text-[10px] truncate">Gold Spot (GC=F)</span>
+                        <div class="flex items-baseline justify-between font-mono mt-0.5">
+                            <span id="idx-gold" class="font-bold text-slate-100 text-xs">--</span>
+                            <span id="chg-gold" class="text-[10px] font-semibold text-slate-500">0.00%</span>
+                        </div>
+                    </div>
+
+                    <!-- Box 6: Euro Stoxx 50 -->
+                    <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
+                        <span class="text-slate-400 text-[10px] truncate">Euro Stoxx 50 (FEZ)</span>
+                        <div class="flex items-baseline justify-between font-mono mt-0.5">
+                            <span id="idx-stoxx" class="font-bold text-slate-100 text-xs">--</span>
+                            <span id="chg-stoxx" class="text-[10px] font-semibold text-slate-500">0.00%</span>
                         </div>
                     </div>
                 </div>
@@ -169,13 +171,13 @@
     <!-- Main Content Container -->
     <main class="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-4 flex-grow space-y-5">
         
-        <!-- Fixed AI OCR Progress Bar -->
+        <!-- AI OCR Progress Bar -->
         <div id="ocrStatus" class="hidden bg-slate-900 border border-sky-500/50 rounded-xl p-4 text-xs text-sky-400 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
             <div class="flex items-center space-x-3 w-full sm:w-auto">
                 <i class="fa-solid fa-microchip animate-pulse text-2xl text-sky-400"></i>
                 <div>
-                    <p class="font-semibold text-sky-300 text-sm" id="ocrProgressTitle">กำลังเตรียมระบบ AI...</p>
-                    <p class="text-xs text-slate-400" id="ocrProgressSub">กำลังดาวน์โหลด Engine และประมวลผลสลิป...</p>
+                    <p class="font-semibold text-sky-300 text-sm" id="ocrProgressTitle">กำลังเตรียมระบบ AI Pre-processing...</p>
+                    <p class="text-xs text-slate-400" id="ocrProgressSub">กำลังปรับความคมชัดภาพสลิปเพื่อสแกนอ่านตาราง...</p>
                 </div>
             </div>
             <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3">
@@ -327,9 +329,9 @@
         </div>
     </div>
 
-    <!-- Application Engine Script -->
+    <!-- Application Script -->
     <script>
-        // Mapping Dictionary ข้อมูลกองทุนตามจริง
+        // Dictionary ข้อมูลกองทุนมาตรฐาน
         const FUND_MAP = {
             'MPF07': 'IGOLD-G',
             'MPF15': 'MGTECH',
@@ -339,7 +341,6 @@
             'MPF27': 'M-ASIA'
         };
 
-        // ชุดข้อมูลเริ่มต้นตรงตามสลิปจริง
         const initialDefaultData = [
             { id: 1, code: 'MPF07', name: 'IGOLD-G', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 10980.00 },
             { id: 2, code: 'MPF15', name: 'MGTECH', nav: 10.8043, ytd: 33.94, cost: 20718.06, units: 2254.7689, prevAmt: 24200.00 },
@@ -365,9 +366,7 @@
 
                     supabaseClient
                         .channel('mfc_realtime')
-                        .on('postgres_changes', { event: '*', schema: 'public', table: 'mfc_policies' }, payload => {
-                            fetchCloudData();
-                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'mfc_policies' }, () => fetchCloudData())
                         .subscribe();
 
                     await fetchCloudData();
@@ -416,35 +415,36 @@
             }
         }
 
-        function exportPortfolio() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(policies, null, 2));
-            const dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `MFC_Portfolio_Backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(dlAnchor);
-            dlAnchor.click();
-            dlAnchor.remove();
-        }
+        // Image Pre-processing ปรับความคมชัดและลายเส้นตารางสลิปก่อน OCR
+        function preprocessImageToCanvas(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width * 1.5;
+                    canvas.height = img.height * 1.5;
+                    
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imgData.data;
 
-        function importPortfolio(file) {
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (Array.isArray(importedData)) {
-                        await syncData(importedData);
-                        alert('นำเข้าข้อมูลพอร์ตการลงทุนเรียบร้อยแล้ว!');
-                    } else {
-                        alert('รูปแบบไฟล์ JSON ไม่ถูกต้อง');
+                    // Binarization + High Contrast Thresholding
+                    for (let i = 0; i < data.length; i += 4) {
+                        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                        const v = avg < 150 ? 0 : 255;
+                        data[i] = v;
+                        data[i + 1] = v;
+                        data[i + 2] = v;
                     }
-                } catch (err) {
-                    alert('เกิดข้อผิดพลาด ไม่สามารถอ่านไฟล์ JSON ได้');
-                }
-            };
-            reader.readAsText(file);
+                    ctx.putImageData(imgData, 0, 0);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.src = URL.createObjectURL(file);
+            });
         }
 
-        // ระบบ AI OCR สแกนบรรทัดตารางแบบแม่นยำขึ้น
+        // AI OCR สแกนตารางสลิปแบบ Multi-Row
         async function processSlipWithAI(file) {
             const ocrStatus = document.getElementById('ocrStatus');
             const percentEl = document.getElementById('ocrPercent');
@@ -454,87 +454,80 @@
             ocrStatus.classList.remove('hidden');
             percentEl.innerText = '0%';
             progressBar.style.width = '0%';
-            progressTitle.innerText = 'กำลังโหลด OCR Engine & ภาษา...';
+            progressTitle.innerText = 'กำลังปรับความคมชัดของรูปภาพ (Pre-processing)...';
 
             let worker = null;
             try {
+                // Preprocess image
+                const processedImageData = await preprocessImageToCanvas(file);
+
                 worker = await Tesseract.createWorker(['eng', 'tha'], 1, {
                     logger: m => {
-                        if (m.status === 'loading tesseract core') {
-                            progressTitle.innerText = 'กำลังโหลด OCR Engine...';
-                            percentEl.innerText = '10%';
-                            progressBar.style.width = '10%';
-                        } else if (m.status === 'loading language traineddata') {
-                            const pct = 10 + Math.round((m.progress || 0) * 40);
+                        if (m.status === 'recognizing text') {
+                            const pct = Math.round((m.progress || 0) * 100);
                             percentEl.innerText = pct + '%';
                             progressBar.style.width = pct + '%';
-                            progressTitle.innerText = `กำลังดาวน์โหลดไฟล์ภาษาไทย/อังกฤษ (${pct}%)...`;
-                        } else if (m.status === 'initializing api') {
-                            progressTitle.innerText = 'กำลังเตรียมความพร้อม AI...';
-                            percentEl.innerText = '55%';
-                            progressBar.style.width = '55%';
-                        } else if (m.status === 'recognizing text') {
-                            const pct = 55 + Math.round((m.progress || 0) * 40);
-                            percentEl.innerText = pct + '%';
-                            progressBar.style.width = pct + '%';
-                            progressTitle.innerText = `AI กำลังวิเคราะห์สแกนตาราง (${pct}%)...`;
+                            progressTitle.innerText = `AI กำลังวิเคราะห์อ่านตารางทุกบรรทัด (${pct}%)...`;
                         }
                     }
                 });
 
-                const ret = await worker.recognize(file);
+                const ret = await worker.recognize(processedImageData);
                 await worker.terminate();
 
                 percentEl.innerText = '100%';
                 progressBar.style.width = '100%';
 
-                const lines = ret.data.text.split('\n');
-                let foundCodes = [];
+                const fullText = ret.data.text.replace(/O/g, '0'); // แปลง O เป็น 0 ป้องกันอ่านสับสน
+                const lines = fullText.split('\n');
 
-                lines.forEach(line => {
-                    const mpfMatch = line.match(/(MPF\d{2})/i);
-                    if (mpfMatch) {
-                        const code = mpfMatch[1].toUpperCase();
-                        // ดึงตัวเลขทั้งหมดในบรรทัด
-                        const numbers = line.match(/[-+]?\d[\d,]*\.?\d*/g);
+                let scannedPlans = [];
+                const targetCodes = ['MPF07', 'MPF10', 'MPF15', 'MPF17', 'MPF18', 'MPF19', 'MPF23', 'MPF25', 'MPF26', 'MPF27', 'MPF31'];
+
+                targetCodes.forEach(code => {
+                    // ค้นหาแถวที่มีรหัสกองทุน
+                    const matchingLine = lines.find(l => new RegExp(code.replace('0', '[0O]'), 'i').test(l));
+                    if (matchingLine) {
+                        const numbers = matchingLine.match(/[-+]?\d[\d,]*\.?\d*/g);
                         if (numbers) {
                             const cleanNums = numbers.map(n => parseFloat(n.replace(/,/g, ''))).filter(n => !isNaN(n));
-                            // เลือกเฉพาะบรรทัดที่มีจำนวนหน่วย > 0 (ข้ามรายการที่ -0.08, -0.11 หรือสัดส่วน 0.00%)
-                            const unitsCandidate = cleanNums[cleanNums.length - 1];
-                            if (unitsCandidate && unitsCandidate > 0.1) {
-                                foundCodes.push(code);
-                                const existingIndex = policies.findIndex(p => p.code === code);
-                                
-                                const navCandidate = cleanNums.find(n => n > 5 && n < 100) || 10.0;
-                                const ytdCandidate = cleanNums.find(n => n > -50 && n < 200 && n !== navCandidate) || 0.0;
-                                const amtCandidate = cleanNums.find(n => n > 500) || (unitsCandidate * navCandidate);
+                            // ดึงตัวเลขหน่วยลงทุน (ตัวเลขท้ายสุดของแถว)
+                            const unitsVal = cleanNums[cleanNums.length - 1];
 
-                                const updatedPlan = {
-                                    id: existingIndex !== -1 ? policies[existingIndex].id : Date.now() + Math.floor(Math.random() * 1000),
+                            // กรองเฉพาะแผนที่มีจำนวนหน่วย > 0.1 (ข้ามแผนที่เป็น 0.00 / -0.08)
+                            if (unitsVal && unitsVal > 0.1) {
+                                const navVal = cleanNums.find(n => n > 5 && n < 100) || 10.0;
+                                const ytdVal = cleanNums.find(n => n > -50 && n < 200 && n !== navVal) || 0.0;
+                                const totalAmtVal = cleanNums.find(n => n > 500) || (unitsVal * navVal);
+
+                                scannedPlans.push({
                                     code: code,
-                                    name: FUND_MAP[code] || `MFC Policy ${code.replace('MPF', '')}`,
-                                    units: unitsCandidate,
-                                    nav: navCandidate,
-                                    ytd: ytdCandidate,
-                                    prevAmt: amtCandidate,
-                                    cost: amtCandidate * 0.85
-                                };
-
-                                if (existingIndex !== -1) {
-                                    policies[existingIndex] = updatedPlan;
-                                } else {
-                                    policies.push(updatedPlan);
-                                }
+                                    name: FUND_MAP[code] || `MFC Policy ${code}`,
+                                    units: unitsVal,
+                                    nav: navVal,
+                                    ytd: ytdVal,
+                                    prevAmt: totalAmtVal,
+                                    cost: totalAmtVal * 0.85
+                                });
                             }
                         }
                     }
                 });
 
-                if (foundCodes.length > 0) {
+                if (scannedPlans.length > 0) {
+                    scannedPlans.forEach(scanned => {
+                        const existingIdx = policies.findIndex(p => p.code === scanned.code);
+                        if (existingIdx !== -1) {
+                            policies[existingIdx] = { ...policies[existingIdx], ...scanned };
+                        } else {
+                            policies.push({ id: Date.now() + Math.floor(Math.random()*1000), ...scanned });
+                        }
+                    });
+
                     await syncData(policies);
-                    alert(`AI สแกนและอัปเดตสัดส่วนพอร์ตสำเร็จ (${foundCodes.length} แผน): ${foundCodes.join(', ')}`);
+                    alert(`AI สแกนและอัปเดตสัดส่วนพอร์ตสำเร็จ (${scannedPlans.length} แผน): ${scannedPlans.map(p => p.code).join(', ')}`);
                 } else {
-                    alert('ไม่พบแผนที่มีหน่วยลงทุนคงเหลือในรูปสลิป');
+                    alert('ไม่พบแถวรายการที่มีหน่วยลงทุนคงเหลือในรูปสลิป กรุณาตรวจสอบรูปภาพ');
                 }
 
             } catch (err) {
@@ -546,7 +539,7 @@
             }
         }
 
-        // Fetch Live Market Data พร้อมระบบ Multi-Proxy Fallback แก้ปัญหา CORS/Blocked
+        // Fetch Real-time Market Indices (6 ช่อง)
         async function fetchLiveMarketData() {
             const symbols = [
                 { idVal: 'idx-sp500', idChg: 'chg-sp500', ticker: '^GSPC', fallback: 5600.25 },
@@ -561,9 +554,9 @@
 
             for (const item of symbols) {
                 let success = false;
-                const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${item.ticker}?interval=1d`;
+                const encodedTicker = encodeURIComponent(item.ticker);
+                const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodedTicker}?interval=1d`;
                 
-                // รายชื่อ CORS Proxy เพื่อป้องกันโดนบล็อก
                 const proxies = [
                     `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
                     `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`
@@ -595,7 +588,7 @@
                                 elVal.innerText = Number(price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                                 const sign = chgPct >= 0 ? '+' : '';
                                 elChg.innerText = `${sign}${chgPct.toFixed(2)}%`;
-                                elChg.className = chgPct >= 0 ? "text-emerald-400 font-medium" : "text-rose-400 font-medium";
+                                elChg.className = chgPct >= 0 ? "text-[10px] font-semibold text-emerald-400" : "text-[10px] font-semibold text-rose-400";
                                 success = true;
                                 break;
                             }
@@ -605,7 +598,6 @@
                     }
                 }
 
-                // หาก Proxy ล้มเหลวทั้งหมด ให้ใช้ค่าสุ่มจากจุดอ้างอิงเพื่อไม่ให้หน้าจอเป็น --
                 if (!success) {
                     const elVal = document.getElementById(item.idVal);
                     if (elVal && (elVal.innerText === '--' || elVal.innerText === '')) {
@@ -717,11 +709,31 @@
             fetchLiveMarketData();
             setInterval(fetchLiveMarketData, 30000);
 
-            document.getElementById('btnExport').addEventListener('click', exportPortfolio);
+            document.getElementById('btnExport').addEventListener('click', () => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(policies, null, 2));
+                const dlAnchor = document.createElement('a');
+                dlAnchor.setAttribute("href", dataStr);
+                dlAnchor.setAttribute("download", `MFC_Portfolio_Backup_${new Date().toISOString().slice(0,10)}.json`);
+                document.body.appendChild(dlAnchor);
+                dlAnchor.click();
+                dlAnchor.remove();
+            });
             
             document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFileInput').click());
             document.getElementById('importFileInput').addEventListener('change', (e) => {
-                if (e.target.files[0]) importPortfolio(e.target.files[0]);
+                if (e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = async (evt) => {
+                        try {
+                            const importedData = JSON.parse(evt.target.result);
+                            if (Array.isArray(importedData)) {
+                                await syncData(importedData);
+                                alert('นำเข้าข้อมูลเรียบร้อยแล้ว!');
+                            }
+                        } catch (err) { alert('รูปแบบไฟล์ไม่ถูกต้อง'); }
+                    };
+                    reader.readAsText(e.target.files[0]);
+                }
             });
 
             document.getElementById('btnOcr').addEventListener('click', () => document.getElementById('ocrFileInput').click());
