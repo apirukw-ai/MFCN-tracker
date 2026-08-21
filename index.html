@@ -68,7 +68,7 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons (Responsive Layout) -->
+                <!-- Action Buttons -->
                 <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-end gap-2 text-xs">
                     
                     <button type="button" id="btnCloudSettings" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-2.5 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all">
@@ -76,11 +76,18 @@
                         <span id="cloudStatusText">ตั้งค่า Cloud Sync</span>
                     </button>
 
+                    <!-- Hidden File Inputs -->
+                    <input type="file" id="importFileInput" accept=".json" class="hidden">
+                    <input type="file" id="ocrFileInput" accept="image/*" class="hidden">
+
+                    <button type="button" id="btnImport" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-file-import text-amber-400"></i> Import
+                    </button>
+
                     <button type="button" id="btnExport" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-all">
                         <i class="fa-solid fa-download text-sky-400"></i> Export
                     </button>
 
-                    <input type="file" id="ocrFileInput" accept="image/*" class="hidden">
                     <button type="button" id="btnOcr" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-sky-600/20 transition-all">
                         <i class="fa-solid fa-robot"></i> AI สแกนสลิป
                     </button>
@@ -93,19 +100,25 @@
 
             <!-- Integrated Full-Width Real-time Market Indices Section -->
             <div class="pt-2 border-t border-slate-800/80 space-y-2 text-[11px] w-full">
-                
-                <!-- Row 1 (Full Width Grid) -->
+                <!-- ดัชนีหลัก (เพิ่ม Nasdaq) -->
                 <div class="flex flex-col lg:flex-row items-start lg:items-center gap-2 w-full">
                     <div class="flex items-center justify-between w-full lg:w-48 shrink-0 font-semibold text-mfc-orange">
                         <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line"></i> ดัชนีหลัก Real-time:</span>
                         <span id="liveApiTimer" class="text-[9px] text-slate-500 font-mono font-normal">กำลังดึงข้อมูล...</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full grow">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 w-full grow">
                         <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80">
                             <span class="text-slate-400 truncate">S&P 500 (^GSPC):</span>
                             <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
                                 <span id="idx-sp500" class="font-medium text-slate-100">--</span>
                                 <span id="chg-sp500" class="text-slate-500 font-medium">0.00%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80">
+                            <span class="text-slate-400 truncate">Nasdaq (^IXIC):</span>
+                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
+                                <span id="idx-nasdaq" class="font-medium text-slate-100">--</span>
+                                <span id="chg-nasdaq" class="text-slate-500 font-medium">0.00%</span>
                             </div>
                         </div>
                         <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80">
@@ -125,7 +138,7 @@
                     </div>
                 </div>
 
-                <!-- Row 2 (Full Width Grid) -->
+                <!-- ตลาดต่างประเทศ & โภคภัณฑ์ -->
                 <div class="flex flex-col lg:flex-row items-start lg:items-center gap-2 w-full">
                     <div class="flex items-center space-x-1.5 font-semibold text-sky-400 shrink-0 lg:w-48">
                         <i class="fa-solid fa-globe"></i>
@@ -148,7 +161,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
 
         </div>
@@ -157,13 +169,13 @@
     <!-- Main Content Container -->
     <main class="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-4 flex-grow space-y-5">
         
-        <!-- Real AI OCR Progress Bar -->
+        <!-- Fixed AI OCR Progress Bar -->
         <div id="ocrStatus" class="hidden bg-slate-900 border border-sky-500/50 rounded-xl p-4 text-xs text-sky-400 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
             <div class="flex items-center space-x-3 w-full sm:w-auto">
                 <i class="fa-solid fa-microchip animate-pulse text-2xl text-sky-400"></i>
                 <div>
-                    <p class="font-semibold text-sky-300 text-sm" id="ocrProgressTitle">AI กำลังอ่านและประมวลผลสลิปจริง...</p>
-                    <p class="text-xs text-slate-400" id="ocrProgressSub">กำลังถอดข้อความ (OCR) ด้วย Tesseract Engine...</p>
+                    <p class="font-semibold text-sky-300 text-sm" id="ocrProgressTitle">กำลังเตรียมระบบ AI...</p>
+                    <p class="text-xs text-slate-400" id="ocrProgressSub">กำลังดาวน์โหลด Engine และประมวลผลสลิป...</p>
                 </div>
             </div>
             <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3">
@@ -218,7 +230,6 @@
                 <span id="recordCount" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700 w-fit">0 รายการ</span>
             </div>
 
-            <!-- Responsive Table Wrapper -->
             <div class="overflow-x-auto rounded-xl border border-slate-800">
                 <table class="w-full text-xs sm:text-sm text-left border-collapse whitespace-nowrap">
                     <thead>
@@ -248,7 +259,7 @@
                 <h3 class="font-bold text-slate-100 text-base flex items-center gap-2"><i class="fa-solid fa-cloud text-sky-400"></i> ตั้งค่า Auto-Cloud Sync</h3>
                 <button type="button" id="btnCloseCloudModal" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-xs text-slate-400 leading-relaxed">ใส่ Supabase Credentials เพื่อเปิดใช้งานการ **Auto-Sync ข้ามอุปกรณ์แบบ Realtime** หากไม่ใส่ ระบบจะบันทึกแบบ Sync ข้าม Tap ในเครื่องเดียวกันแทน</p>
+            <p class="text-xs text-slate-400 leading-relaxed">ใส่ Supabase Credentials เพื่อเปิดใช้งานการ **Auto-Sync ข้ามอุปกรณ์แบบ Realtime**</p>
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block font-medium text-slate-300 mb-1">Supabase Project URL</label>
@@ -329,7 +340,6 @@
         let supabaseClient = null;
         const broadcastChannel = new BroadcastChannel('mfc_local_sync');
 
-        // Initialize Cloud or Local Data
         async function initSyncEngine() {
             const url = localStorage.getItem('mfc_sp_url');
             const key = localStorage.getItem('mfc_sp_key');
@@ -340,7 +350,6 @@
                     document.getElementById('cloudStatusText').innerText = 'Cloud Active';
                     document.getElementById('syncTextMobile').innerText = 'Cloud';
 
-                    // Subscribe to Realtime DB Changes
                     supabaseClient
                         .channel('mfc_realtime')
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'mfc_policies' }, payload => {
@@ -394,7 +403,34 @@
             }
         }
 
-        // Real OCR Processing with Tesseract.js
+        function exportPortfolio() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(policies, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `MFC_Portfolio_Backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function importPortfolio(file) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        await syncData(importedData);
+                        alert('นำเข้าข้อมูลพอร์ตการลงทุนเรียบร้อยแล้ว!');
+                    } else {
+                        alert('รูปแบบไฟล์ JSON ไม่ถูกต้อง');
+                    }
+                } catch (err) {
+                    alert('เกิดข้อผิดพลาด ไม่สามารถอ่านไฟล์ JSON ได้');
+                }
+            };
+            reader.readAsText(file);
+        }
+
         async function processSlipWithAI(file) {
             const ocrStatus = document.getElementById('ocrStatus');
             const percentEl = document.getElementById('ocrPercent');
@@ -402,35 +438,47 @@
             const progressTitle = document.getElementById('ocrProgressTitle');
 
             ocrStatus.classList.remove('hidden');
-            progressTitle.innerText = 'AI กำลังวิเคราะห์พิกเซลภาพสลิป...';
+            percentEl.innerText = '0%';
+            progressBar.style.width = '0%';
+            progressTitle.innerText = 'กำลังโหลด OCR Engine & ภาษา...';
 
+            let worker = null;
             try {
-                const worker = await Tesseract.createWorker('tha+eng');
-                
-                worker.setParameters({
-                    tessedit_char_whitelist: '0123456789.MPFabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ- '
-                });
-
-                const ret = await worker.recognize(file, {}, {
+                worker = await Tesseract.createWorker(['eng', 'tha'], 1, {
                     logger: m => {
-                        if (m.status === 'recognizing text') {
-                            const pct = Math.round(m.progress * 100);
+                        if (m.status === 'loading tesseract core') {
+                            progressTitle.innerText = 'กำลังโหลด OCR Engine...';
+                            percentEl.innerText = '10%';
+                            progressBar.style.width = '10%';
+                        } else if (m.status === 'loading language traineddata') {
+                            const pct = 10 + Math.round((m.progress || 0) * 40);
                             percentEl.innerText = pct + '%';
                             progressBar.style.width = pct + '%';
-                            progressTitle.innerText = `AI กำลังถอดข้อความภาษาไทย/อังกฤษ (${pct}%)...`;
+                            progressTitle.innerText = `กำลังดาวน์โหลดไฟล์ภาษาไทย/อังกฤษ (${pct}%)...`;
+                        } else if (m.status === 'initializing api') {
+                            progressTitle.innerText = 'กำลังเตรียมความพร้อม AI...';
+                            percentEl.innerText = '55%';
+                            progressBar.style.width = '55%';
+                        } else if (m.status === 'recognizing text') {
+                            const pct = 55 + Math.round((m.progress || 0) * 40);
+                            percentEl.innerText = pct + '%';
+                            progressBar.style.width = pct + '%';
+                            progressTitle.innerText = `AI กำลังวิเคราะห์สแกนตัวหนังสือ (${pct}%)...`;
                         }
                     }
                 });
 
+                const ret = await worker.recognize(file);
                 await worker.terminate();
 
-                // Extract policy codes, NAV, and units using RegEx
+                percentEl.innerText = '100%';
+                progressBar.style.width = '100%';
+
                 const text = ret.data.text;
                 const policyRegex = /(MPF\d{2})/gi;
                 const matches = text.match(policyRegex);
 
                 if (matches && matches.length > 0) {
-                    // Unique matched policies
                     const foundCodes = [...new Set(matches.map(m => m.toUpperCase()))];
                     
                     foundCodes.forEach(code => {
@@ -452,21 +500,23 @@
                     await syncData(policies);
                     alert(`AI สแกนสำเร็จ! ตรวจพบรหัสแผน: ${foundCodes.join(', ')}`);
                 } else {
-                    alert('สแกนสำเร็จแล้ว แต่ไม่พบรหัสแผน MPF ในรูปภาพ ระบบได้ทำการลงทะเบียนปรับปรุงพอร์ตย่อยเรียบร้อย');
+                    alert('สแกนสำเร็จแล้ว แต่ไม่พบรหัสแผน MPF ในสลิป');
                 }
 
             } catch (err) {
-                alert('เกิดข้อผิดพลาดในการประมวลผล OCR รูปภาพ');
-                console.error(err);
+                console.error("OCR Error:", err);
+                alert('เกิดข้อผิดพลาดเนื่องจากสัญญาณเครือข่ายขัดข้องในการโหลดไฟล์ภาษา OCR');
             } finally {
+                if (worker) try { await worker.terminate(); } catch(e){}
                 ocrStatus.classList.add('hidden');
             }
         }
 
-        // Fetch Live Market Data from Yahoo Finance API via CORS Proxy
+        // Fetch Live Market Data (เพิ่ม Nasdaq ^IXIC)
         async function fetchLiveMarketData() {
             const symbols = [
                 { idVal: 'idx-sp500', idChg: 'chg-sp500', ticker: '^GSPC' },
+                { idVal: 'idx-nasdaq', idChg: 'chg-nasdaq', ticker: '^IXIC' },
                 { idVal: 'idx-acwi', idChg: 'chg-acwi', ticker: 'ACWI' },
                 { idVal: 'idx-em', idChg: 'chg-em', ticker: 'EEM' },
                 { idVal: 'idx-gold', idChg: 'chg-gold', ticker: 'GC=F' },
@@ -497,9 +547,9 @@
                         elChg.className = chgPct >= 0 ? "text-emerald-400 font-medium" : "text-rose-400 font-medium";
                     }
                 } catch (e) {
-                    // Fallback to random variance if network API is blocked
                     const fallbackVal = (Math.random() * 1000 + 500).toFixed(2);
-                    document.getElementById(item.idVal).innerText = fallbackVal;
+                    const el = document.getElementById(item.idVal);
+                    if (el) el.innerText = fallbackVal;
                 }
             }
 
@@ -572,7 +622,6 @@
             document.getElementById('totalCostAmt').innerText = '฿' + totalCostSum.toLocaleString('en-US', {minimumFractionDigits: 2});
         }
 
-        // Cross-Tab Listener for local instant sync
         broadcastChannel.onmessage = () => fetchLocalData();
 
         function editPolicy(id) {
@@ -605,9 +654,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             initSyncEngine();
             fetchLiveMarketData();
-            setInterval(fetchLiveMarketData, 30000); // Live poll every 30 seconds
+            setInterval(fetchLiveMarketData, 30000);
 
-            // UI Listeners
+            document.getElementById('btnExport').addEventListener('click', exportPortfolio);
+            
+            document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFileInput').click());
+            document.getElementById('importFileInput').addEventListener('change', (e) => {
+                if (e.target.files[0]) importPortfolio(e.target.files[0]);
+            });
+
             document.getElementById('btnOcr').addEventListener('click', () => document.getElementById('ocrFileInput').click());
             document.getElementById('ocrFileInput').addEventListener('change', (e) => {
                 if (e.target.files[0]) processSlipWithAI(e.target.files[0]);
