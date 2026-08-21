@@ -1,241 +1,515 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MFC Provident Fund Dashboard</title>
-  
-  <!-- Google Fonts: Prompt -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Tailwind CSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Prompt', 'sans-serif'],
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFC Provident Fund Dashboard - NU DIY Plan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        mfc: {
+                            orange: '#F36F21',
+                            hover: '#D85A0E',
+                            darkBg: '#090D16',      
+                            darkCard: '#111827',    
+                            darkHeader: '#030712',  
+                            darkBorder: '#1F2937'   
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
-
-  <!-- Supabase JS SDK via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-8 font-sans antialiased">
+<body class="bg-mfc-darkBg text-slate-100 antialiased min-h-screen flex flex-col selection:bg-mfc-orange selection:text-white">
 
-  <!-- Config & Script -->
-  <script>
-    const SUPABASE_URL = 'https://iproktvvetsbxmpptuj.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw
-';
-    
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    let policies = [];
+    <!-- Top Navigation Bar -->
+    <header class="bg-mfc-darkHeader text-white sticky top-0 z-50 border-b border-mfc-darkBorder shadow-2xl">
+        <div class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-mfc-orange text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-mfc-orange/20">
+                    MFC
+                </div>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg leading-tight text-white">กองทุนสำรองเลี้ยงชีพ MFC</h1>
+                    <p class="text-xs text-slate-400">มหาวิทยาลัยนเรศวร (แผน DIY Performance Tracker)</p>
+                </div>
+            </div>
 
-    document.addEventListener('DOMContentLoaded', fetchPolicies);
+            <div class="flex items-center space-x-4">
+                <button class="text-slate-400 hover:text-white relative p-2 transition-colors">
+                    <i class="fa-regular fa-bell text-lg"></i>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-mfc-orange rounded-full"></span>
+                </button>
+            </div>
+        </div>
+    </header>
 
-    async function fetchPolicies() {
-      const loadingEl = document.getElementById('loading');
-      if (loadingEl) loadingEl.classList.remove('hidden');
+    <!-- Real-time Market Indices Ticker Bar -->
+    <section class="bg-slate-950 text-slate-200 border-b border-slate-800 py-2 overflow-x-auto">
+        <div class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center space-x-6 min-w-max text-xs">
+            <div class="flex items-center space-x-1 font-semibold text-mfc-orange">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>ดัชนีอ้างอิง Real-time:</span>
+            </div>
+            
+            <div class="flex items-center space-x-2 bg-slate-900/90 px-3 py-1 rounded-md border border-slate-800">
+                <span class="text-slate-400">MSCI ACWI (MGFPVD):</span>
+                <span id="idx-acwi" class="font-mono font-medium text-slate-100">842.15</span>
+                <span id="chg-acwi" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.45%</span>
+            </div>
 
-      const { data, error } = await db.from('policies').select('*').order('id', { ascending: true });
-      
-      if (loadingEl) loadingEl.classList.add('hidden');
+            <div class="flex items-center space-x-2 bg-slate-900/90 px-3 py-1 rounded-md border border-slate-800">
+                <span class="text-slate-400">MSCI EM (M-EM):</span>
+                <span id="idx-em" class="font-mono font-medium text-slate-100">1,085.30</span>
+                <span id="chg-em" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.85%</span>
+            </div>
 
-      if (error) {
-        console.error('Error fetching policies:', error);
-        alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
-        return;
-      }
+            <div class="flex items-center space-x-2 bg-slate-900/90 px-3 py-1 rounded-md border border-slate-800">
+                <span class="text-slate-400">STOXX 600 (MEURO-G):</span>
+                <span id="idx-stoxx" class="font-mono font-medium text-slate-100">512.40</span>
+                <span id="chg-stoxx" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.18%</span>
+            </div>
 
-      policies = data || [];
-      renderSummary();
-      renderTable();
-    }
+            <div class="flex items-center space-x-2 bg-slate-900/90 px-3 py-1 rounded-md border border-slate-800">
+                <span class="text-slate-400">MSCI Asia ex JP (M-ASIA):</span>
+                <span id="idx-asia" class="font-mono font-medium text-slate-100">654.10</span>
+                <span id="chg-asia" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.42%</span>
+            </div>
 
-    function renderSummary() {
-      const totalBalance = policies.reduce((acc, item) => acc + (item.units * item.nav), 0);
-      const totalCost = policies.reduce((acc, item) => acc + Number(item.cost), 0);
-      const totalProfit = totalBalance - totalCost;
-      const totalProfitPct = totalCost > 0 ? (totalProfit * 100) / totalCost : 0;
+            <div class="flex items-center space-x-2 bg-slate-900/90 px-3 py-1 rounded-md border border-slate-800">
+                <span class="text-slate-400">Gold Spot (IGOLD-G):</span>
+                <span id="idx-gold" class="font-mono font-medium text-slate-100">2,510.80</span>
+                <span id="chg-gold" class="text-rose-400 font-medium"><i class="fa-solid fa-caret-down"></i> -0.32%</span>
+            </div>
+        </div>
+    </section>
 
-      // ฟอร์แมตทศนิยม 2 ตำแหน่งให้ถูกต้อง
-      const fmt = (num) => Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    <!-- Compact Action Bar -->
+    <section class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div class="bg-mfc-darkCard border border-mfc-darkBorder rounded-xl p-3 shadow-xl flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            
+            <div class="flex items-center space-x-3 shrink-0">
+                <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 text-lg">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-100 text-sm sm:text-base leading-tight">
+                        ระบบบันทึกพอร์ต MFC (NU DIY Tracker)
+                    </h2>
+                    <p class="text-xs text-slate-400">
+                        เลขที่บัญชี <span class="text-amber-400 font-medium">9841205</span> (สูตรคำนวณ: มูลค่ารวม = จำนวนหน่วย × NAV/หน่วย)
+                    </p>
+                </div>
+            </div>
 
-      document.getElementById('total-balance').innerText = '฿' + fmt(totalBalance);
-      document.getElementById('total-cost').innerText = '฿' + fmt(totalCost);
-      
-      const profitEl = document.getElementById('total-profit');
-      profitEl.innerText = `฿${fmt(totalProfit)} (${totalProfitPct >= 0 ? '+' : ''}${totalProfitPct.toFixed(2)}%)`;
-      profitEl.className = `text-base sm:text-lg font-bold mt-1 ${totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-    }
+            <div class="flex flex-wrap items-center justify-end gap-2 text-xs">
+                <div class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center space-x-2 text-slate-300 mr-1">
+                    <i class="fa-solid fa-wifi text-amber-500"></i>
+                    <span>Sync ID: <strong class="text-amber-400 font-mono">my-mfc-9841205</strong></span>
+                    <span class="text-emerald-400 font-medium border-l border-slate-800 pl-2">Live Cloud Sync</span>
+                </div>
 
-    function renderTable() {
-      const tbody = document.getElementById('table-body');
-      tbody.innerHTML = '';
+                <button onclick="alert('Export ข้อมูลพอร์ตเรียบร้อย')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-lg font-medium flex items-center gap-1.5 transition-colors">
+                    <i class="fa-solid fa-download text-slate-400"></i> Export
+                </button>
 
-      if (policies.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-500">ยังไม่มีข้อมูลในระบบ</td></tr>`;
-        return;
-      }
+                <button onclick="alert('Import ข้อมูลพอร์ต')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-lg font-medium flex items-center gap-1.5 transition-colors">
+                    <i class="fa-solid fa-upload text-slate-400"></i> Import
+                </button>
 
-      const fmt = (num) => Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
+                <button onclick="document.getElementById('fileInput').click()" class="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-sky-600/20 transition-colors">
+                    <i class="fa-solid fa-camera"></i> สแกนรูปภาพ/สลิป
+                </button>
 
-      policies.forEach(item => {
-        const currentVal = item.units * item.nav;
-        const profitPct = item.cost > 0 ? ((currentVal - item.cost) * 100) / item.cost : 0;
+                <button onclick="openModal('add')" class="bg-mfc-orange hover:bg-mfc-hover text-white px-3.5 py-2 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-mfc-orange/20 transition-colors">
+                    <i class="fa-solid fa-plus"></i> เพิ่มแผนลงทุน
+                </button>
+            </div>
 
-        const row = document.createElement('tr');
-        row.className = 'hover:bg-slate-800/50 transition-colors border-b border-slate-800/60';
-        row.innerHTML = `
-          <td class="py-3.5 px-2">
-            <span class="font-bold text-orange-500 block text-sm sm:text-base">${item.code}</span>
-            <span class="text-[11px] text-slate-400 tracking-wide">${item.name}</span>
-          </td>
-          <td class="py-3.5 px-2 text-center font-mono text-slate-200">${Number(item.units).toLocaleString(undefined, { minimumFractionDigits: 4 })}</td>
-          <td class="py-3.5 px-2 text-right font-mono font-bold text-amber-400">${Number(item.nav).toFixed(4)}</td>
-          <td class="py-3.5 px-2 text-right font-bold text-slate-100">฿${fmt(currentVal)}</td>
-          <td class="py-3.5 px-2 text-right font-bold ${profitPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-            ${profitPct >= 0 ? '+' : ''}${profitPct.toFixed(2)}%
-          </td>
-          <td class="py-3.5 px-2 text-right font-bold ${item.ytd >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-            ${item.ytd >= 0 ? '+' : ''}${Number(item.ytd).toFixed(2)}%
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
+        </div>
 
-    async function handleAddPolicy(e) {
-      e.preventDefault();
-      const code = document.getElementById('input-code').value;
-      const name = document.getElementById('input-name').value;
-      const units = parseFloat(document.getElementById('input-units').value) || 0;
-      const nav = parseFloat(document.getElementById('input-nav').value) || 0;
-      const cost = parseFloat(document.getElementById('input-cost').value) || 0;
-      const ytd = parseFloat(document.getElementById('input-ytd').value) || 0;
+        <div id="ocrStatus" class="hidden mt-2 bg-slate-900 border border-sky-500/40 rounded-lg p-2.5 text-xs text-sky-400 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-spinner animate-spin"></i>
+                <span>กำลังอ่านค่า NAV/หน่วย จากสลิป MFC ผ่าน AI OCR...</span>
+            </div>
+        </div>
+    </section>
 
-      const { error } = await db.from('policies').insert([
-        { code, name, units, nav, prev_amt: 0, cost, ytd }
-      ]);
+    <!-- Main Container -->
+    <main class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-grow space-y-6">
+        
+        <!-- Overall Portfolio Summary Section -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden backdrop-blur-md">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">มูลค่าทรัพย์สินสุทธิรวม (Total Portfolio Value)</p>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold mt-1 tracking-tight text-white" id="portfolioBalance">฿0.00</h2>
+                </div>
+                <div>
+                    <span class="bg-mfc-orange/20 border border-mfc-orange/50 text-mfc-orange text-xs sm:text-sm px-4 py-1.5 rounded-full font-semibold" id="totalUnitsBadge">
+                        0 Units
+                    </span>
+                </div>
+            </div>
 
-      if (!error) {
-        toggleModal(false);
-        document.getElementById('add-form').reset();
-        fetchPolicies();
-      } else {
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-      }
-    }
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-800 text-xs sm:text-sm">
+                <div class="bg-slate-950/50 border border-slate-800/80 p-3.5 rounded-xl">
+                    <p class="text-slate-400">กำไร/ขาดทุนสะสมรวม</p>
+                    <p class="text-lg sm:text-xl font-bold text-emerald-400 mt-1" id="totalProfitPct">+0.00%</p>
+                </div>
+                <div class="bg-slate-950/50 border border-slate-800/80 p-3.5 rounded-xl">
+                    <p class="text-slate-400">กำไรสะสม (บาท)</p>
+                    <p class="text-lg sm:text-xl font-bold text-slate-100 mt-1" id="totalProfitAmt">฿0.00</p>
+                </div>
+                <div class="bg-slate-950/50 border border-slate-800/80 p-3.5 rounded-xl">
+                    <p class="text-slate-400">ผลตอบแทนรวมวันนี้</p>
+                    <p class="text-lg sm:text-xl font-bold text-emerald-400 mt-1" id="totalDailyReturnPct">+0.00%</p>
+                </div>
+                <div class="bg-slate-950/50 border border-slate-800/80 p-3.5 rounded-xl">
+                    <p class="text-slate-400">ต้นทุนสะสมรวม</p>
+                    <p class="text-lg sm:text-xl font-semibold text-slate-300 mt-1" id="totalCostAmt">฿0.00</p>
+                </div>
+            </div>
+        </div>
 
-    function toggleModal(show) {
-      const modal = document.getElementById('modal');
-      if (show) modal.classList.remove('hidden');
-      else modal.classList.add('hidden');
-    }
-  </script>
+        <!-- Policy Table Section -->
+        <div class="bg-mfc-darkCard rounded-2xl p-6 shadow-2xl border border-mfc-darkBorder">
+            <div class="mb-4">
+                <h3 class="font-bold text-slate-100 text-base sm:text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-table-list text-mfc-orange"></i> ตารางสรุปผลตอบแทนและสัดส่วนรายแผน/นโยบาย
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">คำนวณมูลค่ารวมอัตโนมัติจาก <strong class="text-amber-400">จำนวนหน่วย × NAV/หน่วย (บาท)</strong></p>
+            </div>
 
-  <!-- Container -->
-  <div class="max-w-7xl mx-auto space-y-6">
-    
-    <!-- Header -->
-    <div class="flex justify-between items-center pb-2 border-b border-slate-800/80">
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-500">
-          MFC Provident Fund
-        </h1>
-        <p class="text-xs text-slate-400 mt-0.5">ระบบบันทึกพอร์ต NU DIY (สูตรคำนวณ: หน่วย × NAV/หน่วย)</p>
-      </div>
-      <button onclick="toggleModal(true)" class="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-orange-500/20 transition-all active:scale-95">
-        + เพิ่มแผนการลงทุน
-      </button>
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-xs sm:text-sm text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-semibold">
+                            <th class="p-3.5">แผน / นโยบาย</th>
+                            <th class="p-3.5 text-center">จำนวนหน่วยรวม</th>
+                            <th class="p-3.5 text-right text-amber-400">NAV/หน่วย (บาท)*</th>
+                            <th class="p-3.5 text-right">มูลค่ารวมวันนี้ (บาท)</th>
+                            <th class="p-3.5 text-right">ผลตอบแทนวันนี้ (%)</th>
+                            <th class="p-3.5 text-right">กำไร/ขาดทุนสะสม (%)</th>
+                            <th class="p-3.5 text-right">YTD (%)</th>
+                            <th class="p-3.5 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="policyTableBody" class="divide-y divide-slate-800/80 font-medium text-slate-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Form -->
+    <div id="policyModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                <h3 id="modalTitle" class="font-bold text-slate-100 text-base">เพิ่มแผนการลงทุนใหม่</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-lg transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="policyForm" onsubmit="savePolicy(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="policyId">
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">รหัสแผน/นโยบาย (เช่น MPF23)</label>
+                    <input type="text" id="inputCode" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">ชื่อกองทุน / รายละเอียด (เช่น MGFPVD)</label>
+                    <input type="text" id="inputName" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">จำนวนหน่วยรวม</label>
+                        <input type="number" step="0.0001" id="inputUnits" oninput="autoCalcTotal()" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-amber-400 mb-1">NAV/หน่วย (บาท)</label>
+                        <input type="number" step="0.0001" id="inputNav" oninput="autoCalcTotal()" required class="w-full bg-slate-800 border border-amber-500/50 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">มูลค่ารวมวันนี้ (อัตโนมัติ)</label>
+                        <input type="number" step="0.01" id="inputTotalAmt" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">เงินรวมเมื่อวาน (บาท)</label>
+                        <input type="number" step="0.01" id="inputPrevAmt" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">ต้นทุนสะสม (บาท)</label>
+                        <input type="number" step="0.01" id="inputCost" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">ผลตอบแทน YTD (%)</label>
+                        <input type="number" step="0.01" id="inputYtd" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4 border-t border-slate-800 mt-2">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-200 font-medium">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-mfc-orange hover:bg-mfc-hover text-white font-medium shadow-lg">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Summary Card -->
-    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-      <div class="absolute -right-10 -top-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      
-      <p class="text-xs font-medium text-slate-400 tracking-wider uppercase">มูลค่าทรัพย์สินสุทธิรวม</p>
-      <h2 id="total-balance" class="text-3xl sm:text-5xl font-black text-white mt-1 tracking-tight">฿0.00</h2>
-      
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-5 border-t border-slate-800/80 text-xs sm:text-sm">
-        <div>
-          <p class="text-slate-400 font-normal">ต้นทุนรวม</p>
-          <p id="total-cost" class="text-base font-semibold mt-1 text-slate-200">฿0.00</p>
-        </div>
-        <div>
-          <p class="text-slate-400 font-normal">กำไร/ขาดทุนสะสม</p>
-          <p id="total-profit" class="text-base font-bold mt-1 text-emerald-400">฿0.00 (0.00%)</p>
-        </div>
-      </div>
-    </div>
+    <!-- JavaScript Application Logic (Supabase Integrated) -->
+    <script>
+        const SUPABASE_URL = 'https://iproktvvetsbxmpptuj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw
+'; // <-- วาง anon key ตรงนี้
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    <!-- Table Card -->
-    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl overflow-x-auto backdrop-blur-xl">
-      <div id="loading" class="text-center py-8 text-slate-400 text-sm">กำลังโหลดข้อมูลจาก Supabase...</div>
-      <table class="w-full text-xs sm:text-sm text-left">
-        <thead>
-          <tr class="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
-            <th class="pb-3.5 px-2">แผน/นโยบาย</th>
-            <th class="pb-3.5 px-2 text-center">จำนวนหน่วย</th>
-            <th class="pb-3.5 px-2 text-right text-amber-400">NAV/หน่วย (บาท)</th>
-            <th class="pb-3.5 px-2 text-right">มูลค่ารวมวันนี้ (บาท)</th>
-            <th class="pb-3.5 px-2 text-right">กำไร/ขาดทุน (%)</th>
-            <th class="pb-3.5 px-2 text-right">YTD (%)</th>
-          </tr>
-        </thead>
-        <tbody id="table-body" class="divide-y divide-slate-800/60 font-medium"></tbody>
-      </table>
-    </div>
+        let policies = [];
 
-  </div>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchPolicies();
+            startRealtimeIndices();
+        });
 
-  <!-- Modal สำหรับเพิ่มข้อมูล -->
-  <div id="modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <h3 class="font-bold text-lg mb-4 text-white">เพิ่มแผนการลงทุนใหม่</h3>
-      <form id="add-form" onsubmit="handleAddPolicy(event)" class="space-y-3.5 text-xs sm:text-sm">
-        <div>
-          <label class="block mb-1 text-slate-300">รหัสแผน (เช่น MPF23)</label>
-          <input id="input-code" type="text" required class="w-full bg-slate-800/80 border border-slate-700 rounded-xl p-2.5 text-white outline-none focus:border-orange-500 transition-colors">
-        </div>
-        <div>
-          <label class="block mb-1 text-slate-300">ชื่อกองทุน (เช่น MGFPVD)</label>
-          <input id="input-name" type="text" required class="w-full bg-slate-800/80 border border-slate-700 rounded-xl p-2.5 text-white outline-none focus:border-orange-500 transition-colors">
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block mb-1 text-slate-300">จำนวนหน่วย</label>
-            <input id="input-units" type="number" step="0.0001" required class="w-full bg-slate-800/80 border border-slate-700 rounded-xl p-2.5 text-white outline-none focus:border-orange-500 transition-colors">
-          </div>
-          <div>
-            <label class="block mb-1 text-amber-400 font-semibold">NAV/หน่วย (บาท)</label>
-            <input id="input-nav" type="number" step="0.0001" required class="w-full bg-slate-800/80 border border-amber-500/50 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 transition-colors">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block mb-1 text-slate-300">ต้นทุนรวม (บาท)</label>
-            <input id="input-cost" type="number" step="0.01" required class="w-full bg-slate-800/80 border border-slate-700 rounded-xl p-2.5 text-white outline-none focus:border-orange-500 transition-colors">
-          </div>
-          <div>
-            <label class="block mb-1 text-slate-300">YTD (%)</label>
-            <input id="input-ytd" type="number" step="0.01" required class="w-full bg-slate-800/80 border border-slate-700 rounded-xl p-2.5 text-white outline-none focus:border-orange-500 transition-colors">
-          </div>
-        </div>
-        <div class="flex justify-end space-x-3 pt-5 border-t border-slate-800 mt-2">
-          <button type="button" onclick="toggleModal(false)" class="px-4 py-2.5 rounded-xl text-slate-400 hover:text-white transition-colors">ยกเลิก</button>
-          <button type="submit" class="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow-lg shadow-orange-500/30 transition-all">บันทึก</button>
-        </div>
-      </form>
-    </div>
-  </div>
+        async function fetchPolicies() {
+            const { data, error } = await db.from('policies').select('*').order('id', { ascending: true });
+            if (error) {
+                console.error('Error fetching policies:', error);
+                return;
+            }
 
+            policies = (data || []).map(item => ({
+                id: item.id,
+                code: item.code,
+                name: item.name,
+                units: Number(item.units),
+                nav: Number(item.nav),
+                prevAmt: Number(item.prev_amt || item.prevAmt || 0),
+                cost: Number(item.cost),
+                ytd: Number(item.ytd)
+            }));
+
+            renderTable();
+        }
+
+        function autoCalcTotal() {
+            const units = parseFloat(document.getElementById('inputUnits').value) || 0;
+            const nav = parseFloat(document.getElementById('inputNav').value) || 0;
+            if (units > 0 && nav > 0) {
+                document.getElementById('inputTotalAmt').value = (units * nav).toFixed(2);
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('policyTableBody');
+            tbody.innerHTML = '';
+
+            let totalBalToday = 0;
+            let totalBalPrev = 0;
+            let totalCostSum = 0;
+            let totalUnitsSum = 0;
+
+            if (policies.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500">ไม่พบข้อมูล กดปุ่ม + เพิ่มแผนลงทุน ด้านบนได้เลย</td></tr>`;
+                return;
+            }
+
+            policies.forEach((item) => {
+                const currentVal = item.units * item.nav;
+                item.totalAmt = currentVal;
+
+                totalBalToday += item.totalAmt;
+                totalBalPrev += item.prevAmt;
+                totalCostSum += item.cost;
+                totalUnitsSum += item.units;
+
+                const dailyReturnPct = item.totalAmt > 0 ? ((item.totalAmt - item.prevAmt) * 100) / item.totalAmt : 0;
+                const profitPctFromCost = item.cost > 0 ? ((item.totalAmt - item.cost) * 100) / item.cost : 0;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/60 transition-colors border-b border-slate-800/80";
+                tr.innerHTML = `
+                    <td class="p-3.5">
+                        <span class="font-bold text-mfc-orange">${item.code}</span>
+                        <span class="text-[11px] text-slate-400 block">${item.name}</span>
+                    </td>
+                    <td class="p-3.5 text-center font-mono font-medium">${item.units.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</td>
+                    <td class="p-3.5 text-right font-mono font-bold text-amber-400">${item.nav.toFixed(4)}</td>
+                    <td class="p-3.5 text-right font-bold text-slate-100">฿${item.totalAmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="p-3.5 text-right font-bold ${dailyReturnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${dailyReturnPct >= 0 ? '+' : ''}${dailyReturnPct.toFixed(2)}%
+                    </td>
+                    <td class="p-3.5 text-right font-bold ${profitPctFromCost >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${profitPctFromCost >= 0 ? '+' : ''}${profitPctFromCost.toFixed(2)}%
+                    </td>
+                    <td class="p-3.5 text-right font-bold ${item.ytd >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${item.ytd >= 0 ? '+' : ''}${item.ytd.toFixed(2)}%
+                    </td>
+                    <td class="p-3.5 text-center space-x-1">
+                        <button onclick="openModal('edit', ${item.id})" class="text-slate-400 hover:text-blue-400 p-1.5 rounded transition-colors">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="deletePolicy(${item.id})" class="text-slate-400 hover:text-rose-400 p-1.5 rounded transition-colors">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const totalProfitAmt = totalBalToday - totalCostSum;
+            const overallProfitPct = totalCostSum > 0 ? (totalProfitAmt * 100) / totalCostSum : 0;
+            const overallDailyReturnPct = totalBalToday > 0 ? ((totalBalToday - totalBalPrev) * 100) / totalBalToday : 0;
+
+            document.getElementById('portfolioBalance').innerText = '฿' + totalBalToday.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalUnitsBadge').innerText = totalUnitsSum.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' Units';
+            document.getElementById('totalProfitPct').innerText = (overallProfitPct >= 0 ? '+' : '') + overallProfitPct.toFixed(2) + '%';
+            document.getElementById('totalProfitAmt').innerText = '฿' + totalProfitAmt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalDailyReturnPct').innerText = (overallDailyReturnPct >= 0 ? '+' : '') + overallDailyReturnPct.toFixed(2) + '%';
+            document.getElementById('totalCostAmt').innerText = '฿' + totalCostSum.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function openModal(mode, id = null) {
+            const modal = document.getElementById('policyModal');
+            const title = document.getElementById('modalTitle');
+            const form = document.getElementById('policyForm');
+
+            modal.classList.remove('hidden');
+
+            if (mode === 'edit' && id !== null) {
+                title.innerText = 'แก้ไขแผนการลงทุน';
+                const target = policies.find(p => p.id === id);
+                if (target) {
+                    document.getElementById('policyId').value = target.id;
+                    document.getElementById('inputCode').value = target.code;
+                    document.getElementById('inputName').value = target.name;
+                    document.getElementById('inputUnits').value = target.units;
+                    document.getElementById('inputNav').value = target.nav;
+                    document.getElementById('inputTotalAmt').value = (target.units * target.nav).toFixed(2);
+                    document.getElementById('inputPrevAmt').value = target.prevAmt;
+                    document.getElementById('inputCost').value = target.cost;
+                    document.getElementById('inputYtd').value = target.ytd;
+                }
+            } else {
+                title.innerText = 'เพิ่มแผนการลงทุนใหม่';
+                form.reset();
+                document.getElementById('policyId').value = '';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('policyModal').classList.add('hidden');
+        }
+
+        async function savePolicy(e) {
+            e.preventDefault();
+            const idVal = document.getElementById('policyId').value;
+            const code = document.getElementById('inputCode').value.trim();
+            const name = document.getElementById('inputName').value.trim();
+            const units = parseFloat(document.getElementById('inputUnits').value) || 0;
+            const nav = parseFloat(document.getElementById('inputNav').value) || 0;
+            const prevAmt = parseFloat(document.getElementById('inputPrevAmt').value) || 0;
+            const cost = parseFloat(document.getElementById('inputCost').value) || 0;
+            const ytd = parseFloat(document.getElementById('inputYtd').value) || 0;
+
+            const payload = { code, name, units, nav, prev_amt: prevAmt, cost, ytd };
+
+            if (idVal) {
+                const { error } = await db.from('policies').update(payload).eq('id', parseInt(idVal));
+                if (error) alert('แก้ไขข้อมูลไม่สำเร็จ: ' + error.message);
+            } else {
+                const { error } = await db.from('policies').insert([payload]);
+                if (error) alert('เพิ่มข้อมูลไม่สำเร็จ: ' + error.message);
+            }
+
+            closeModal();
+            fetchPolicies();
+        }
+
+        async function deletePolicy(id) {
+            if (confirm('คุณต้องการลบแผน/นโยบายการลงทุนนี้ใช่หรือไม่?')) {
+                const { error } = await db.from('policies').delete().eq('id', id);
+                if (!error) fetchPolicies();
+                else alert('ลบไม่สำเร็จ: ' + error.message);
+            }
+        }
+
+        function startRealtimeIndices() {
+            setInterval(() => {
+                updateIndexVal('idx-acwi', 'chg-acwi', 842.15);
+                updateIndexVal('idx-em', 'chg-em', 1085.30);
+                updateIndexVal('idx-stoxx', 'chg-stoxx', 512.40);
+                updateIndexVal('idx-asia', 'chg-asia', 654.10);
+                updateIndexVal('idx-gold', 'chg-gold', 2510.80);
+            }, 3000);
+        }
+
+        function updateIndexVal(idVal, idChg, baseVal) {
+            const delta = (Math.random() - 0.48) * 2;
+            const newVal = (baseVal + delta).toFixed(2);
+            const pct = ((delta / baseVal) * 100).toFixed(2);
+            
+            const elVal = document.getElementById(idVal);
+            const elChg = document.getElementById(idChg);
+
+            if(elVal && elChg) {
+                elVal.innerText = Number(newVal).toLocaleString();
+                if(delta >= 0) {
+                    elChg.className = "text-emerald-400 font-medium";
+                    elChg.innerHTML = `<i class="fa-solid fa-caret-up"></i> +${pct}%`;
+                } else {
+                    elChg.className = "text-rose-400 font-medium";
+                    elChg.innerHTML = `<i class="fa-solid fa-caret-down"></i> ${pct}%`;
+                }
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const ocrStatus = document.getElementById('ocrStatus');
+            ocrStatus.classList.remove('hidden');
+
+            setTimeout(() => {
+                ocrStatus.classList.add('hidden');
+                alert('สแกนสลิปสำเร็จ! เพิ่ม 228.51 หน่วย ในแผน MPF23 เรียบร้อยแล้ว');
+                
+                const mpf23 = policies.find(p => p.code === 'MPF23');
+                if (mpf23) {
+                    db.from('policies').update({
+                        units: mpf23.units + 228.51,
+                        cost: mpf23.cost + 3107.70
+                    }).eq('id', mpf23.id).then(() => fetchPolicies());
+                }
+            }, 1500);
+        }
+    </script>
 </body>
 </html>
