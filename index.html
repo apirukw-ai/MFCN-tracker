@@ -320,6 +320,9 @@
             { id: 6, code: 'MPF27', name: 'M-ASIA', nav: 13.0584, ytd: 13.46, cost: 20718.06, units: 1787.9167, prevAmt: 23347.29 }
         ];
 
+// กำหนดมูลค่าพอร์ต ณ ต้นปี (1 ม.ค. 2569)
+        const PORT_BASE_JAN1_2026 = 76010.79;
+        
         let policies = [];
         let supabaseClient = null;
         const broadcastChannel = new BroadcastChannel('mfc_local_sync');
@@ -530,7 +533,8 @@
             const totalDailyAmt = totalBalToday - totalBalPrev;
             const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
 
-            const overallYtdPct = (totalBalToday > 0 && (totalBalToday - totalYtdAmtSum) > 0) ? (totalYtdAmtSum / (totalBalToday - totalYtdAmtSum)) * 100 : 0;
+            const overallYtdAmt = totalBalToday - PORT_BASE_JAN1_2026;
+            const overallYtdPct = PORT_BASE_JAN1_2026 > 0 ? (overallYtdAmt / PORT_BASE_JAN1_2026) * 100 : 0;
 
             const formatCardText = (amt, pct) => {
                 const sign = amt >= 0 ? '+' : '';
@@ -549,8 +553,8 @@
             dailyEl.className = `text-sm sm:text-lg font-bold ${totalDailyAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
 
             const ytdEl = document.getElementById('totalYtdSummary');
-            ytdEl.innerText = formatCardText(totalYtdAmtSum, overallYtdPct);
-            ytdEl.className = `text-sm sm:text-lg font-bold ${totalYtdAmtSum >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
+            ytdEl.innerText = formatCardText(overallYtdAmt, overallYtdPct);
+            ytdEl.className = `text-sm sm:text-lg font-bold ${overallYtdAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
 
             document.getElementById('totalCostAmt').innerText = '฿' + totalCostSum.toLocaleString('en-US', {minimumFractionDigits: 2});
         }
