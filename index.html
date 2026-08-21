@@ -325,6 +325,9 @@
         const broadcastChannel = new BroadcastChannel('mfc_local_sync');
 
         async function initSyncEngine() {
+            // โหลดข้อมูล Local เสมอเพื่อให้หน้าเว็บมีข้อมูลทันทีที่เปิด
+            fetchLocalData();
+
             const url = localStorage.getItem('mfc_sp_url');
             const key = localStorage.getItem('mfc_sp_key');
 
@@ -340,20 +343,18 @@
                         .subscribe();
 
                     await fetchCloudData();
-                    return;
                 } catch (e) {
                     console.error("Supabase connect error:", e);
                 }
             }
-
-            fetchLocalData();
         }
 
         async function fetchCloudData() {
             if (!supabaseClient) return;
             const { data, error } = await supabaseClient.from('mfc_policies').select('*').order('id', { ascending: true });
-            if (!error && data) {
+            if (!error && data && data.length > 0) {
                 policies = data;
+                saveToLocalStorage();
                 renderTable();
             }
         }
@@ -361,7 +362,11 @@
         function fetchLocalData() {
             const local = localStorage.getItem('mfc_policies');
             if (local) {
-                try { policies = JSON.parse(local); } catch(e) { policies = [...initialDefaultData]; }
+                try { 
+                    policies = JSON.parse(local); 
+                } catch(e) { 
+                    policies = [...initialDefaultData]; 
+                }
             } else {
                 policies = [...initialDefaultData];
                 saveToLocalStorage();
@@ -371,17 +376,23 @@
 
         function saveToLocalStorage() {
             localStorage.setItem('mfc_policies', JSON.stringify(policies));
-            broadcastChannel.postMessage('update');
+            try { broadcastChannel.postMessage('update'); } catch(e) {}
         }
 
         async function syncData(updatedList) {
             policies = updatedList;
             renderTable();
 
+            // บันทึกลง LocalStorage ทุกครั้ง
+            saveToLocalStorage();
+
+            // หากเชื่อมต่อ Supabase ไว้ ให้บันทึกขึ้น Cloud ด้วย
             if (supabaseClient) {
-                await supabaseClient.from('mfc_policies').upsert(policies);
-            } else {
-                saveToLocalStorage();
+                try {
+                    await supabaseClient.from('mfc_policies').upsert(policies);
+                } catch (err) {
+                    console.error("Cloud sync error:", err);
+                }
             }
         }
 
@@ -567,7 +578,7 @@
             if (confirm('ยืนยันลบแผนลงทุนนี้?')) {
                 const updated = policies.filter(p => p.id !== id);
                 if (supabaseClient) {
-                    await supabaseClient.from('mfc_policies').delete().eq('id', id);
+                    try { await supabaseClient.from('mfc_policies').delete().eq('id', id); } catch(e){}
                 }
                 await syncData(updated);
             }
