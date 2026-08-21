@@ -2,15 +2,27 @@
 <html lang="th" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MFC Provident Fund Dashboard - Live Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MFC Provident Fund Dashboard</title>
+    
+    <!-- PWA Settings -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#090D16">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- iOS Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MFC Tracker">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3309/3309991.png">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts (Prompt) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Supabase JS Client for Realtime Cloud Sync -->
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
@@ -34,18 +46,16 @@
         };
     </script>
     <style>
-        body { font-family: 'Prompt', sans-serif; }
+        body { font-family: 'Prompt', sans-serif; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="bg-mfc-darkBg text-slate-100 antialiased min-h-screen flex flex-col selection:bg-mfc-orange selection:text-white">
 
-    <!-- Regular Header Section (Unsticky / Scrolls with page) -->
+    <!-- Header Section (Unsticky / Scrolls with page) -->
     <header class="bg-mfc-darkHeader text-white border-b border-mfc-darkBorder shadow-2xl relative">
         <div class="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 space-y-3">
             
-            <!-- Top Controls Row -->
             <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-                <!-- Brand & Account Info -->
                 <div class="flex items-center justify-between lg:justify-start space-x-3">
                     <div class="flex items-center space-x-3">
                         <div class="bg-mfc-orange text-white w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg shadow-mfc-orange/20">
@@ -59,22 +69,18 @@
                             <p class="text-[10px] sm:text-[11px] text-slate-400">สูตร: มูลค่ารวม = จำนวนหน่วย × NAV/หน่วย</p>
                         </div>
                     </div>
-                    <!-- Mobile Sync Badge -->
                     <div id="syncStatusBadge" class="lg:hidden bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg flex items-center space-x-1 text-[10px] text-emerald-400">
                         <i class="fa-solid fa-circle text-[8px] animate-pulse"></i>
                         <span id="syncTextMobile">Local</span>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-end gap-2 text-xs">
-                    
                     <button type="button" id="btnCloudSettings" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-2.5 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all">
                         <i class="fa-solid fa-cloud text-sky-400"></i>
                         <span id="cloudStatusText">ตั้งค่า Cloud Sync</span>
                     </button>
 
-                    <!-- Hidden File Input -->
                     <input type="file" id="importFileInput" accept=".json" class="hidden">
 
                     <button type="button" id="btnImport" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-all">
@@ -91,7 +97,7 @@
                 </div>
             </div>
 
-            <!-- Full 6-Column Grid Real-time Market Indices Section -->
+            <!-- Market Indices Section -->
             <div class="pt-2.5 border-t border-slate-800/80 space-y-2 text-[11px] w-full">
                 <div class="flex items-center justify-between text-slate-400 font-medium px-1">
                     <span class="flex items-center gap-1.5 text-mfc-orange font-semibold">
@@ -100,9 +106,7 @@
                     <span id="liveApiTimer" class="text-[10px] text-slate-500 font-mono">กำลังอัปเดต...</span>
                 </div>
 
-                <!-- 6 Equal Boxes Grid Layout -->
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
-                    <!-- Box 1: S&P 500 -->
                     <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
                         <span class="text-slate-400 text-[10px] truncate">S&P 500 (^GSPC)</span>
                         <div class="flex items-baseline justify-between font-mono mt-0.5">
@@ -110,8 +114,6 @@
                             <span id="chg-sp500" class="text-[10px] font-semibold text-slate-500">0.00%</span>
                         </div>
                     </div>
-
-                    <!-- Box 2: Nasdaq -->
                     <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14 border-sky-500/30">
                         <span class="text-sky-300 text-[10px] font-medium truncate">Nasdaq (^IXIC)</span>
                         <div class="flex items-baseline justify-between font-mono mt-0.5">
@@ -119,8 +121,6 @@
                             <span id="chg-nasdaq" class="text-[10px] font-semibold text-slate-500">0.00%</span>
                         </div>
                     </div>
-
-                    <!-- Box 3: MSCI ACWI -->
                     <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
                         <span class="text-slate-400 text-[10px] truncate">MSCI ACWI (ACWI)</span>
                         <div class="flex items-baseline justify-between font-mono mt-0.5">
@@ -128,8 +128,6 @@
                             <span id="chg-acwi" class="text-[10px] font-semibold text-slate-500">0.00%</span>
                         </div>
                     </div>
-
-                    <!-- Box 4: MSCI EM -->
                     <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
                         <span class="text-slate-400 text-[10px] truncate">MSCI EM (EEM)</span>
                         <div class="flex items-baseline justify-between font-mono mt-0.5">
@@ -137,8 +135,6 @@
                             <span id="chg-em" class="text-[10px] font-semibold text-slate-500">0.00%</span>
                         </div>
                     </div>
-
-                    <!-- Box 5: Gold Spot -->
                     <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
                         <span class="text-amber-400/90 text-[10px] truncate">Gold Spot (GC=F)</span>
                         <div class="flex items-baseline justify-between font-mono mt-0.5">
@@ -146,8 +142,6 @@
                             <span id="chg-gold" class="text-[10px] font-semibold text-slate-500">0.00%</span>
                         </div>
                     </div>
-
-                    <!-- Box 6: Euro Stoxx 50 -->
                     <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-between h-14">
                         <span class="text-slate-400 text-[10px] truncate">Euro Stoxx 50 (FEZ)</span>
                         <div class="flex items-baseline justify-between font-mono mt-0.5">
@@ -306,8 +300,17 @@
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- Application Script & SW Registration -->
     <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('PWA Service Worker registered:', reg.scope))
+                    .catch((err) => console.error('PWA Service Worker registration failed:', err));
+            });
+        }
+
         const initialDefaultData = [
             { id: 1, code: 'MPF07', name: 'IGOLD-G', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 11038.65 },
             { id: 2, code: 'MPF15', name: 'MGTECH', nav: 10.8043, ytd: 33.94, cost: 20718.06, units: 2254.7689, prevAmt: 24361.24 },
@@ -382,7 +385,6 @@
             }
         }
 
-        // Fetch Real-time Market Indices (6 ช่อง)
         async function fetchLiveMarketData() {
             const symbols = [
                 { idVal: 'idx-sp500', idChg: 'chg-sp500', ticker: '^GSPC', fallback: 5600.25 },
@@ -473,19 +475,16 @@
                 totalCostSum += item.cost || 0;
                 totalUnitsSum += item.units || 0;
 
-                // คำนวณผลตอบแทนรายรายการ
                 const dailyReturnAmt = item.totalAmt - (item.prevAmt || item.totalAmt);
                 const dailyReturnPct = (item.prevAmt && item.prevAmt > 0) ? ((dailyReturnAmt / item.prevAmt) * 100) : 0;
 
                 const profitAmt = item.totalAmt - (item.cost || 0);
                 const profitPct = (item.cost && item.cost > 0) ? ((profitAmt / item.cost) * 100) : 0;
 
-                // คำนวณ YTD บาท = มูลค่าปัจจุบัน - (มูลค่าปัจจุบัน / (1 + YTD%))
                 const ytdValPct = item.ytd || 0;
                 const ytdAmt = ytdValPct !== 0 ? (item.totalAmt - (item.totalAmt / (1 + (ytdValPct / 100)))) : 0;
                 totalYtdAmtSum += ytdAmt;
 
-                // Helper Format HTML บาท + (%)
                 const fmtValPct = (amt, pct) => {
                     const sign = amt >= 0 ? '+' : '';
                     const color = amt >= 0 ? 'text-emerald-400' : 'text-rose-400';
@@ -514,7 +513,6 @@
                 tbody.appendChild(tr);
             });
 
-            // คำนวณยอดรวมสุทธิภาพรวมพอร์ต
             const totalProfitAmt = totalBalToday - totalCostSum;
             const overallProfitPct = totalCostSum > 0 ? (totalProfitAmt * 100) / totalCostSum : 0;
 
@@ -523,13 +521,11 @@
 
             const overallYtdPct = (totalBalToday > 0 && (totalBalToday - totalYtdAmtSum) > 0) ? (totalYtdAmtSum / (totalBalToday - totalYtdAmtSum)) * 100 : 0;
 
-            // ฟังก์ชันจัดรูปแบบการ์ดสรุป
             const formatCardText = (amt, pct) => {
                 const sign = amt >= 0 ? '+' : '';
                 return `${sign}฿${Math.abs(amt).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pct.toFixed(2)}%)`;
             };
 
-            // อัปเดตการ์ดสรุป 4 กล่อง
             document.getElementById('portfolioBalance').innerText = '฿' + totalBalToday.toLocaleString('en-US', {minimumFractionDigits: 2});
             document.getElementById('totalUnitsBadge').innerText = totalUnitsSum.toLocaleString('en-US', {minimumFractionDigits: 4}) + ' Units';
 
