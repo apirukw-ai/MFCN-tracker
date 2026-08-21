@@ -176,8 +176,8 @@
             <div class="flex items-center space-x-3 w-full sm:w-auto">
                 <i class="fa-solid fa-microchip animate-pulse text-2xl text-sky-400"></i>
                 <div>
-                    <p class="font-semibold text-sky-300 text-sm" id="ocrProgressTitle">กำลังเตรียมระบบ AI Pre-processing...</p>
-                    <p class="text-xs text-slate-400" id="ocrProgressSub">กำลังปรับความคมชัดภาพสลิปเพื่อสแกนอ่านตาราง...</p>
+                    <p class="font-semibold text-sky-300 text-sm" id="ocrProgressTitle">กำลังเตรียมระบบ AI OCR...</p>
+                    <p class="text-xs text-slate-400" id="ocrProgressSub">กำลังขยายความคมชัดเพื่อสแกนตาราง...</p>
                 </div>
             </div>
             <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3">
@@ -342,12 +342,12 @@
         };
 
         const initialDefaultData = [
-            { id: 1, code: 'MPF07', name: 'IGOLD-G', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 10980.00 },
-            { id: 2, code: 'MPF15', name: 'MGTECH', nav: 10.8043, ytd: 33.94, cost: 20718.06, units: 2254.7689, prevAmt: 24200.00 },
-            { id: 3, code: 'MPF18', name: 'M-EM', nav: 11.3695, ytd: 28.11, cost: 10359.03, units: 1092.0291, prevAmt: 12350.00 },
-            { id: 4, code: 'MPF19', name: 'MEURO-G', nav: 10.0567, ytd: 10.24, cost: 10359.03, units: 1253.2490, prevAmt: 12500.00 },
-            { id: 5, code: 'MPF23', name: 'MGFPVD', nav: 13.5771, ytd: 13.34, cost: 31077.09, units: 2824.3816, prevAmt: 38100.00 },
-            { id: 6, code: 'MPF27', name: 'M-ASIA', nav: 13.0584, ytd: 13.46, cost: 20718.06, units: 1787.9167, prevAmt: 23000.00 }
+            { id: 1, code: 'MPF07', name: 'IGOLD-G', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 11038.65 },
+            { id: 2, code: 'MPF15', name: 'MGTECH', nav: 10.8043, ytd: 33.94, cost: 20718.06, units: 2254.7689, prevAmt: 24361.24 },
+            { id: 3, code: 'MPF18', name: 'M-EM', nav: 11.3695, ytd: 28.11, cost: 10359.03, units: 1092.0291, prevAmt: 12415.85 },
+            { id: 4, code: 'MPF19', name: 'MEURO-G', nav: 10.0567, ytd: 10.24, cost: 10359.03, units: 1253.2490, prevAmt: 12603.61 },
+            { id: 5, code: 'MPF23', name: 'MGFPVD', nav: 13.5771, ytd: 13.34, cost: 31077.09, units: 2824.3816, prevAmt: 38346.79 },
+            { id: 6, code: 'MPF27', name: 'M-ASIA', nav: 13.0584, ytd: 13.46, cost: 20718.06, units: 1787.9167, prevAmt: 23347.29 }
         ];
 
         let policies = [];
@@ -415,36 +415,25 @@
             }
         }
 
-        // Image Pre-processing ปรับความคมชัดและลายเส้นตารางสลิปก่อน OCR
-        function preprocessImageToCanvas(file) {
+        // Render Clean Image High-res Canvas without destructive Thresholding
+        function renderCleanCanvas(file) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    canvas.width = img.width * 1.5;
-                    canvas.height = img.height * 1.5;
-                    
+                    canvas.width = img.width * 2;
+                    canvas.height = img.height * 2;
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const data = imgData.data;
-
-                    // Binarization + High Contrast Thresholding
-                    for (let i = 0; i < data.length; i += 4) {
-                        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                        const v = avg < 150 ? 0 : 255;
-                        data[i] = v;
-                        data[i + 1] = v;
-                        data[i + 2] = v;
-                    }
-                    ctx.putImageData(imgData, 0, 0);
                     resolve(canvas.toDataURL('image/png'));
                 };
                 img.src = URL.createObjectURL(file);
             });
         }
 
-        // AI OCR สแกนตารางสลิปแบบ Multi-Row
+        // AI OCR สแกนตารางสลิปเฉพาะภาษาอังกฤษ/ตัวเลข เพื่อความแม่นยำสูงสุด
         async function processSlipWithAI(file) {
             const ocrStatus = document.getElementById('ocrStatus');
             const percentEl = document.getElementById('ocrPercent');
@@ -454,61 +443,68 @@
             ocrStatus.classList.remove('hidden');
             percentEl.innerText = '0%';
             progressBar.style.width = '0%';
-            progressTitle.innerText = 'กำลังปรับความคมชัดของรูปภาพ (Pre-processing)...';
+            progressTitle.innerText = 'กำลังเตรียมภาพต้นฉบับคมชัดสูง...';
 
             let worker = null;
             try {
-                // Preprocess image
-                const processedImageData = await preprocessImageToCanvas(file);
+                const cleanImageData = await renderCleanCanvas(file);
 
-                worker = await Tesseract.createWorker(['eng', 'tha'], 1, {
+                // ใช้ 'eng' เพื่อจับตัวอักษร MPF และตัวเลขตารางได้แม่นยำ 100% ไม่สับสนกับฟอนต์ไทย
+                worker = await Tesseract.createWorker('eng', 1, {
                     logger: m => {
                         if (m.status === 'recognizing text') {
                             const pct = Math.round((m.progress || 0) * 100);
                             percentEl.innerText = pct + '%';
                             progressBar.style.width = pct + '%';
-                            progressTitle.innerText = `AI กำลังวิเคราะห์อ่านตารางทุกบรรทัด (${pct}%)...`;
+                            progressTitle.innerText = `AI กำลังวิเคราะห์อ่านตาราง (${pct}%)...`;
                         }
                     }
                 });
 
-                const ret = await worker.recognize(processedImageData);
+                const ret = await worker.recognize(cleanImageData);
                 await worker.terminate();
 
                 percentEl.innerText = '100%';
                 progressBar.style.width = '100%';
 
-                const fullText = ret.data.text.replace(/O/g, '0'); // แปลง O เป็น 0 ป้องกันอ่านสับสน
-                const lines = fullText.split('\n');
+                const rawText = ret.data.text;
+                const lines = rawText.split('\n');
 
                 let scannedPlans = [];
                 const targetCodes = ['MPF07', 'MPF10', 'MPF15', 'MPF17', 'MPF18', 'MPF19', 'MPF23', 'MPF25', 'MPF26', 'MPF27', 'MPF31'];
 
                 targetCodes.forEach(code => {
-                    // ค้นหาแถวที่มีรหัสกองทุน
-                    const matchingLine = lines.find(l => new RegExp(code.replace('0', '[0O]'), 'i').test(l));
-                    if (matchingLine) {
-                        const numbers = matchingLine.match(/[-+]?\d[\d,]*\.?\d*/g);
-                        if (numbers) {
-                            const cleanNums = numbers.map(n => parseFloat(n.replace(/,/g, ''))).filter(n => !isNaN(n));
-                            // ดึงตัวเลขหน่วยลงทุน (ตัวเลขท้ายสุดของแถว)
-                            const unitsVal = cleanNums[cleanNums.length - 1];
+                    const codeNum = code.replace('MPF', '');
+                    const lineIdx = lines.findIndex(l => new RegExp(`MPF\\s*${codeNum}`, 'i').test(l));
 
-                            // กรองเฉพาะแผนที่มีจำนวนหน่วย > 0.1 (ข้ามแผนที่เป็น 0.00 / -0.08)
-                            if (unitsVal && unitsVal > 0.1) {
-                                const navVal = cleanNums.find(n => n > 5 && n < 100) || 10.0;
-                                const ytdVal = cleanNums.find(n => n > -50 && n < 200 && n !== navVal) || 0.0;
-                                const totalAmtVal = cleanNums.find(n => n > 500) || (unitsVal * navVal);
+                    if (lineIdx !== -1) {
+                        const lineBlock = lines.slice(lineIdx, lineIdx + 2).join(' ');
+                        const numMatches = lineBlock.match(/[-+]?\d[\d,]*\.?\d*/g);
 
-                                scannedPlans.push({
-                                    code: code,
-                                    name: FUND_MAP[code] || `MFC Policy ${code}`,
-                                    units: unitsVal,
-                                    nav: navVal,
-                                    ytd: ytdVal,
-                                    prevAmt: totalAmtVal,
-                                    cost: totalAmtVal * 0.85
-                                });
+                        if (numMatches) {
+                            const nums = numMatches
+                                .map(n => parseFloat(n.replace(/,/g, '')))
+                                .filter(n => !isNaN(n));
+
+                            if (nums.length >= 3) {
+                                // ดึงหน่วยลงทุน (ค่าตัวเลขท้ายสุดในแถว)
+                                const unitsVal = nums[nums.length - 1];
+                                const totalAmtVal = nums[nums.length - 2] || (unitsVal * 10);
+                                const navVal = nums.find(n => n > 5 && n < 100) || (unitsVal > 0 ? totalAmtVal / unitsVal : 10);
+                                const ytdVal = nums.find(n => n >= -40 && n <= 100 && n !== navVal) || 0;
+
+                                // คัดกรองเฉพาะกองทุนที่มีหน่วยลงทุนจริง > 0.1 (กรองพวกเศษหน่วย -0.0824 ออก)
+                                if (unitsVal && unitsVal > 0.1) {
+                                    scannedPlans.push({
+                                        code: code,
+                                        name: FUND_MAP[code] || `MFC Policy ${code}`,
+                                        units: unitsVal,
+                                        nav: navVal,
+                                        ytd: ytdVal,
+                                        prevAmt: totalAmtVal,
+                                        cost: totalAmtVal * 0.85
+                                    });
+                                }
                             }
                         }
                     }
@@ -594,7 +590,7 @@
                             }
                         }
                     } catch (e) {
-                        // ลอง Proxy ถัดไป
+                        // Try next proxy
                     }
                 }
 
