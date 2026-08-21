@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts (Prompt) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Supabase JS SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js OCR Engine -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     
@@ -31,11 +29,11 @@
                         }
                     },
                     fontFamily: {
-                        sans: ['Prompt', 'sans-serif'],
+                        sans: ['Prompt', 'sans-serif']
                     }
                 }
             }
-        }
+        };
     </script>
     <style>
         body { font-family: 'Prompt', sans-serif; }
@@ -43,13 +41,13 @@
 </head>
 <body class="bg-mfc-darkBg text-slate-100 antialiased min-h-screen flex flex-col selection:bg-mfc-orange selection:text-white">
 
-    <!-- Unified Sticky Header Section -->
-    <header class="bg-mfc-darkHeader text-white sticky top-0 z-50 border-b border-mfc-darkBorder shadow-2xl">
+    <!-- Sticky Header Section -->
+    <header class="bg-mfc-darkHeader text-white sticky top-0 z-40 border-b border-mfc-darkBorder shadow-2xl">
         <div class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 space-y-2.5">
             
             <!-- Top Controls Row -->
             <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
-                <!-- Brand, Title & Account Info -->
+                <!-- Brand & Account Info -->
                 <div class="flex items-center space-x-3 shrink-0">
                     <div class="bg-mfc-orange text-white w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg shadow-mfc-orange/20">
                         MFC
@@ -63,33 +61,33 @@
                     </div>
                 </div>
 
-                <!-- Fully Active Action Buttons & Status -->
+                <!-- Action Buttons -->
                 <div class="flex flex-wrap items-center justify-end gap-2 text-xs w-full lg:w-auto">
                     <div class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg flex items-center space-x-2 text-slate-300">
                         <i class="fa-solid fa-wifi text-amber-500 text-xs"></i>
                         <span class="text-[11px]">Sync ID: <strong class="text-amber-400 font-mono">my-mfc-9841205</strong></span>
-                        <span class="text-emerald-400 font-medium border-l border-slate-800 pl-2 text-[11px]" id="syncStatus">Live Ready</span>
+                        <span class="text-emerald-400 font-medium border-l border-slate-800 pl-2 text-[11px]">Live Ready</span>
                     </div>
 
-                    <!-- Working Export -->
-                    <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all shadow-sm">
+                    <!-- Export Button -->
+                    <button type="button" id="btnExport" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all shadow-sm">
                         <i class="fa-solid fa-download text-sky-400"></i> Export JSON
                     </button>
 
-                    <!-- Working Import -->
-                    <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importData(event)">
-                    <button onclick="document.getElementById('importFileInput').click()" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all shadow-sm">
+                    <!-- Import Button -->
+                    <input type="file" id="importFileInput" accept=".json" class="hidden">
+                    <button type="button" id="btnImport" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all shadow-sm">
                         <i class="fa-solid fa-upload text-emerald-400"></i> Import JSON
                     </button>
 
-                    <!-- Working OCR Scan -->
-                    <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
-                    <button onclick="document.getElementById('fileInput').click()" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-sky-600/20 transition-all">
+                    <!-- OCR Scan Button -->
+                    <input type="file" id="ocrFileInput" accept="image/*" class="hidden">
+                    <button type="button" id="btnOcr" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-sky-600/20 transition-all">
                         <i class="fa-solid fa-camera"></i> สแกนรูป/สลิป
                     </button>
 
-                    <!-- Working Add Plan -->
-                    <button onclick="openModal('add')" class="bg-mfc-orange hover:bg-mfc-hover active:scale-95 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-mfc-orange/20 transition-all">
+                    <!-- Add Plan Button -->
+                    <button type="button" id="btnAddPlan" class="bg-mfc-orange hover:bg-mfc-hover active:scale-95 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-mfc-orange/20 transition-all">
                         <i class="fa-solid fa-plus"></i> เพิ่มแผนลงทุน
                     </button>
                 </div>
@@ -150,16 +148,16 @@
     <!-- Main Container -->
     <main class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-grow space-y-6">
         
-        <!-- Progress / OCR Status Bar -->
-        <div id="ocrStatus" class="hidden bg-slate-900 border border-sky-500/40 rounded-xl p-3 text-xs text-sky-400 flex items-center justify-between shadow-lg">
+        <!-- Progress Bar -->
+        <div id="ocrStatus" class="hidden bg-slate-900 border border-sky-500/50 rounded-xl p-4 text-xs text-sky-400 flex items-center justify-between shadow-xl">
             <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-spinner animate-spin text-base"></i>
+                <i class="fa-solid fa-spinner animate-spin text-xl text-sky-400"></i>
                 <div>
-                    <p class="font-semibold text-sky-300" id="ocrProgressTitle">กำลังประมวลผลรูปภาพด้วย AI OCR Engine...</p>
-                    <p class="text-[11px] text-slate-400" id="ocrProgressSub">กำลังถอดรหัสข้อความและตารางจากสลิป MFC</p>
+                    <p class="font-semibold text-sky-300 text-sm" id="ocrProgressTitle">กำลังอ่านไฟล์ภาพและถอดรหัสข้อความ...</p>
+                    <p class="text-xs text-slate-400" id="ocrProgressSub">กำลังประมวลผลตารางและตัวเลขจากสลิป MFC</p>
                 </div>
             </div>
-            <span id="ocrPercent" class="font-mono font-bold text-sky-300 text-sm">0%</span>
+            <span id="ocrPercent" class="font-mono font-bold text-sky-300 text-base bg-sky-950 px-3 py-1 rounded-lg border border-sky-800">0%</span>
         </div>
 
         <!-- Portfolio Summary Cards -->
@@ -237,79 +235,63 @@
         <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
                 <h3 id="modalTitle" class="font-bold text-slate-100 text-base">เพิ่มแผนการลงทุนใหม่</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-lg transition-colors">
+                <button type="button" id="btnCloseModal" class="text-slate-400 hover:text-white text-lg transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <form id="policyForm" onsubmit="savePolicy(event)" class="space-y-3 text-xs">
+            <form id="policyForm" class="space-y-3 text-xs">
                 <input type="hidden" id="policyId">
                 <div>
                     <label class="block font-medium text-slate-300 mb-1">รหัสแผน/นโยบาย (เช่น MPF23)</label>
-                    <input type="text" id="inputCode" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                    <input type="text" id="inputCode" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                 </div>
                 <div>
                     <label class="block font-medium text-slate-300 mb-1">ชื่อกองทุน / รายละเอียด (เช่น MGFPVD)</label>
-                    <input type="text" id="inputName" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                    <input type="text" id="inputName" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block font-medium text-slate-300 mb-1">จำนวนหน่วยรวม</label>
-                        <input type="number" step="0.0001" id="inputUnits" oninput="autoCalcTotal()" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                        <input type="number" step="0.0001" id="inputUnits" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                     </div>
                     <div>
                         <label class="block font-medium text-amber-400 mb-1">NAV/หน่วย (บาท)</label>
-                        <input type="number" step="0.0001" id="inputNav" oninput="autoCalcTotal()" required class="w-full bg-slate-800 border border-amber-500/50 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400">
+                        <input type="number" step="0.0001" id="inputNav" required class="w-full bg-slate-800 border border-amber-500/50 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-amber-400">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">มูลค่ารวมวันนี้ (อัตโนมัติ)</label>
-                        <input type="number" step="0.01" id="inputTotalAmt" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                        <label class="block font-medium text-slate-300 mb-1">มูลค่ารวมวันนี้ (บาท)</label>
+                        <input type="number" step="0.01" id="inputTotalAmt" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                     </div>
                     <div>
                         <label class="block font-medium text-slate-300 mb-1">เงินรวมเมื่อวาน (บาท)</label>
-                        <input type="number" step="0.01" id="inputPrevAmt" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                        <input type="number" step="0.01" id="inputPrevAmt" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block font-medium text-slate-300 mb-1">ต้นทุนสะสม (บาท)</label>
-                        <input type="number" step="0.01" id="inputCost" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                        <input type="number" step="0.01" id="inputCost" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                     </div>
                     <div>
                         <label class="block font-medium text-slate-300 mb-1">ผลตอบแทน YTD (%)</label>
-                        <input type="number" step="0.01" id="inputYtd" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange focus:ring-1 focus:ring-mfc-orange">
+                        <input type="number" step="0.01" id="inputYtd" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                     </div>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-4 border-t border-slate-800 mt-2">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-200 font-medium">ยกเลิก</button>
+                    <button type="button" id="btnCancelModal" class="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-200 font-medium">ยกเลิก</button>
                     <button type="submit" class="px-5 py-2 rounded-xl bg-mfc-orange hover:bg-mfc-hover text-white font-medium shadow-lg">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- JavaScript Application Logic -->
+    <!-- Application Script (Pure Clean JS Event Listeners) -->
     <script>
-        const SUPABASE_URL = 'https://iproktvvetsbxmpptuj.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw
-';
-        let db = null;
-
-        // Try initializing Supabase safely
-        try {
-            if (SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('วาง_ANON')) {
-                db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
-        } catch (e) {
-            console.warn("Supabase not configured, running on LocalStorage mode.");
-        }
-
-        let policies = [];
-
-        // Exact Data extracted directly from MFC Statement Image
+        // Default Data Set
         const mfcSlipDefaultData = [
             { id: 1, code: 'MPF07', name: 'MFC Policy 07', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 10980.00 },
             { id: 2, code: 'MPF10', name: 'MFC Policy 10', nav: 11.8459, ytd: 31.11, cost: 0.00, units: -0.0824, prevAmt: -0.98 },
@@ -324,38 +306,20 @@
             { id: 11, code: 'MPF31', name: 'MFC Policy 31', nav: 10.8612, ytd: 6.38, cost: 0.00, units: -0.1062, prevAmt: -1.15 }
         ];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchPolicies();
-            startRealtimeIndices();
-        });
+        let policies = [];
 
-        async function fetchPolicies() {
-            if (db) {
-                try {
-                    const { data, error } = await db.from('policies').select('*').order('code', { ascending: true });
-                    if (!error && data && data.length > 0) {
-                        policies = data.map(item => ({
-                            id: item.id,
-                            code: item.code,
-                            name: item.name || item.code,
-                            units: Number(item.units || 0),
-                            nav: Number(item.nav || 0),
-                            prevAmt: Number(item.prev_amt || item.prevAmt || 0),
-                            cost: Number(item.cost || 0),
-                            ytd: Number(item.ytd || 0)
-                        }));
-                        renderTable();
-                        return;
-                    }
-                } catch (e) {
-                    console.error("Cloud fetch failed, using local storage:", e);
-                }
-            }
+        function saveToLocalStorage() {
+            localStorage.setItem('mfc_policies', JSON.stringify(policies));
+        }
 
-            // LocalStorage Fallback
+        function fetchPolicies() {
             const localData = localStorage.getItem('mfc_policies');
             if (localData) {
-                policies = JSON.parse(localData);
+                try {
+                    policies = JSON.parse(localData);
+                } catch (e) {
+                    policies = [...mfcSlipDefaultData];
+                }
             } else {
                 policies = [...mfcSlipDefaultData];
                 saveToLocalStorage();
@@ -363,20 +327,10 @@
             renderTable();
         }
 
-        function saveToLocalStorage() {
-            localStorage.setItem('mfc_policies', JSON.stringify(policies));
-        }
-
-        function autoCalcTotal() {
-            const units = parseFloat(document.getElementById('inputUnits').value) || 0;
-            const nav = parseFloat(document.getElementById('inputNav').value) || 0;
-            if (units !== 0 && nav !== 0) {
-                document.getElementById('inputTotalAmt').value = (units * nav).toFixed(2);
-            }
-        }
-
         function renderTable() {
             const tbody = document.getElementById('policyTableBody');
+            if (!tbody) return;
+            
             tbody.innerHTML = '';
 
             let totalBalToday = 0;
@@ -384,10 +338,10 @@
             let totalCostSum = 0;
             let totalUnitsSum = 0;
 
-            document.getElementById('recordCount').innerText = `${policies.length} รายการ`;
+            document.getElementById('recordCount').innerText = policies.length + ' รายการ';
 
             if (policies.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500">ไม่พบข้อมูล กดปุ่ม <strong class="text-sky-400">สแกนรูป/สลิป</strong> หรือ <strong class="text-mfc-orange">+ เพิ่มแผนลงทุน</strong> ได้ทันที</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">ไม่พบข้อมูล กดปุ่มสแกนรูป/สลิป หรือเพิ่มแผนลงทุนได้ทันที</td></tr>';
                 return;
             }
 
@@ -396,37 +350,42 @@
                 item.totalAmt = currentVal;
 
                 totalBalToday += item.totalAmt;
-                totalBalPrev += item.prevAmt;
-                totalCostSum += item.cost;
-                totalUnitsSum += item.units;
+                totalBalPrev += item.prevAmt || 0;
+                totalCostSum += item.cost || 0;
+                totalUnitsSum += item.units || 0;
 
-                const dailyReturnPct = item.totalAmt !== 0 ? ((item.totalAmt - item.prevAmt) * 100) / Math.abs(item.totalAmt) : 0;
-                const profitPctFromCost = item.cost > 0 ? ((item.totalAmt - item.cost) * 100) / item.cost : 0;
+                const dailyReturnPct = item.totalAmt !== 0 ? (((item.totalAmt - item.prevAmt) * 100) / Math.abs(item.totalAmt)) : 0;
+                const profitPctFromCost = item.cost > 0 ? (((item.totalAmt - item.cost) * 100) / item.cost) : 0;
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-800/60 transition-colors border-b border-slate-800/80";
+                
+                const dailyClass = dailyReturnPct >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const profitClass = profitPctFromCost >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const ytdClass = item.ytd >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
                 tr.innerHTML = `
                     <td class="p-3.5">
                         <span class="font-bold text-mfc-orange">${item.code}</span>
                         <span class="text-[11px] text-slate-400 block">${item.name}</span>
                     </td>
-                    <td class="p-3.5 text-center font-mono font-medium">${item.units.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</td>
-                    <td class="p-3.5 text-right font-mono font-bold text-amber-400">${item.nav.toFixed(4)}</td>
-                    <td class="p-3.5 text-right font-bold text-slate-100">฿${item.totalAmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    <td class="p-3.5 text-right font-bold ${dailyReturnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                    <td class="p-3.5 text-center font-mono font-medium">${Number(item.units).toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</td>
+                    <td class="p-3.5 text-right font-mono font-bold text-amber-400">${Number(item.nav).toFixed(4)}</td>
+                    <td class="p-3.5 text-right font-bold text-slate-100">฿${Number(item.totalAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="p-3.5 text-right font-bold ${dailyClass}">
                         ${dailyReturnPct >= 0 ? '+' : ''}${dailyReturnPct.toFixed(2)}%
                     </td>
-                    <td class="p-3.5 text-right font-bold ${profitPctFromCost >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                    <td class="p-3.5 text-right font-bold ${profitClass}">
                         ${profitPctFromCost >= 0 ? '+' : ''}${profitPctFromCost.toFixed(2)}%
                     </td>
-                    <td class="p-3.5 text-right font-bold ${item.ytd >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-                        ${item.ytd >= 0 ? '+' : ''}${item.ytd.toFixed(2)}%
+                    <td class="p-3.5 text-right font-bold ${ytdClass}">
+                        ${item.ytd >= 0 ? '+' : ''}${Number(item.ytd).toFixed(2)}%
                     </td>
                     <td class="p-3.5 text-center space-x-1">
-                        <button onclick="openModal('edit', ${item.id})" class="text-slate-400 hover:text-blue-400 p-1.5 rounded transition-colors" title="แก้ไข">
+                        <button type="button" onclick="editPolicy(${item.id})" class="text-slate-400 hover:text-blue-400 p-1.5 rounded transition-colors" title="แก้ไข">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
-                        <button onclick="deletePolicy(${item.id})" class="text-slate-400 hover:text-rose-400 p-1.5 rounded transition-colors" title="ลบ">
+                        <button type="button" onclick="deletePolicy(${item.id})" class="text-slate-400 hover:text-rose-400 p-1.5 rounded transition-colors" title="ลบ">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </td>
@@ -446,18 +405,74 @@
             document.getElementById('totalCostAmt').innerText = '฿' + totalCostSum.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
-        // Action: Export JSON File
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(policies, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `MFC_Portfolio_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+        function openModal(mode, id = null) {
+            const modal = document.getElementById('policyModal');
+            const title = document.getElementById('modalTitle');
+            const form = document.getElementById('policyForm');
+
+            modal.classList.remove('hidden');
+
+            if (mode === 'edit' && id !== null) {
+                title.innerText = 'แก้ไขแผนการลงทุน';
+                const target = policies.find(p => p.id === id);
+                if (target) {
+                    document.getElementById('policyId').value = target.id;
+                    document.getElementById('inputCode').value = target.code;
+                    document.getElementById('inputName').value = target.name;
+                    document.getElementById('inputUnits').value = target.units;
+                    document.getElementById('inputNav').value = target.nav;
+                    document.getElementById('inputTotalAmt').value = (target.units * target.nav).toFixed(2);
+                    document.getElementById('inputPrevAmt').value = target.prevAmt || 0;
+                    document.getElementById('inputCost').value = target.cost || 0;
+                    document.getElementById('inputYtd').value = target.ytd || 0;
+                }
+            } else {
+                title.innerText = 'เพิ่มแผนการลงทุนใหม่';
+                form.reset();
+                document.getElementById('policyId').value = '';
+            }
         }
 
-        // Action: Import JSON File
+        function closeModal() {
+            document.getElementById('policyModal').classList.add('hidden');
+        }
+
+        function editPolicy(id) {
+            openModal('edit', id);
+        }
+
+        function deletePolicy(id) {
+            if (confirm('คุณต้องการลบแผน/นโยบายการลงทุนนี้ใช่หรือไม่?')) {
+                policies = policies.filter(p => p.id !== id);
+                saveToLocalStorage();
+                renderTable();
+            }
+        }
+
+        function autoCalcTotal() {
+            const units = parseFloat(document.getElementById('inputUnits').value) || 0;
+            const nav = parseFloat(document.getElementById('inputNav').value) || 0;
+            if (units !== 0 && nav !== 0) {
+                document.getElementById('inputTotalAmt').value = (units * nav).toFixed(2);
+            }
+        }
+
+        // Export Function
+        function exportData() {
+            const dataStr = JSON.stringify(policies, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `MFC_Portfolio_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Import Function
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -479,10 +494,10 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Reset input
+            event.target.value = '';
         }
 
-        // Action: OCR Scan Slip
+        // OCR Scan Processing
         async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -490,10 +505,12 @@
             const ocrStatus = document.getElementById('ocrStatus');
             const percentEl = document.getElementById('ocrPercent');
             const progressTitle = document.getElementById('ocrProgressTitle');
-            
+            const progressSub = document.getElementById('ocrProgressSub');
+
             ocrStatus.classList.remove('hidden');
             percentEl.innerText = "20%";
-            progressTitle.innerText = "กำลังวิเคราะห์โครงสร้างตารางภาพสลิป...";
+            progressTitle.innerText = "กำลังอ่านไฟล์ภาพสลิป...";
+            progressSub.innerText = file.name;
 
             setTimeout(() => {
                 percentEl.innerText = "60%";
@@ -502,91 +519,22 @@
 
             setTimeout(() => {
                 percentEl.innerText = "100%";
-                progressTitle.innerText = "ประมวลผลสำเร็จ!";
-                
-                // Update dataset with extracted slip data
+                progressTitle.innerText = "สแกนสำเร็จ!";
+
                 policies = [...mfcSlipDefaultData];
                 saveToLocalStorage();
                 renderTable();
 
                 setTimeout(() => {
                     ocrStatus.classList.add('hidden');
-                    alert(`สแกนสลิปสำเร็จ! อัปเดตข้อมูล ${policies.length} แผนลงทุนจากสลิป MFC เรียบร้อยแล้ว`);
+                    alert(`สแกนสลิปสำเร็จ! อัปเดตข้อมูล ${policies.length} รายการแผนลงทุนเรียบร้อยแล้ว`);
                 }, 300);
             }, 1200);
 
-            event.target.value = ''; // Reset input
+            event.target.value = '';
         }
 
-        // Modal Controls
-        function openModal(mode, id = null) {
-            const modal = document.getElementById('policyModal');
-            const title = document.getElementById('modalTitle');
-            const form = document.getElementById('policyForm');
-
-            modal.classList.remove('hidden');
-
-            if (mode === 'edit' && id !== null) {
-                title.innerText = 'แก้ไขแผนการลงทุน';
-                const target = policies.find(p => p.id === id);
-                if (target) {
-                    document.getElementById('policyId').value = target.id;
-                    document.getElementById('inputCode').value = target.code;
-                    document.getElementById('inputName').value = target.name;
-                    document.getElementById('inputUnits').value = target.units;
-                    document.getElementById('inputNav').value = target.nav;
-                    document.getElementById('inputTotalAmt').value = (target.units * target.nav).toFixed(2);
-                    document.getElementById('inputPrevAmt').value = target.prevAmt;
-                    document.getElementById('inputCost').value = target.cost;
-                    document.getElementById('inputYtd').value = target.ytd;
-                }
-            } else {
-                title.innerText = 'เพิ่มแผนการลงทุนใหม่';
-                form.reset();
-                document.getElementById('policyId').value = '';
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('policyModal').classList.add('hidden');
-        }
-
-        async function savePolicy(e) {
-            e.preventDefault();
-            const idVal = document.getElementById('policyId').value;
-            const code = document.getElementById('inputCode').value.trim().toUpperCase();
-            const name = document.getElementById('inputName').value.trim();
-            const units = parseFloat(document.getElementById('inputUnits').value) || 0;
-            const nav = parseFloat(document.getElementById('inputNav').value) || 0;
-            const prevAmt = parseFloat(document.getElementById('inputPrevAmt').value) || 0;
-            const cost = parseFloat(document.getElementById('inputCost').value) || 0;
-            const ytd = parseFloat(document.getElementById('inputYtd').value) || 0;
-
-            if (idVal) {
-                // Edit
-                const idx = policies.findIndex(p => p.id === parseInt(idVal));
-                if (idx !== -1) {
-                    policies[idx] = { id: parseInt(idVal), code, name, units, nav, prevAmt, cost, ytd };
-                }
-            } else {
-                // Add
-                const newId = Date.now();
-                policies.push({ id: newId, code, name, units, nav, prevAmt, cost, ytd });
-            }
-
-            saveToLocalStorage();
-            renderTable();
-            closeModal();
-        }
-
-        async function deletePolicy(id) {
-            if (confirm('คุณต้องการลบแผน/นโยบายการลงทุนนี้ใช่หรือไม่?')) {
-                policies = policies.filter(p => p.id !== id);
-                saveToLocalStorage();
-                renderTable();
-            }
-        }
-
+        // Realtime Indices Simulation
         function startRealtimeIndices() {
             setInterval(() => {
                 updateIndexVal('idx-acwi', 'chg-acwi', 842.15);
@@ -606,9 +554,9 @@
             const elVal = document.getElementById(idVal);
             const elChg = document.getElementById(idChg);
 
-            if(elVal && elChg) {
+            if (elVal && elChg) {
                 elVal.innerText = Number(newVal).toLocaleString();
-                if(delta >= 0) {
+                if (delta >= 0) {
                     elChg.className = "text-emerald-400 font-medium";
                     elChg.innerHTML = `<i class="fa-solid fa-caret-up"></i> +${pct}%`;
                 } else {
@@ -617,6 +565,52 @@
                 }
             }
         }
+
+        // Attach Event Listeners Safely on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchPolicies();
+            startRealtimeIndices();
+
+            // Bind UI Buttons
+            document.getElementById('btnExport').addEventListener('click', exportData);
+            document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFileInput').click());
+            document.getElementById('btnOcr').addEventListener('click', () => document.getElementById('ocrFileInput').click());
+            document.getElementById('btnAddPlan').addEventListener('click', () => openModal('add'));
+            document.getElementById('btnCloseModal').addEventListener('click', closeModal);
+            document.getElementById('btnCancelModal').addEventListener('click', closeModal);
+
+            // Bind Inputs
+            document.getElementById('importFileInput').addEventListener('change', importData);
+            document.getElementById('ocrFileInput').addEventListener('change', handleFileUpload);
+            document.getElementById('inputUnits').addEventListener('input', autoCalcTotal);
+            document.getElementById('inputNav').addEventListener('input', autoCalcTotal);
+
+            // Form Submit
+            document.getElementById('policyForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const idVal = document.getElementById('policyId').value;
+                const code = document.getElementById('inputCode').value.trim().toUpperCase();
+                const name = document.getElementById('inputName').value.trim();
+                const units = parseFloat(document.getElementById('inputUnits').value) || 0;
+                const nav = parseFloat(document.getElementById('inputNav').value) || 0;
+                const prevAmt = parseFloat(document.getElementById('inputPrevAmt').value) || 0;
+                const cost = parseFloat(document.getElementById('inputCost').value) || 0;
+                const ytd = parseFloat(document.getElementById('inputYtd').value) || 0;
+
+                if (idVal) {
+                    const idx = policies.findIndex(p => p.id === parseInt(idVal));
+                    if (idx !== -1) {
+                        policies[idx] = { id: parseInt(idVal), code, name, units, nav, prevAmt, cost, ytd };
+                    }
+                } else {
+                    policies.push({ id: Date.now(), code, name, units, nav, prevAmt, cost, ytd });
+                }
+
+                saveToLocalStorage();
+                renderTable();
+                closeModal();
+            });
+        });
     </script>
 </body>
 </html>
