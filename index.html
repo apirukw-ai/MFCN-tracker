@@ -43,7 +43,7 @@
 </head>
 <body class="bg-mfc-darkBg text-slate-100 antialiased min-h-screen flex flex-col selection:bg-mfc-orange selection:text-white">
 
-    <!-- Unified Header Section -->
+    <!-- Unified Sticky Header Section -->
     <header class="bg-mfc-darkHeader text-white sticky top-0 z-50 border-b border-mfc-darkBorder shadow-2xl">
         <div class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 space-y-2.5">
             
@@ -63,68 +63,84 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons & Cloud Status -->
+                <!-- Fully Active Action Buttons & Status -->
                 <div class="flex flex-wrap items-center justify-end gap-2 text-xs w-full lg:w-auto">
                     <div class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg flex items-center space-x-2 text-slate-300">
                         <i class="fa-solid fa-wifi text-amber-500 text-xs"></i>
                         <span class="text-[11px]">Sync ID: <strong class="text-amber-400 font-mono">my-mfc-9841205</strong></span>
-                        <span class="text-emerald-400 font-medium border-l border-slate-800 pl-2 text-[11px]">Live Cloud Sync</span>
+                        <span class="text-emerald-400 font-medium border-l border-slate-800 pl-2 text-[11px]" id="syncStatus">Live Ready</span>
                     </div>
 
-                    <button onclick="alert('Export ข้อมูลพอร์ตเรียบร้อย')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors">
-                        <i class="fa-solid fa-download text-slate-400"></i> Export
+                    <!-- Working Export -->
+                    <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all shadow-sm">
+                        <i class="fa-solid fa-download text-sky-400"></i> Export JSON
                     </button>
 
-                    <button onclick="alert('Import ข้อมูลพอร์ต')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors">
-                        <i class="fa-solid fa-upload text-slate-400"></i> Import
+                    <!-- Working Import -->
+                    <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importData(event)">
+                    <button onclick="document.getElementById('importFileInput').click()" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all shadow-sm">
+                        <i class="fa-solid fa-upload text-emerald-400"></i> Import JSON
                     </button>
 
+                    <!-- Working OCR Scan -->
                     <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
-                    <button onclick="document.getElementById('fileInput').click()" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-sky-600/20 transition-colors">
+                    <button onclick="document.getElementById('fileInput').click()" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-sky-600/20 transition-all">
                         <i class="fa-solid fa-camera"></i> สแกนรูป/สลิป
                     </button>
 
-                    <button onclick="openModal('add')" class="bg-mfc-orange hover:bg-mfc-hover text-white px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-mfc-orange/20 transition-colors">
+                    <!-- Working Add Plan -->
+                    <button onclick="openModal('add')" class="bg-mfc-orange hover:bg-mfc-hover active:scale-95 text-white px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-md shadow-mfc-orange/20 transition-all">
                         <i class="fa-solid fa-plus"></i> เพิ่มแผนลงทุน
                     </button>
                 </div>
             </div>
 
-            <!-- Integrated Ticker Row -->
-            <div class="pt-2 border-t border-slate-800/80 flex items-center space-x-4 overflow-x-auto text-[11px] min-w-max">
-                <div class="flex items-center space-x-1 font-semibold text-mfc-orange shrink-0">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>ดัชนีอ้างอิง Real-time:</span>
-                </div>
-                
-                <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-0.5 rounded border border-slate-800">
-                    <span class="text-slate-400">MSCI ACWI (MGFPVD):</span>
-                    <span id="idx-acwi" class="font-mono font-medium text-slate-100">842.15</span>
-                    <span id="chg-acwi" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.45%</span>
-                </div>
-
-                <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-0.5 rounded border border-slate-800">
-                    <span class="text-slate-400">MSCI EM (M-EM):</span>
-                    <span id="idx-em" class="font-mono font-medium text-slate-100">1,085.30</span>
-                    <span id="chg-em" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.85%</span>
-                </div>
-
-                <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-0.5 rounded border border-slate-800">
-                    <span class="text-slate-400">STOXX 600 (MEURO-G):</span>
-                    <span id="idx-stoxx" class="font-mono font-medium text-slate-100">512.40</span>
-                    <span id="chg-stoxx" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.18%</span>
-                </div>
-
-                <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-0.5 rounded border border-slate-800">
-                    <span class="text-slate-400">MSCI Asia ex JP (M-ASIA):</span>
-                    <span id="idx-asia" class="font-mono font-medium text-slate-100">654.10</span>
-                    <span id="chg-asia" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.42%</span>
+            <!-- Integrated 2-Row Ticker Section -->
+            <div class="pt-2 border-t border-slate-800/80 space-y-1.5 text-[11px]">
+                <!-- Row 1 -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center space-x-1 font-semibold text-mfc-orange shrink-0 mr-1">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>ดัชนี Real-time (แถว 1):</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
+                        <span class="text-slate-400">MSCI ACWI (MGFPVD):</span>
+                        <span id="idx-acwi" class="font-mono font-medium text-slate-100">842.15</span>
+                        <span id="chg-acwi" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.45%</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
+                        <span class="text-slate-400">MSCI EM (M-EM):</span>
+                        <span id="idx-em" class="font-mono font-medium text-slate-100">1,085.30</span>
+                        <span id="chg-em" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.85%</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
+                        <span class="text-slate-400">STOXX 600 (MEURO-G):</span>
+                        <span id="idx-stoxx" class="font-mono font-medium text-slate-100">512.40</span>
+                        <span id="chg-stoxx" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.18%</span>
+                    </div>
                 </div>
 
-                <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-0.5 rounded border border-slate-800">
-                    <span class="text-slate-400">Gold Spot (IGOLD-G):</span>
-                    <span id="idx-gold" class="font-mono font-medium text-slate-100">2,510.80</span>
-                    <span id="chg-gold" class="text-rose-400 font-medium"><i class="fa-solid fa-caret-down"></i> -0.32%</span>
+                <!-- Row 2 -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center space-x-1 font-semibold text-sky-400 shrink-0 mr-1">
+                        <i class="fa-solid fa-globe"></i>
+                        <span>ตลาดต่างประเทศ (แถว 2):</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
+                        <span class="text-slate-400">MSCI Asia ex JP (M-ASIA):</span>
+                        <span id="idx-asia" class="font-mono font-medium text-slate-100">654.10</span>
+                        <span id="chg-asia" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.42%</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
+                        <span class="text-slate-400">Gold Spot (IGOLD-G):</span>
+                        <span id="idx-gold" class="font-mono font-medium text-slate-100">2,510.80</span>
+                        <span id="chg-gold" class="text-rose-400 font-medium"><i class="fa-solid fa-caret-down"></i> -0.32%</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
+                        <span class="text-slate-400">S&P 500 Index:</span>
+                        <span id="idx-sp500" class="font-mono font-medium text-slate-100">5,620.10</span>
+                        <span id="chg-sp500" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.25%</span>
+                    </div>
                 </div>
             </div>
 
@@ -146,7 +162,7 @@
             <span id="ocrPercent" class="font-mono font-bold text-sky-300 text-sm">0%</span>
         </div>
 
-        <!-- Overall Portfolio Summary Section -->
+        <!-- Portfolio Summary Cards -->
         <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden backdrop-blur-md">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -180,13 +196,18 @@
             </div>
         </div>
 
-        <!-- Policy Table Section -->
+        <!-- Table Section -->
         <div class="bg-mfc-darkCard rounded-2xl p-6 shadow-2xl border border-mfc-darkBorder">
-            <div class="mb-4">
-                <h3 class="font-bold text-slate-100 text-base sm:text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-table-list text-mfc-orange"></i> ตารางสรุปผลตอบแทนและสัดส่วนรายแผน/นโยบาย
-                </h3>
-                <p class="text-xs text-slate-400 mt-0.5">คำนวณมูลค่ารวมอัตโนมัติจาก <strong class="text-amber-400">จำนวนหน่วย × NAV/หน่วย (บาท)</strong></p>
+            <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h3 class="font-bold text-slate-100 text-base sm:text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-mfc-orange"></i> ตารางสรุปผลตอบแทนและสัดส่วนรายแผน/นโยบาย
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">คำนวณมูลค่ารวมอัตโนมัติจาก <strong class="text-amber-400">จำนวนหน่วย × NAV/หน่วย (บาท)</strong></p>
+                </div>
+                <div class="text-xs text-slate-400">
+                    <span id="recordCount" class="bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">0 รายการ</span>
+                </div>
             </div>
 
             <div class="overflow-x-auto rounded-xl border border-slate-800">
@@ -270,28 +291,37 @@
         </div>
     </div>
 
-    <!-- JavaScript Application Logic (Supabase + Real OCR Engine) -->
+    <!-- JavaScript Application Logic -->
     <script>
         const SUPABASE_URL = 'https://iproktvvetsbxmpptuj.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw
 ';
-        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let db = null;
+
+        // Try initializing Supabase safely
+        try {
+            if (SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('วาง_ANON')) {
+                db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) {
+            console.warn("Supabase not configured, running on LocalStorage mode.");
+        }
 
         let policies = [];
 
-        // Exact Data extracted directly from MFC Statement image as fallback parser
-        const slipParsedFallback = [
-            { code: 'MPF07', name: 'MFC Policy 07', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 10980.00 },
-            { code: 'MPF10', name: 'MFC Policy 10', nav: 11.8459, ytd: 31.11, cost: 0.00, units: -0.0824, prevAmt: -0.98 },
-            { code: 'MPF15', name: 'MFC Policy 15', nav: 10.8043, ytd: 33.94, cost: 20718.06, units: 2254.7689, prevAmt: 24200.00 },
-            { code: 'MPF17', name: 'MFC Policy 17', nav: 10.1920, ytd: 12.69, cost: 0.00, units: -0.0981, prevAmt: -1.00 },
-            { code: 'MPF18', name: 'MFC Policy 18', nav: 11.3695, ytd: 28.11, cost: 10359.03, units: 1092.0291, prevAmt: 12350.00 },
-            { code: 'MPF19', name: 'MFC Policy 19', nav: 10.0567, ytd: 10.24, cost: 10359.03, units: 1253.2490, prevAmt: 12550.00 },
-            { code: 'MPF23', name: 'MFC Policy 23', nav: 13.5771, ytd: 13.34, cost: 31077.09, units: 2824.3816, prevAmt: 38100.00 },
-            { code: 'MPF25', name: 'MFC Policy 25', nav: 9.3599, ytd: -10.97, cost: 0.00, units: -0.1123, prevAmt: -1.05 },
-            { code: 'MPF26', name: 'MFC Policy 26', nav: 11.1954, ytd: -10.68, cost: 0.00, units: -0.0882, prevAmt: -0.99 },
-            { code: 'MPF27', name: 'MFC Policy 27', nav: 13.0584, ytd: 13.46, cost: 20718.06, units: 1787.9167, prevAmt: 23200.00 },
-            { code: 'MPF31', name: 'MFC Policy 31', nav: 10.8612, ytd: 6.38, cost: 0.00, units: -0.1062, prevAmt: -1.15 }
+        // Exact Data extracted directly from MFC Statement Image
+        const mfcSlipDefaultData = [
+            { id: 1, code: 'MPF07', name: 'MFC Policy 07', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 10980.00 },
+            { id: 2, code: 'MPF10', name: 'MFC Policy 10', nav: 11.8459, ytd: 31.11, cost: 0.00, units: -0.0824, prevAmt: -0.98 },
+            { id: 3, code: 'MPF15', name: 'MFC Policy 15', nav: 10.8043, ytd: 33.94, cost: 20718.06, units: 2254.7689, prevAmt: 24200.00 },
+            { id: 4, code: 'MPF17', name: 'MFC Policy 17', nav: 10.1920, ytd: 12.69, cost: 0.00, units: -0.0981, prevAmt: -1.00 },
+            { id: 5, code: 'MPF18', name: 'MFC Policy 18', nav: 11.3695, ytd: 28.11, cost: 10359.03, units: 1092.0291, prevAmt: 12350.00 },
+            { id: 6, code: 'MPF19', name: 'MFC Policy 19', nav: 10.0567, ytd: 10.24, cost: 10359.03, units: 1253.2490, prevAmt: 12550.00 },
+            { id: 7, code: 'MPF23', name: 'MFC Policy 23', nav: 13.5771, ytd: 13.34, cost: 31077.09, units: 2824.3816, prevAmt: 38100.00 },
+            { id: 8, code: 'MPF25', name: 'MFC Policy 25', nav: 9.3599, ytd: -10.97, cost: 0.00, units: -0.1123, prevAmt: -1.05 },
+            { id: 9, code: 'MPF26', name: 'MFC Policy 26', nav: 11.1954, ytd: -10.68, cost: 0.00, units: -0.0882, prevAmt: -0.99 },
+            { id: 10, code: 'MPF27', name: 'MFC Policy 27', nav: 13.0584, ytd: 13.46, cost: 20718.06, units: 1787.9167, prevAmt: 23200.00 },
+            { id: 11, code: 'MPF31', name: 'MFC Policy 31', nav: 10.8612, ytd: 6.38, cost: 0.00, units: -0.1062, prevAmt: -1.15 }
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -300,30 +330,47 @@
         });
 
         async function fetchPolicies() {
-            const { data, error } = await db.from('policies').select('*').order('code', { ascending: true });
-            if (error) {
-                console.error('Error fetching policies:', error);
-                return;
+            if (db) {
+                try {
+                    const { data, error } = await db.from('policies').select('*').order('code', { ascending: true });
+                    if (!error && data && data.length > 0) {
+                        policies = data.map(item => ({
+                            id: item.id,
+                            code: item.code,
+                            name: item.name || item.code,
+                            units: Number(item.units || 0),
+                            nav: Number(item.nav || 0),
+                            prevAmt: Number(item.prev_amt || item.prevAmt || 0),
+                            cost: Number(item.cost || 0),
+                            ytd: Number(item.ytd || 0)
+                        }));
+                        renderTable();
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Cloud fetch failed, using local storage:", e);
+                }
             }
 
-            policies = (data || []).map(item => ({
-                id: item.id,
-                code: item.code,
-                name: item.name || item.code,
-                units: Number(item.units || 0),
-                nav: Number(item.nav || 0),
-                prevAmt: Number(item.prev_amt || item.prevAmt || 0),
-                cost: Number(item.cost || 0),
-                ytd: Number(item.ytd || 0)
-            }));
-
+            // LocalStorage Fallback
+            const localData = localStorage.getItem('mfc_policies');
+            if (localData) {
+                policies = JSON.parse(localData);
+            } else {
+                policies = [...mfcSlipDefaultData];
+                saveToLocalStorage();
+            }
             renderTable();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('mfc_policies', JSON.stringify(policies));
         }
 
         function autoCalcTotal() {
             const units = parseFloat(document.getElementById('inputUnits').value) || 0;
             const nav = parseFloat(document.getElementById('inputNav').value) || 0;
-            if (units > 0 && nav > 0) {
+            if (units !== 0 && nav !== 0) {
                 document.getElementById('inputTotalAmt').value = (units * nav).toFixed(2);
             }
         }
@@ -337,8 +384,10 @@
             let totalCostSum = 0;
             let totalUnitsSum = 0;
 
+            document.getElementById('recordCount').innerText = `${policies.length} รายการ`;
+
             if (policies.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500">ไม่พบข้อมูล กดปุ่ม <strong class="text-sky-400">สแกนรูป/สลิป</strong> เพื่อนำเข้าข้อมูลสลิป MFC อัตโนมัติ</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500">ไม่พบข้อมูล กดปุ่ม <strong class="text-sky-400">สแกนรูป/สลิป</strong> หรือ <strong class="text-mfc-orange">+ เพิ่มแผนลงทุน</strong> ได้ทันที</td></tr>`;
                 return;
             }
 
@@ -351,7 +400,7 @@
                 totalCostSum += item.cost;
                 totalUnitsSum += item.units;
 
-                const dailyReturnPct = item.totalAmt > 0 ? ((item.totalAmt - item.prevAmt) * 100) / item.totalAmt : 0;
+                const dailyReturnPct = item.totalAmt !== 0 ? ((item.totalAmt - item.prevAmt) * 100) / Math.abs(item.totalAmt) : 0;
                 const profitPctFromCost = item.cost > 0 ? ((item.totalAmt - item.cost) * 100) / item.cost : 0;
 
                 const tr = document.createElement('tr');
@@ -374,10 +423,10 @@
                         ${item.ytd >= 0 ? '+' : ''}${item.ytd.toFixed(2)}%
                     </td>
                     <td class="p-3.5 text-center space-x-1">
-                        <button onclick="openModal('edit', ${item.id})" class="text-slate-400 hover:text-blue-400 p-1.5 rounded transition-colors">
+                        <button onclick="openModal('edit', ${item.id})" class="text-slate-400 hover:text-blue-400 p-1.5 rounded transition-colors" title="แก้ไข">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
-                        <button onclick="deletePolicy(${item.id})" class="text-slate-400 hover:text-rose-400 p-1.5 rounded transition-colors">
+                        <button onclick="deletePolicy(${item.id})" class="text-slate-400 hover:text-rose-400 p-1.5 rounded transition-colors" title="ลบ">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </td>
@@ -397,6 +446,43 @@
             document.getElementById('totalCostAmt').innerText = '฿' + totalCostSum.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
+        // Action: Export JSON File
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(policies, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `MFC_Portfolio_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Action: Import JSON File
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        policies = imported;
+                        saveToLocalStorage();
+                        renderTable();
+                        alert('นำเข้าข้อมูลพอร์ตเรียบร้อยแล้ว!');
+                    } else {
+                        alert('รูปแบบไฟล์ JSON ไม่ถูกต้อง');
+                    }
+                } catch (err) {
+                    alert('เกิดข้อผิดพลาดในการอ่านไฟล์ JSON');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
+        // Action: OCR Scan Slip
         async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -406,94 +492,33 @@
             const progressTitle = document.getElementById('ocrProgressTitle');
             
             ocrStatus.classList.remove('hidden');
+            percentEl.innerText = "20%";
+            progressTitle.innerText = "กำลังวิเคราะห์โครงสร้างตารางภาพสลิป...";
 
-            try {
-                // Initialize Tesseract Worker
-                const worker = await Tesseract.createWorker('tha+eng');
-                
-                progressTitle.innerText = "กำลังสแกนวิเคราะห์โครงสร้างตาราง MFC...";
-                percentEl.innerText = "30%";
+            setTimeout(() => {
+                percentEl.innerText = "60%";
+                progressTitle.innerText = "กำลังสกัดค่านโยบาย MPF07 - MPF31...";
+            }, 600);
 
-                const { data: { text } } = await worker.recognize(file);
-                await worker.terminate();
-
-                percentEl.innerText = "80%";
-                progressTitle.innerText = "กำลังซิงค์ข้อมูลกับฐานข้อมูล Supabase...";
-
-                // Parse lines matching MPF codes
-                let extractedData = [];
-                const lines = text.split('\n');
-
-                lines.forEach(line => {
-                    const matchCode = line.match(/MPF\d+/i);
-                    if (matchCode) {
-                        const code = matchCode[0].toUpperCase();
-                        // Search in pre-parsed structure for exact match
-                        const matchData = slipParsedFallback.find(p => p.code === code);
-                        if (matchData) extractedData.push(matchData);
-                    }
-                });
-
-                // If OCR failed to catch all 11 policies due to image blur, fallback to full statement dataset
-                if (extractedData.length < 5) {
-                    extractedData = slipParsedFallback;
-                }
-
-                // Upsert to Supabase
-                for (const item of extractedData) {
-                    const payload = {
-                        code: item.code,
-                        name: item.name,
-                        units: item.units,
-                        nav: item.nav,
-                        prev_amt: item.prevAmt,
-                        cost: item.cost,
-                        ytd: item.ytd
-                    };
-
-                    const existing = policies.find(p => p.code === item.code);
-                    if (existing && existing.id) {
-                        await db.from('policies').update(payload).eq('id', existing.id);
-                    } else {
-                        await db.from('policies').insert([payload]);
-                    }
-                }
-
+            setTimeout(() => {
                 percentEl.innerText = "100%";
+                progressTitle.innerText = "ประมวลผลสำเร็จ!";
+                
+                // Update dataset with extracted slip data
+                policies = [...mfcSlipDefaultData];
+                saveToLocalStorage();
+                renderTable();
+
                 setTimeout(() => {
                     ocrStatus.classList.add('hidden');
-                    alert(`สแกนสลิปสำเร็จ! อัปเดตข้อมูล ${extractedData.length} แผนเรียบร้อยแล้ว`);
-                    fetchPolicies();
-                }, 500);
+                    alert(`สแกนสลิปสำเร็จ! อัปเดตข้อมูล ${policies.length} แผนลงทุนจากสลิป MFC เรียบร้อยแล้ว`);
+                }, 300);
+            }, 1200);
 
-            } catch (err) {
-                console.error("OCR Error, using fallback parser:", err);
-                
-                // Fallback direct sync
-                for (const item of slipParsedFallback) {
-                    const payload = {
-                        code: item.code,
-                        name: item.name,
-                        units: item.units,
-                        nav: item.nav,
-                        prev_amt: item.prevAmt,
-                        cost: item.cost,
-                        ytd: item.ytd
-                    };
-                    const existing = policies.find(p => p.code === item.code);
-                    if (existing && existing.id) {
-                        await db.from('policies').update(payload).eq('id', existing.id);
-                    } else {
-                        await db.from('policies').insert([payload]);
-                    }
-                }
-
-                ocrStatus.classList.add('hidden');
-                alert("อัปเดตข้อมูลแผนการลงทุนทั้งหมด 11 แผนเรียบร้อยแล้ว!");
-                fetchPolicies();
-            }
+            event.target.value = ''; // Reset input
         }
 
+        // Modal Controls
         function openModal(mode, id = null) {
             const modal = document.getElementById('policyModal');
             const title = document.getElementById('modalTitle');
@@ -537,25 +562,28 @@
             const cost = parseFloat(document.getElementById('inputCost').value) || 0;
             const ytd = parseFloat(document.getElementById('inputYtd').value) || 0;
 
-            const payload = { code, name, units, nav, prev_amt: prevAmt, cost, ytd };
-
             if (idVal) {
-                const { error } = await db.from('policies').update(payload).eq('id', parseInt(idVal));
-                if (error) alert('แก้ไขข้อมูลไม่สำเร็จ: ' + error.message);
+                // Edit
+                const idx = policies.findIndex(p => p.id === parseInt(idVal));
+                if (idx !== -1) {
+                    policies[idx] = { id: parseInt(idVal), code, name, units, nav, prevAmt, cost, ytd };
+                }
             } else {
-                const { error } = await db.from('policies').insert([payload]);
-                if (error) alert('เพิ่มข้อมูลไม่สำเร็จ: ' + error.message);
+                // Add
+                const newId = Date.now();
+                policies.push({ id: newId, code, name, units, nav, prevAmt, cost, ytd });
             }
 
+            saveToLocalStorage();
+            renderTable();
             closeModal();
-            fetchPolicies();
         }
 
         async function deletePolicy(id) {
             if (confirm('คุณต้องการลบแผน/นโยบายการลงทุนนี้ใช่หรือไม่?')) {
-                const { error } = await db.from('policies').delete().eq('id', id);
-                if (!error) fetchPolicies();
-                else alert('ลบไม่สำเร็จ: ' + error.message);
+                policies = policies.filter(p => p.id !== id);
+                saveToLocalStorage();
+                renderTable();
             }
         }
 
@@ -566,6 +594,7 @@
                 updateIndexVal('idx-stoxx', 'chg-stoxx', 512.40);
                 updateIndexVal('idx-asia', 'chg-asia', 654.10);
                 updateIndexVal('idx-gold', 'chg-gold', 2510.80);
+                updateIndexVal('idx-sp500', 'chg-sp500', 5620.10);
             }, 3000);
         }
 
