@@ -1,0 +1,23 @@
+{
+  "name": "MFC Provident Fund Dashboard",
+  "short_name": "MFC Tracker",
+  "description": "ระบบติดตามพอร์ต MFC Provident Fund",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#090D16",
+  "theme_color": "#090D16",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3309/3309991.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3309/3309991.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
