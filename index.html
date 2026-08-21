@@ -93,53 +93,71 @@
                 </div>
             </div>
 
-            <!-- Integrated 2-Row Ticker Section -->
-            <div class="pt-2 border-t border-slate-800/80 space-y-1.5 text-[11px]">
-                <!-- Row 1 -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center space-x-1 font-semibold text-mfc-orange shrink-0 mr-1">
+            <!-- Integrated Full-Width 2-Row Ticker Section -->
+            <div class="pt-2 border-t border-slate-800/80 space-y-2 text-[11px] w-full">
+                
+                <!-- Row 1 (Full Width Grid) -->
+                <div class="flex flex-col lg:flex-row items-start lg:items-center gap-2 w-full">
+                    <div class="flex items-center space-x-1.5 font-semibold text-mfc-orange shrink-0 lg:w-48">
                         <i class="fa-solid fa-chart-line"></i>
                         <span>ดัชนี Real-time (แถว 1):</span>
                     </div>
-                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
-                        <span class="text-slate-400">MSCI ACWI (MGFPVD):</span>
-                        <span id="idx-acwi" class="font-mono font-medium text-slate-100">842.15</span>
-                        <span id="chg-acwi" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.45%</span>
-                    </div>
-                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
-                        <span class="text-slate-400">MSCI EM (M-EM):</span>
-                        <span id="idx-em" class="font-mono font-medium text-slate-100">1,085.30</span>
-                        <span id="chg-em" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.85%</span>
-                    </div>
-                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
-                        <span class="text-slate-400">STOXX 600 (MEURO-G):</span>
-                        <span id="idx-stoxx" class="font-mono font-medium text-slate-100">512.40</span>
-                        <span id="chg-stoxx" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.18%</span>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 w-full grow">
+                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80 hover:border-slate-700 transition-colors">
+                            <span class="text-slate-400 truncate">MSCI ACWI (MGFPVD):</span>
+                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
+                                <span id="idx-acwi" class="font-medium text-slate-100">842.15</span>
+                                <span id="chg-acwi" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.45%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80 hover:border-slate-700 transition-colors">
+                            <span class="text-slate-400 truncate">MSCI EM (M-EM):</span>
+                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
+                                <span id="idx-em" class="font-medium text-slate-100">1,085.30</span>
+                                <span id="chg-em" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.85%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80 hover:border-slate-700 transition-colors">
+                            <span class="text-slate-400 truncate">STOXX 600 (MEURO-G):</span>
+                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
+                                <span id="idx-stoxx" class="font-medium text-slate-100">512.40</span>
+                                <span id="chg-stoxx" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.18%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Row 2 -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center space-x-1 font-semibold text-sky-400 shrink-0 mr-1">
+                <!-- Row 2 (Full Width Grid) -->
+                <div class="flex flex-col lg:flex-row items-start lg:items-center gap-2 w-full">
+                    <div class="flex items-center space-x-1.5 font-semibold text-sky-400 shrink-0 lg:w-48">
                         <i class="fa-solid fa-globe"></i>
                         <span>ตลาดต่างประเทศ (แถว 2):</span>
                     </div>
-                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
-                        <span class="text-slate-400">MSCI Asia ex JP (M-ASIA):</span>
-                        <span id="idx-asia" class="font-mono font-medium text-slate-100">654.10</span>
-                        <span id="chg-asia" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.42%</span>
-                    </div>
-                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
-                        <span class="text-slate-400">Gold Spot (IGOLD-G):</span>
-                        <span id="idx-gold" class="font-mono font-medium text-slate-100">2,510.80</span>
-                        <span id="chg-gold" class="text-rose-400 font-medium"><i class="fa-solid fa-caret-down"></i> -0.32%</span>
-                    </div>
-                    <div class="flex items-center space-x-2 bg-slate-900/90 px-2.5 py-1 rounded border border-slate-800 grow sm:grow-0">
-                        <span class="text-slate-400">S&P 500 Index:</span>
-                        <span id="idx-sp500" class="font-mono font-medium text-slate-100">5,620.10</span>
-                        <span id="chg-sp500" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.25%</span>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 w-full grow">
+                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80 hover:border-slate-700 transition-colors">
+                            <span class="text-slate-400 truncate">MSCI Asia ex JP (M-ASIA):</span>
+                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
+                                <span id="idx-asia" class="font-medium text-slate-100">654.10</span>
+                                <span id="chg-asia" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.42%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80 hover:border-slate-700 transition-colors">
+                            <span class="text-slate-400 truncate">Gold Spot (IGOLD-G):</span>
+                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
+                                <span id="idx-gold" class="font-medium text-slate-100">2,510.80</span>
+                                <span id="chg-gold" class="text-rose-400 font-medium"><i class="fa-solid fa-caret-down"></i> -0.32%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800/80 hover:border-slate-700 transition-colors">
+                            <span class="text-slate-400 truncate">S&P 500 Index:</span>
+                            <div class="flex items-center space-x-2 font-mono shrink-0 ml-2">
+                                <span id="idx-sp500" class="font-medium text-slate-100">5,620.10</span>
+                                <span id="chg-sp500" class="text-emerald-400 font-medium"><i class="fa-solid fa-caret-up"></i> +0.25%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </div>
 
         </div>
@@ -289,9 +307,8 @@
         </div>
     </div>
 
-    <!-- Application Script (Pure Clean JS Event Listeners) -->
+    <!-- Application Script -->
     <script>
-        // Default Data Set
         const mfcSlipDefaultData = [
             { id: 1, code: 'MPF07', name: 'MFC Policy 07', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 10980.00 },
             { id: 2, code: 'MPF10', name: 'MFC Policy 10', nav: 11.8459, ytd: 31.11, cost: 0.00, units: -0.0824, prevAmt: -0.98 },
@@ -457,7 +474,6 @@
             }
         }
 
-        // Export Function
         function exportData() {
             const dataStr = JSON.stringify(policies, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
@@ -472,7 +488,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // Import Function
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -497,7 +512,6 @@
             event.target.value = '';
         }
 
-        // OCR Scan Processing
         async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -534,7 +548,6 @@
             event.target.value = '';
         }
 
-        // Realtime Indices Simulation
         function startRealtimeIndices() {
             setInterval(() => {
                 updateIndexVal('idx-acwi', 'chg-acwi', 842.15);
@@ -566,12 +579,10 @@
             }
         }
 
-        // Attach Event Listeners Safely on DOM Load
         document.addEventListener('DOMContentLoaded', () => {
             fetchPolicies();
             startRealtimeIndices();
 
-            // Bind UI Buttons
             document.getElementById('btnExport').addEventListener('click', exportData);
             document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFileInput').click());
             document.getElementById('btnOcr').addEventListener('click', () => document.getElementById('ocrFileInput').click());
@@ -579,13 +590,11 @@
             document.getElementById('btnCloseModal').addEventListener('click', closeModal);
             document.getElementById('btnCancelModal').addEventListener('click', closeModal);
 
-            // Bind Inputs
             document.getElementById('importFileInput').addEventListener('change', importData);
             document.getElementById('ocrFileInput').addEventListener('change', handleFileUpload);
             document.getElementById('inputUnits').addEventListener('input', autoCalcTotal);
             document.getElementById('inputNav').addEventListener('input', autoCalcTotal);
 
-            // Form Submit
             document.getElementById('policyForm').addEventListener('submit', (e) => {
                 e.preventDefault();
                 const idVal = document.getElementById('policyId').value;
