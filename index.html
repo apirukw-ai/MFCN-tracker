@@ -192,8 +192,8 @@
         </div>
 
         <!-- Table Section -->
-        <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-6 shadow-2xl border border-mfc-darkBorder">
-            <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-6 shadow-2xl border border-mfc-darkBorder space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                     <h3 class="font-bold text-slate-100 text-base sm:text-lg flex items-center gap-2">
                         <i class="fa-solid fa-table-list text-mfc-orange"></i> ตารางรายการสัดส่วนแผนลงทุน
@@ -223,9 +223,44 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Batch Edit NAV Button Under Table -->
+            <div class="pt-2 flex justify-end">
+                <button type="button" id="btnBatchNav" class="bg-gradient-to-r from-amber-500 to-mfc-orange hover:from-amber-600 hover:to-mfc-hover text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-amber-500/10 transition-all text-xs sm:text-sm">
+                    <i class="fa-solid fa-bolt text-amber-200"></i> อัปเดต NAV ทุกกองทุนพร้อมกัน (Quick Batch Update)
+                </button>
+            </div>
         </div>
 
     </main>
+
+    <!-- Batch NAV Modal Pop-up -->
+    <div id="batchNavModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 flex-shrink-0">
+                <h3 class="font-bold text-slate-100 text-base sm:text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-amber-400"></i> อัปเดต NAV ทั้งหมด 6 กองทุนพร้อมกัน
+                </h3>
+                <button type="button" id="btnCloseBatchModal" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed flex-shrink-0">
+                กรอกค่า NAV ใหม่ในช่องล่างนี้ (เมื่อกดบันทึก ระบบจะอัปเดตค่า NAV วันนี้ และย้าย NAV วันนี้เดิมไปเป็น NAV เมื่อวานให้อัตโนมัติ)
+            </p>
+            
+            <form id="batchNavForm" class="space-y-3 text-xs overflow-y-auto pr-1 flex-grow">
+                <div id="batchNavContainer" class="space-y-3">
+                    <!-- Dynamic fund rows inserted via JS -->
+                </div>
+            </form>
+
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800 flex-shrink-0">
+                <button type="button" id="btnCancelBatchModal" class="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-200">ยกเลิก</button>
+                <button type="button" id="btnSaveBatchNav" class="px-5 py-2.5 rounded-xl bg-mfc-orange hover:bg-mfc-hover text-white font-semibold shadow-lg shadow-mfc-orange/20 flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลทั้งหมด
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Cloud Settings Modal -->
     <div id="cloudModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -556,6 +591,74 @@
 
         broadcastChannel.onmessage = () => fetchLocalData();
 
+        function openBatchNavModal() {
+            const container = document.getElementById('batchNavContainer');
+            container.innerHTML = '';
+
+            if (policies.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 text-center py-4">ไม่พบรายการกองทุน</p>';
+            } else {
+                policies.forEach((item) => {
+                    const units = Number(item.units) || 0;
+                    const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : (item.cost && units ? item.cost / units : 0)) || 0;
+                    const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
+
+                    const row = document.createElement('div');
+                    row.className = "bg-slate-950/70 p-3 rounded-xl border border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-center";
+                    row.innerHTML = `
+                        <div>
+                            <span class="font-bold text-mfc-orange text-sm">${item.code}</span>
+                            <span class="text-[11px] text-slate-400 block truncate">${item.name}</span>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-sky-400 font-medium mb-1">NAV/หน่วย (บิล)</label>
+                            <input type="number" step="0.0001" data-id="${item.id}" data-type="unitCost" value="${navUnitCost.toFixed(4)}" class="w-full bg-slate-800 border border-sky-500/40 text-slate-100 rounded-lg px-2.5 py-1.5 outline-none focus:border-sky-400 font-mono text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-amber-400 font-medium mb-1">NAV วันนี้ (เว็บ)</label>
+                            <input type="number" step="0.0001" data-id="${item.id}" data-type="navToday" value="${navToday.toFixed(4)}" class="w-full bg-slate-800 border border-amber-500/40 text-slate-100 rounded-lg px-2.5 py-1.5 outline-none focus:border-amber-400 font-mono text-xs">
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            document.getElementById('batchNavModal').classList.remove('hidden');
+        }
+
+        async function saveBatchNav() {
+            const container = document.getElementById('batchNavContainer');
+            const unitCostInputs = container.querySelectorAll('input[data-type="unitCost"]');
+            const navTodayInputs = container.querySelectorAll('input[data-type="navToday"]');
+
+            let updated = [...policies];
+
+            unitCostInputs.forEach(input => {
+                const id = parseInt(input.getAttribute('data-id'));
+                const newCost = parseFloat(input.value) || 0;
+                const target = updated.find(p => p.id === id);
+                if (target) {
+                    target.navUnitCost = newCost;
+                }
+            });
+
+            navTodayInputs.forEach(input => {
+                const id = parseInt(input.getAttribute('data-id'));
+                const newNavToday = parseFloat(input.value) || 0;
+                const target = updated.find(p => p.id === id);
+                if (target) {
+                    const currentNavToday = Number(target.navToday) || 0;
+                    if (currentNavToday !== newNavToday) {
+                        target.navYesterday = currentNavToday;
+                        target.navToday = newNavToday;
+                    }
+                }
+            });
+
+            await syncData(updated);
+            document.getElementById('batchNavModal').classList.add('hidden');
+        }
+
         function editPolicy(id) {
             const target = policies.find(p => p.id === id);
             if (!target) return;
@@ -591,6 +694,12 @@
             initSyncEngine();
             fetchLiveMarketData();
             setInterval(fetchLiveMarketData, 30000);
+
+            // Batch Update Modal events
+            document.getElementById('btnBatchNav').addEventListener('click', openBatchNavModal);
+            document.getElementById('btnCloseBatchModal').addEventListener('click', () => document.getElementById('batchNavModal').classList.add('hidden'));
+            document.getElementById('btnCancelBatchModal').addEventListener('click', () => document.getElementById('batchNavModal').classList.add('hidden'));
+            document.getElementById('btnSaveBatchNav').addEventListener('click', saveBatchNav);
 
             document.getElementById('btnExport').addEventListener('click', () => {
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(policies, null, 2));
