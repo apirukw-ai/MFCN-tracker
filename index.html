@@ -24,8 +24,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- PDF.js for Direct PDF Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     
     <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -64,7 +68,7 @@
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
                                 <h1 class="font-bold text-sm sm:text-base leading-tight text-white">MFC NU DIY Tracker</h1>
-                                <span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] sm:text-xs px-2 py-0.5 rounded-md font-mono">Acc: 9841205</span>
+                                <span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] sm:text-xs px-2 py-0.5 rounded-md font-mono">Acc: 080200</span>
                             </div>
                             <p class="text-[10px] sm:text-[11px] text-slate-400">ต้นทุนรวม = หน่วย × NAV/หน่วย (บิล) | มูลค่าวันนี้ = หน่วย × NAV วันนี้ (เว็บ)</p>
                         </div>
@@ -76,6 +80,12 @@
                 </div>
 
                 <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-end gap-2 text-xs">
+                    <!-- PDF Import Button -->
+                    <input type="file" id="importPdfInput" accept=".pdf" class="hidden">
+                    <button type="button" id="btnImportPdf" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-2.5 py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow-md transition-all">
+                        <i class="fa-solid fa-file-pdf text-amber-300"></i> นำเข้า PDF Statement
+                    </button>
+
                     <button type="button" id="btnCloudSettings" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 px-2.5 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all">
                         <i class="fa-solid fa-cloud text-sky-400"></i>
                         <span id="cloudStatusText">ตั้งค่า Cloud Sync</span>
@@ -209,8 +219,8 @@
                         <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-semibold">
                             <th class="p-3">แผน / นโยบาย</th>
                             <th class="p-3 text-center">จำนวนหน่วยรวม</th>
-                            <th class="p-3 text-right text-sky-400">NAV/หน่วย</th>
-                            <th class="p-3 text-right text-amber-400">NAV วันนี้</th>
+                            <th class="p-3 text-right text-sky-400">NAV/หน่วย (บิล)</th>
+                            <th class="p-3 text-right text-amber-400">NAV วันนี้ (เว็บ)</th>
                             <th class="p-3 text-right">ต้นทุนรวม</th>
                             <th class="p-3 text-right">มูลค่าเมื่อวาน</th>
                             <th class="p-3 text-right">มูลค่าวันนี้</th>
@@ -239,7 +249,7 @@
         <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3 flex-shrink-0">
                 <h3 class="font-bold text-slate-100 text-base sm:text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-amber-400"></i> อัปเดต NAV ทั้งหมด 6 กองทุนพร้อมกัน
+                    <i class="fa-solid fa-bolt text-amber-400"></i> อัปเดต NAV ทั้งหมดพร้อมกัน
                 </h3>
                 <button type="button" id="btnCloseBatchModal" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -342,12 +352,12 @@
         }
 
         const initialDefaultData = [
-            { id: 1, code: 'MPF07', name: 'IGOLD-G', units: 611.5193, navUnitCost: 16.9398, navToday: 18.0512, navYesterday: 18.0400 },
-            { id: 2, code: 'MPF15', name: 'MGTECH', units: 2254.7689, navUnitCost: 9.1885, navToday: 10.8043, navYesterday: 10.7900 },
-            { id: 3, code: 'MPF18', name: 'M-EM', units: 1092.0291, navUnitCost: 9.4860, navToday: 11.3695, navYesterday: 11.3500 },
-            { id: 4, code: 'MPF19', name: 'MEURO-G', units: 1253.2490, navUnitCost: 8.2657, navToday: 10.0567, navYesterday: 10.0400 },
-            { id: 5, code: 'MPF23', name: 'MGFPVD', units: 2824.3816, navUnitCost: 11.0031, navToday: 13.5771, navYesterday: 13.5600 },
-            { id: 6, code: 'MPF27', name: 'M-ASIA', units: 1787.9167, navUnitCost: 11.5878, navToday: 13.0584, navYesterday: 13.0400 }
+            { id: 1, code: 'MPF07', name: 'IGOLD-G', units: 611.5193, navUnitCost: 18.0512, navToday: 18.0512, navYesterday: 18.0400 },
+            { id: 2, code: 'MPF15', name: 'MGTECH', units: 2254.7689, navUnitCost: 10.8043, navToday: 10.8043, navYesterday: 10.7900 },
+            { id: 3, code: 'MPF18', name: 'M-EM', units: 1092.0291, navUnitCost: 11.3695, navToday: 11.3695, navYesterday: 11.3500 },
+            { id: 4, code: 'MPF19', name: 'MEURO-G', units: 1253.2490, navUnitCost: 10.0567, navToday: 10.0567, navYesterday: 10.0400 },
+            { id: 5, code: 'MPF23', name: 'MGFPVD', units: 2824.3816, navUnitCost: 13.5771, navToday: 13.5771, navYesterday: 13.5600 },
+            { id: 6, code: 'MPF27', name: 'M-ASIA', units: 1787.9167, navUnitCost: 13.0584, navToday: 13.0584, navYesterday: 13.0400 }
         ];
 
         const PORT_BASE_JAN1_2026 = 76010.79;
@@ -421,6 +431,67 @@
                 } catch (err) {
                     console.error("Cloud sync error:", err);
                 }
+            }
+        }
+
+        // PDF Statement Auto-Parser Engine (Updated correct mapping for navUnitCost)
+        async function processPDFStatement(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = "";
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(" ");
+                    fullText += pageText + "\n";
+                }
+
+                // Match MPF codes pattern
+                const matches = [...fullText.matchAll(/(MPF\d{2})/g)];
+                if (matches.length === 0) {
+                    alert('ไม่พบข้อมูลรหัสแผน MPF ในไฟล์ PDF นี้ กรุณาตรวจสอบว่าเป็นใบรับรองยอดเงิน MFC');
+                    return;
+                }
+
+                let updated = [...policies];
+                let updateCount = 0;
+
+                for (let i = 0; i < matches.length; i++) {
+                    const code = matches[i][1];
+                    const startIdx = matches[i].index;
+                    const endIdx = (i < matches.length - 1) ? matches[i+1].index : (fullText.indexOf("รวม") > startIdx ? fullText.indexOf("รวม") : fullText.length);
+                    const block = fullText.substring(startIdx, endIdx).replace(/,/g, '');
+
+                    // Find numbers with 4 decimal places (NAV & Units)
+                    const floats = block.match(/\d+\.\d{4}/g);
+
+                    if (floats && floats.length >= 2) {
+                        const billNavVal = parseFloat(floats[0]); // มูลค่าทรัพย์สินสุทธิต่อหน่วย (บาท) ในบิล
+                        const unitsVal = parseFloat(floats[floats.length - 1]); // จำนวนหน่วยรวม ในบิล
+
+                        if (unitsVal > 0.1) {
+                            const target = updated.find(p => p.code === code);
+                            if (target) {
+                                target.navUnitCost = billNavVal; // นำเข้าช่อง NAV/หน่วย (ต้นทุนจากบิล)
+                                target.units = unitsVal;         // นำเข้าช่อง จำนวนหน่วยรวม
+                                updateCount++;
+                            }
+                        }
+                    }
+                }
+
+                if (updateCount > 0) {
+                    await syncData(updated);
+                    alert(`สแกนนำเข้าสำเร็จ! อัปเดต NAV/หน่วย (บิล) และจำนวนหน่วยรวม ของทั้ง ${updateCount} กองทุนเรียบร้อยแล้ว`);
+                } else {
+                    alert('อ่านไฟล์ PDF เรียบร้อย แต่ไม่พบรายการกองทุนที่ตรงกับในระบบ');
+                }
+
+            } catch (err) {
+                console.error("PDF Parsing error:", err);
+                alert("เกิดข้อผิดพลาดในการอ่านไฟล์ PDF");
             }
         }
 
@@ -694,6 +765,14 @@
             initSyncEngine();
             fetchLiveMarketData();
             setInterval(fetchLiveMarketData, 30000);
+
+            // PDF Import Event Listeners
+            document.getElementById('btnImportPdf').addEventListener('click', () => document.getElementById('importPdfInput').click());
+            document.getElementById('importPdfInput').addEventListener('change', (e) => {
+                if (e.target.files[0]) {
+                    processPDFStatement(e.target.files[0]);
+                }
+            });
 
             // Batch Update Modal events
             document.getElementById('btnBatchNav').addEventListener('click', openBatchNavModal);
