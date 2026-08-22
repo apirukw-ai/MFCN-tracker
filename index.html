@@ -51,7 +51,7 @@
 </head>
 <body class="bg-mfc-darkBg text-slate-100 antialiased min-h-screen flex flex-col selection:bg-mfc-orange selection:text-white">
 
-    <!-- Header Section (Unsticky / Scrolls with page) -->
+    <!-- Header Section -->
     <header class="bg-mfc-darkHeader text-white border-b border-mfc-darkBorder shadow-2xl relative">
         <div class="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 space-y-3">
             
@@ -66,7 +66,7 @@
                                 <h1 class="font-bold text-sm sm:text-base leading-tight text-white">MFC NU DIY Tracker</h1>
                                 <span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] sm:text-xs px-2 py-0.5 rounded-md font-mono">Acc: 9841205</span>
                             </div>
-                            <p class="text-[10px] sm:text-[11px] text-slate-400">สูตร: มูลค่ารวม = จำนวนหน่วย × NAV/หน่วย</p>
+                            <p class="text-[10px] sm:text-[11px] text-slate-400">ต้นทุนรวม = หน่วย × NAV/หน่วย (บิล) | มูลค่าวันนี้ = หน่วย × NAV วันนี้ (เว็บ)</p>
                         </div>
                     </div>
                     <div id="syncStatusBadge" class="lg:hidden bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg flex items-center space-x-1 text-[10px] text-emerald-400">
@@ -170,18 +170,18 @@
                 </span>
             </div>
 
-            <!-- Summary Returns Cards displaying Amount & (%) -->
+            <!-- Summary Returns Cards -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5 pt-5 border-t border-slate-800 text-xs sm:text-sm">
                 <div class="bg-slate-950/50 border border-slate-800/80 p-3 rounded-xl">
-                    <p class="text-slate-400 text-[11px]">กำไร/ขาดทุนสะสมรวม</p>
+                    <p class="text-slate-400 text-[11px]">กำไรสะสมรวม</p>
                     <p class="text-sm sm:text-lg font-bold text-emerald-400 mt-0.5" id="totalProfitSummary">+฿0.00 (+0.00%)</p>
                 </div>
                 <div class="bg-slate-950/50 border border-slate-800/80 p-3 rounded-xl">
-                    <p class="text-slate-400 text-[11px]">ผลตอบแทนรวมวันนี้</p>
+                    <p class="text-slate-400 text-[11px]">กำไรวันนี้รวม</p>
                     <p class="text-sm sm:text-lg font-bold text-emerald-400 mt-0.5" id="totalDailySummary">+฿0.00 (+0.00%)</p>
                 </div>
                 <div class="bg-slate-950/50 border border-slate-800/80 p-3 rounded-xl">
-                    <p class="text-slate-400 text-[11px]">ผลตอบแทน YTD รวม</p>
+                    <p class="text-slate-400 text-[11px]">ผลตอบแทน YTD รวม (เทียบ 1 ม.ค. 69)</p>
                     <p class="text-sm sm:text-lg font-bold text-emerald-400 mt-0.5" id="totalYtdSummary">+฿0.00 (+0.00%)</p>
                 </div>
                 <div class="bg-slate-950/50 border border-slate-800/80 p-3 rounded-xl">
@@ -209,11 +209,13 @@
                         <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-semibold">
                             <th class="p-3">แผน / นโยบาย</th>
                             <th class="p-3 text-center">จำนวนหน่วยรวม</th>
-                            <th class="p-3 text-right text-amber-400">NAV/หน่วย (บาท)</th>
-                            <th class="p-3 text-right">มูลค่ารวมวันนี้ (บาท)</th>
-                            <th class="p-3 text-right">ผลตอบแทนวันนี้ (บาท & %)</th>
-                            <th class="p-3 text-right">กำไรสะสม (บาท & %)</th>
-                            <th class="p-3 text-right">YTD (บาท & %)</th>
+                            <th class="p-3 text-right text-sky-400">NAV/หน่วย</th>
+                            <th class="p-3 text-right text-amber-400">NAV วันนี้</th>
+                            <th class="p-3 text-right">ต้นทุนรวม</th>
+                            <th class="p-3 text-right">มูลค่าเมื่อวาน</th>
+                            <th class="p-3 text-right">มูลค่าวันนี้</th>
+                            <th class="p-3 text-right">กำไรวันนี้ (%)</th>
+                            <th class="p-3 text-right">กำไรสะสม (%)</th>
                             <th class="p-3 text-center">จัดการ</th>
                         </tr>
                     </thead>
@@ -267,29 +269,23 @@
                     <label class="block font-medium text-slate-300 mb-1">ชื่อกองทุน / รายละเอียด</label>
                     <input type="text" id="inputName" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-medium text-slate-300 mb-1">จำนวนหน่วยรวม</label>
-                        <input type="number" step="0.0001" id="inputUnits" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
-                    </div>
-                    <div>
-                        <label class="block font-medium text-amber-400 mb-1">NAV/หน่วย (บาท)</label>
-                        <input type="number" step="0.0001" id="inputNav" required class="w-full bg-slate-800 border border-amber-500/50 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-amber-400">
-                    </div>
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">จำนวนหน่วยรวม</label>
+                    <input type="number" step="0.0001" id="inputUnits" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">เงินรวมเมื่อวาน (บาท)</label>
-                        <input type="number" step="0.01" id="inputPrevAmt" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
+                        <label class="block font-medium text-sky-400 mb-1">NAV/หน่วย (ต้นทุนจากบิล)</label>
+                        <input type="number" step="0.0001" id="inputNavUnitCost" required class="w-full bg-slate-800 border border-sky-500/50 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-sky-400">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">ต้นทุนสะสม (บาท)</label>
-                        <input type="number" step="0.01" id="inputCost" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
+                        <label class="block font-medium text-amber-400 mb-1">NAV วันนี้ (เว็บ MFC)</label>
+                        <input type="number" step="0.0001" id="inputNavToday" required class="w-full bg-slate-800 border border-amber-500/50 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-amber-400">
                     </div>
                 </div>
                 <div>
-                    <label class="block font-medium text-slate-300 mb-1">ผลตอบแทน YTD (%)</label>
-                    <input type="number" step="0.01" id="inputYtd" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
+                    <label class="block font-medium text-slate-300 mb-1">NAV เมื่อวาน (เว็บ MFC)</label>
+                    <input type="number" step="0.0001" id="inputNavYesterday" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 outline-none focus:border-mfc-orange">
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-4 border-t border-slate-800 mt-2">
@@ -300,9 +296,8 @@
         </div>
     </div>
 
-    <!-- Application Script & SW Registration -->
+    <!-- Application Script -->
     <script>
-        // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -312,15 +307,14 @@
         }
 
         const initialDefaultData = [
-            { id: 1, code: 'MPF07', name: 'IGOLD-G', nav: 18.0512, ytd: -2.83, cost: 10359.03, units: 611.5193, prevAmt: 11038.65 },
-            { id: 2, code: 'MPF15', name: 'MGTECH', nav: 10.8043, ytd: 33.94, cost: 20718.06, units: 2254.7689, prevAmt: 24361.24 },
-            { id: 3, code: 'MPF18', name: 'M-EM', nav: 11.3695, ytd: 28.11, cost: 10359.03, units: 1092.0291, prevAmt: 12415.85 },
-            { id: 4, code: 'MPF19', name: 'MEURO-G', nav: 10.0567, ytd: 10.24, cost: 10359.03, units: 1253.2490, prevAmt: 12603.61 },
-            { id: 5, code: 'MPF23', name: 'MGFPVD', nav: 13.5771, ytd: 13.34, cost: 31077.09, units: 2824.3816, prevAmt: 38346.79 },
-            { id: 6, code: 'MPF27', name: 'M-ASIA', nav: 13.0584, ytd: 13.46, cost: 20718.06, units: 1787.9167, prevAmt: 23347.29 }
+            { id: 1, code: 'MPF07', name: 'IGOLD-G', units: 611.5193, navUnitCost: 16.9398, navToday: 18.0512, navYesterday: 18.0400 },
+            { id: 2, code: 'MPF15', name: 'MGTECH', units: 2254.7689, navUnitCost: 9.1885, navToday: 10.8043, navYesterday: 10.7900 },
+            { id: 3, code: 'MPF18', name: 'M-EM', units: 1092.0291, navUnitCost: 9.4860, navToday: 11.3695, navYesterday: 11.3500 },
+            { id: 4, code: 'MPF19', name: 'MEURO-G', units: 1253.2490, navUnitCost: 8.2657, navToday: 10.0567, navYesterday: 10.0400 },
+            { id: 5, code: 'MPF23', name: 'MGFPVD', units: 2824.3816, navUnitCost: 11.0031, navToday: 13.5771, navYesterday: 13.5600 },
+            { id: 6, code: 'MPF27', name: 'M-ASIA', units: 1787.9167, navUnitCost: 11.5878, navToday: 13.0584, navYesterday: 13.0400 }
         ];
 
-// กำหนดมูลค่าพอร์ต ณ ต้นปี (1 ม.ค. 2569)
         const PORT_BASE_JAN1_2026 = 76010.79;
         
         let policies = [];
@@ -328,7 +322,6 @@
         const broadcastChannel = new BroadcastChannel('mfc_local_sync');
 
         async function initSyncEngine() {
-            // โหลดข้อมูล Local เสมอเพื่อให้หน้าเว็บมีข้อมูลทันทีที่เปิด
             fetchLocalData();
 
             const url = localStorage.getItem('mfc_sp_url');
@@ -385,11 +378,8 @@
         async function syncData(updatedList) {
             policies = updatedList;
             renderTable();
-
-            // บันทึกลง LocalStorage ทุกครั้ง
             saveToLocalStorage();
 
-            // หากเชื่อมต่อ Supabase ไว้ ให้บันทึกขึ้น Cloud ด้วย
             if (supabaseClient) {
                 try {
                     await supabaseClient.from('mfc_policies').upsert(policies);
@@ -471,33 +461,36 @@
             if (!tbody) return;
             
             tbody.innerHTML = '';
-            let totalBalToday = 0, totalBalPrev = 0, totalCostSum = 0, totalUnitsSum = 0, totalYtdAmtSum = 0;
+            let totalBalToday = 0, totalBalPrev = 0, totalCostSum = 0, totalUnitsSum = 0;
 
             document.getElementById('recordCount').innerText = policies.length + ' รายการ';
 
             if (policies.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">ไม่พบข้อมูลแผนลงทุน</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-500">ไม่พบข้อมูลแผนลงทุน</td></tr>';
                 return;
             }
 
             policies.forEach((item) => {
-                const currentVal = item.units * item.nav;
-                item.totalAmt = currentVal;
+                const units = Number(item.units) || 0;
+                
+                const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : (item.cost && units ? item.cost / units : 0)) || 0;
+                const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
+                const navYesterday = Number(item.navYesterday !== undefined ? item.navYesterday : navToday) || 0;
 
-                totalBalToday += item.totalAmt;
-                totalBalPrev += item.prevAmt || 0;
-                totalCostSum += item.cost || 0;
-                totalUnitsSum += item.units || 0;
+                const costVal = units * navUnitCost;
+                const todayVal = units * navToday;
+                const yesterdayVal = units * navYesterday;
 
-                const dailyReturnAmt = item.totalAmt - (item.prevAmt || item.totalAmt);
-                const dailyReturnPct = (item.prevAmt && item.prevAmt > 0) ? ((dailyReturnAmt / item.prevAmt) * 100) : 0;
+                totalBalToday += todayVal;
+                totalBalPrev += yesterdayVal;
+                totalCostSum += costVal;
+                totalUnitsSum += units;
 
-                const profitAmt = item.totalAmt - (item.cost || 0);
-                const profitPct = (item.cost && item.cost > 0) ? ((profitAmt / item.cost) * 100) : 0;
+                const dailyProfitAmt = todayVal - yesterdayVal;
+                const dailyProfitPct = yesterdayVal > 0 ? (dailyProfitAmt / yesterdayVal) * 100 : 0;
 
-                const ytdValPct = item.ytd || 0;
-                const ytdAmt = ytdValPct !== 0 ? (item.totalAmt - (item.totalAmt / (1 + (ytdValPct / 100)))) : 0;
-                totalYtdAmtSum += ytdAmt;
+                const cumProfitAmt = todayVal - costVal;
+                const cumProfitPct = costVal > 0 ? (cumProfitAmt / costVal) * 100 : 0;
 
                 const fmtValPct = (amt, pct) => {
                     const sign = amt >= 0 ? '+' : '';
@@ -513,12 +506,14 @@
                         <span class="font-bold text-mfc-orange">${item.code}</span>
                         <span class="text-[10px] text-slate-400 block truncate max-w-[120px]">${item.name}</span>
                     </td>
-                    <td class="p-3 text-center font-mono font-medium">${Number(item.units).toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
-                    <td class="p-3 text-right font-mono font-bold text-amber-400">${Number(item.nav).toFixed(4)}</td>
-                    <td class="p-3 text-right font-bold text-slate-100">฿${Number(item.totalAmt).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td class="p-3 text-right font-bold">${fmtValPct(dailyReturnAmt, dailyReturnPct)}</td>
-                    <td class="p-3 text-right font-bold">${fmtValPct(profitAmt, profitPct)}</td>
-                    <td class="p-3 text-right font-bold">${fmtValPct(ytdAmt, ytdValPct)}</td>
+                    <td class="p-3 text-center font-mono font-medium">${units.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
+                    <td class="p-3 text-right font-mono font-bold text-sky-400">${navUnitCost.toFixed(4)}</td>
+                    <td class="p-3 text-right font-mono font-bold text-amber-400">${navToday.toFixed(4)}</td>
+                    <td class="p-3 text-right font-bold text-slate-300">฿${costVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-3 text-right font-bold text-slate-400">฿${yesterdayVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-3 text-right font-bold text-slate-100">฿${todayVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-3 text-right font-bold">${fmtValPct(dailyProfitAmt, dailyProfitPct)}</td>
+                    <td class="p-3 text-right font-bold">${fmtValPct(cumProfitAmt, cumProfitPct)}</td>
                     <td class="p-3 text-center space-x-1">
                         <button type="button" onclick="editPolicy(${item.id})" class="text-slate-400 hover:text-sky-400 p-1"><i class="fa-solid fa-pen"></i></button>
                         <button type="button" onclick="deletePolicy(${item.id})" class="text-slate-400 hover:text-rose-400 p-1"><i class="fa-solid fa-trash"></i></button>
@@ -565,14 +560,18 @@
             const target = policies.find(p => p.id === id);
             if (!target) return;
 
+            const units = Number(target.units) || 0;
+            const navUnitCost = target.navUnitCost !== undefined ? target.navUnitCost : (target.cost && units ? target.cost / units : 0);
+            const navToday = target.navToday !== undefined ? target.navToday : target.nav;
+            const navYesterday = target.navYesterday !== undefined ? target.navYesterday : navToday;
+
             document.getElementById('policyId').value = target.id;
             document.getElementById('inputCode').value = target.code;
             document.getElementById('inputName').value = target.name;
-            document.getElementById('inputUnits').value = target.units;
-            document.getElementById('inputNav').value = target.nav;
-            document.getElementById('inputPrevAmt').value = target.prevAmt || 0;
-            document.getElementById('inputCost').value = target.cost || 0;
-            document.getElementById('inputYtd').value = target.ytd || 0;
+            document.getElementById('inputUnits').value = units;
+            document.getElementById('inputNavUnitCost').value = Number(navUnitCost).toFixed(4);
+            document.getElementById('inputNavToday').value = Number(navToday).toFixed(4);
+            document.getElementById('inputNavYesterday').value = Number(navYesterday).toFixed(4);
 
             document.getElementById('modalTitle').innerText = 'แก้ไขแผนการลงทุน';
             document.getElementById('policyModal').classList.remove('hidden');
@@ -653,17 +652,16 @@
                 const code = document.getElementById('inputCode').value.trim().toUpperCase();
                 const name = document.getElementById('inputName').value.trim();
                 const units = parseFloat(document.getElementById('inputUnits').value) || 0;
-                const nav = parseFloat(document.getElementById('inputNav').value) || 0;
-                const prevAmt = parseFloat(document.getElementById('inputPrevAmt').value) || 0;
-                const cost = parseFloat(document.getElementById('inputCost').value) || 0;
-                const ytd = parseFloat(document.getElementById('inputYtd').value) || 0;
+                const navUnitCost = parseFloat(document.getElementById('inputNavUnitCost').value) || 0;
+                const navToday = parseFloat(document.getElementById('inputNavToday').value) || 0;
+                const navYesterday = parseFloat(document.getElementById('inputNavYesterday').value) || 0;
 
                 let updated = [...policies];
                 if (idVal) {
                     const idx = updated.findIndex(p => p.id == idVal);
-                    if (idx !== -1) updated[idx] = { id: parseInt(idVal), code, name, units, nav, prevAmt, cost, ytd };
+                    if (idx !== -1) updated[idx] = { id: parseInt(idVal), code, name, units, navUnitCost, navToday, navYesterday };
                 } else {
-                    updated.push({ id: Date.now(), code, name, units, nav, prevAmt, cost, ytd });
+                    updated.push({ id: Date.now(), code, name, units, navUnitCost, navToday, navYesterday });
                 }
 
                 await syncData(updated);
