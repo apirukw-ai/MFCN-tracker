@@ -295,9 +295,9 @@
                             <th class="p-3 text-right text-amber-400">NAV วันนี้</th>
                             <th class="p-3 text-right">ต้นทุนรวม</th>
                             <th class="p-3 text-right">มูลค่าวันนี้</th>
-                            <th class="p-3 text-right text-emerald-400">กำไรวันนี้ (%)</th>
-                            <th class="p-3 text-right text-sky-300">3 เดือน (%)</th>
-                            <th class="p-3 text-right text-amber-300">ต้นปี (YTD) (%)</th>
+                            <th class="p-3 text-right text-emerald-400">กำไรวันนี้</th>
+                            <th class="p-3 text-right text-sky-300">3 เดือน</th>
+                            <th class="p-3 text-right text-amber-300">ต้นปี (YTD)</th>
                             <th class="p-3 text-center">จัดการ</th>
                         </tr>
                     </thead>
@@ -819,174 +819,184 @@
             }
         }
 
-        function renderTable() {
-            const tbody = document.getElementById('policyTableBody');
-            const targetTbody = document.getElementById('targetTableBody');
-            if (!tbody || !targetTbody) return;
-            
-            tbody.innerHTML = '';
-            targetTbody.innerHTML = '';
+function renderTable() {
+    const tbody = document.getElementById('policyTableBody');
+    const targetTbody = document.getElementById('targetTableBody');
+    if (!tbody || !targetTbody) return;
+    
+    tbody.innerHTML = '';
+    targetTbody.innerHTML = '';
 
-            let totalBalToday = 0, totalBalPrev = 0, totalCostSum = 0, totalUnitsSum = 0;
-            let weighted3mSum = 0;
-            let totalYtdStartVal = 0;
+    let totalBalToday = 0, totalBalPrev = 0, totalCostSum = 0, totalUnitsSum = 0;
+    let weighted3mSum = 0;
+    let totalYtdStartVal = 0;
 
-            document.getElementById('recordCount').innerText = policies.length + ' รายการ';
+    document.getElementById('recordCount').innerText = policies.length + ' รายการ';
 
-            if (policies.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-500">ไม่พบข้อมูลแผนลงทุน</td></tr>';
-                targetTbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-500">ไม่พบข้อมูลสัดส่วนเป้าหมาย</td></tr>';
-                return;
-            }
+    if (policies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-500">ไม่พบข้อมูลแผนลงทุน</td></tr>';
+        targetTbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-500">ไม่พบข้อมูลสัดส่วนเป้าหมาย</td></tr>';
+        return;
+    }
 
-            // Calculation Loop
-            policies.forEach((item) => {
-                const units = Number(item.units) || 0;
-                const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : 0);
-                const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
-                const navYesterday = Number(item.navYesterday !== undefined ? item.navYesterday : navToday) || 0;
+    // Calculation Loop
+    policies.forEach((item) => {
+        const units = Number(item.units) || 0;
+        const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : 0);
+        const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
+        const navYesterday = Number(item.navYesterday !== undefined ? item.navYesterday : navToday) || 0;
 
-                const costVal = units * navUnitCost;
-                const todayVal = units * navToday;
-                const yesterdayVal = units * navYesterday;
+        const costVal = units * navUnitCost;
+        const todayVal = units * navToday;
+        const yesterdayVal = units * navYesterday;
 
-                totalBalToday += todayVal;
-                totalBalPrev += yesterdayVal;
-                totalCostSum += costVal;
-                totalUnitsSum += units;
+        totalBalToday += todayVal;
+        totalBalPrev += yesterdayVal;
+        totalCostSum += costVal;
+        totalUnitsSum += units;
 
-                const r3m = Number(item.return3m) || 0;
-                weighted3mSum += todayVal * r3m;
+        const r3m = Number(item.return3m) || 0;
+        weighted3mSum += todayVal * r3m;
 
-                const rYtd = Number(item.returnYtd) || 0;
-                const startYtdVal = todayVal / (1 + (rYtd / 100));
-                totalYtdStartVal += startYtdVal;
-            });
+        const rYtd = Number(item.returnYtd) || 0;
+        const startYtdVal = todayVal / (1 + (rYtd / 100));
+        totalYtdStartVal += startYtdVal;
+    });
 
-            // Target Table Render
-            policies.forEach((item) => {
-                const units = Number(item.units) || 0;
-                const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
-                const todayVal = units * navToday;
+    // Target Table Render
+    policies.forEach((item) => {
+        const units = Number(item.units) || 0;
+        const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
+        const todayVal = units * navToday;
 
-                const targetPct = TARGET_ALLOCATIONS[item.code] || 0;
-                const currentPct = totalBalToday > 0 ? (todayVal / totalBalToday) * 100 : 0;
-                const diffPct = currentPct - targetPct;
+        const targetPct = TARGET_ALLOCATIONS[item.code] || 0;
+        const currentPct = totalBalToday > 0 ? (todayVal / totalBalToday) * 100 : 0;
+        const diffPct = currentPct - targetPct;
 
-                const trTarget = document.createElement('tr');
-                trTarget.className = "hover:bg-slate-800/60 transition-colors border-b border-slate-800/80";
+        const trTarget = document.createElement('tr');
+        trTarget.className = "hover:bg-slate-800/60 transition-colors border-b border-slate-800/80";
 
-                let diffColor = 'text-slate-400';
-                if (Math.abs(diffPct) >= 0.01) {
-                    diffColor = diffPct > 0 ? 'text-amber-400' : 'text-rose-400';
-                }
-                const diffSign = diffPct > 0 ? '+' : '';
-
-                trTarget.innerHTML = `
-                    <td class="p-3">
-                        <span class="font-bold text-mfc-orange">${item.code}</span>
-                        <span class="text-[10px] text-slate-400 block truncate max-w-[150px]">${item.name}</span>
-                    </td>
-                    <td class="p-3 text-center font-bold text-slate-100">฿${todayVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    <td class="p-3 text-center font-mono font-bold text-slate-300">${targetPct.toFixed(2)}%</td>
-                    <td class="p-3 text-center font-mono font-bold text-slate-100">${currentPct.toFixed(2)}%</td>
-                    <td class="p-3 text-center font-mono font-bold ${diffColor}">${diffSign}${diffPct.toFixed(2)}%</td>
-                `;
-                targetTbody.appendChild(trTarget);
-            });
-
-            // Policy Table Render
-            policies.forEach((item) => {
-                const units = Number(item.units) || 0;
-                const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : 0);
-                const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
-                const navYesterday = Number(item.navYesterday !== undefined ? item.navYesterday : navToday) || 0;
-
-                const costVal = units * navUnitCost;
-                const todayVal = units * navToday;
-                const yesterdayVal = units * navYesterday;
-
-                const dailyProfitAmt = todayVal - yesterdayVal;
-                const dailyProfitPct = yesterdayVal > 0 ? (dailyProfitAmt / yesterdayVal) * 100 : 0;
-
-                const r3m = Number(item.return3m) || 0;
-                const rYtd = Number(item.returnYtd) || 0;
-
-                const fmtPct = (pct) => {
-                    const sign = pct >= 0 ? '+' : '';
-                    const color = pct >= 0 ? 'text-emerald-400' : 'text-rose-400';
-                    return `<span class="${color}">${sign}${pct.toFixed(2)}%</span>`;
-                };
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800/60 transition-colors border-b border-slate-800/80";
-
-                tr.innerHTML = `
-                    <td class="p-3">
-                        <span class="font-bold text-mfc-orange">${item.code}</span>
-                        <span class="text-[10px] text-slate-400 block truncate max-w-[120px]">${item.name}</span>
-                    </td>
-                    <td class="p-3 text-center font-mono font-medium">${units.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
-                    <td class="p-3 text-right font-mono font-bold text-sky-400">${navUnitCost.toFixed(4)}</td>
-                    <td class="p-3 text-right font-mono font-bold text-amber-400">${navToday.toFixed(4)}</td>
-                    <td class="p-3 text-right font-bold text-slate-300">฿${costVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td class="p-3 text-right font-bold text-slate-100">฿${todayVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td class="p-3 text-right font-bold font-mono">${fmtPct(dailyProfitPct)}</td>
-                    <td class="p-3 text-right font-bold font-mono text-sky-300">${fmtPct(r3m)}</td>
-                    <td class="p-3 text-right font-bold font-mono text-amber-300">${fmtPct(rYtd)}</td>
-                    <td class="p-3 text-center space-x-1">
-                        <button type="button" onclick="editPolicy(${item.id})" class="text-slate-400 hover:text-sky-400 p-1"><i class="fa-solid fa-pen"></i></button>
-                        <button type="button" onclick="deletePolicy(${item.id})" class="text-slate-400 hover:text-rose-400 p-1"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // Portfolio Summary Calculations
-            const totalProfitAmt = totalBalToday - totalCostSum;
-            const overallProfitPct = totalCostSum > 0 ? (totalProfitAmt * 100) / totalCostSum : 0;
-
-            const totalDailyAmt = totalBalToday - totalBalPrev;
-            const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
-
-            const overall3mPct = totalBalToday > 0 ? (weighted3mSum / totalBalToday) : 0;
-
-            const totalYtdProfitAmt = totalBalToday - totalYtdStartVal;
-            const overallYtdPct = totalYtdStartVal > 0 ? (totalYtdProfitAmt / totalYtdStartVal) * 100 : 0;
-
-            const formatCardText = (amt, pct) => {
-                const sign = amt >= 0 ? '+' : '';
-                return `${sign}฿${Math.abs(amt).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pct.toFixed(2)}%)`;
-            };
-
-            const formatPctOnly = (pct) => {
-                const sign = pct >= 0 ? '+' : '';
-                return `${sign}${pct.toFixed(2)}%`;
-            };
-
-            document.getElementById('portfolioBalance').innerText = '฿' + totalBalToday.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('totalCostAmt').innerText = '฿' + totalCostSum.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('totalUnitsBadge').innerText = totalUnitsSum.toLocaleString('en-US', {minimumFractionDigits: 4}) + ' Units';
-
-            const dailyEl = document.getElementById('totalDailySummary');
-            dailyEl.innerText = formatCardText(totalDailyAmt, overallDailyReturnPct);
-            dailyEl.className = `text-sm sm:text-base font-bold ${totalDailyAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
-
-            const profEl = document.getElementById('totalProfitSummary');
-            profEl.innerText = formatCardText(totalProfitAmt, overallProfitPct);
-            profEl.className = `text-sm sm:text-base font-bold ${totalProfitAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
-
-            const r3mEl = document.getElementById('total3mSummary');
-            r3mEl.innerText = formatPctOnly(overall3mPct);
-            r3mEl.className = `text-sm sm:text-base font-bold ${overall3mPct >= 0 ? 'text-sky-400' : 'text-rose-400'} mt-0.5`;
-
-            const ytdEl = document.getElementById('totalYtdSummary');
-            ytdEl.innerText = formatCardText(totalYtdProfitAmt, overallYtdPct);
-            ytdEl.className = `text-sm sm:text-base font-bold ${totalYtdProfitAmt >= 0 ? 'text-amber-400' : 'text-rose-400'} mt-0.5`;
-
-            // Render Analytics Charts
-            renderCharts(totalBalToday, totalCostSum);
+        let diffColor = 'text-slate-400';
+        if (Math.abs(diffPct) >= 0.01) {
+            diffColor = diffPct > 0 ? 'text-amber-400' : 'text-rose-400';
         }
+        const diffSign = diffPct > 0 ? '+' : '';
+
+        trTarget.innerHTML = `
+            <td class="p-3">
+                <span class="font-bold text-mfc-orange">${item.code}</span>
+                <span class="text-[10px] text-slate-400 block truncate max-w-[150px]">${item.name}</span>
+            </td>
+            <td class="p-3 text-center font-bold text-slate-100">฿${todayVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            <td class="p-3 text-center font-mono font-bold text-slate-300">${targetPct.toFixed(2)}%</td>
+            <td class="p-3 text-center font-mono font-bold text-slate-100">${currentPct.toFixed(2)}%</td>
+            <td class="p-3 text-center font-mono font-bold ${diffColor}">${diffSign}${diffPct.toFixed(2)}%</td>
+        `;
+        targetTbody.appendChild(trTarget);
+    });
+
+    // Policy Table Render
+    policies.forEach((item) => {
+        const units = Number(item.units) || 0;
+        const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : 0);
+        const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
+        const navYesterday = Number(item.navYesterday !== undefined ? item.navYesterday : navToday) || 0;
+
+        const costVal = units * navUnitCost;
+        const todayVal = units * navToday;
+        const yesterdayVal = units * navYesterday;
+
+        // 1. คำนวณกำไรวันนี้ (บาท และ %)
+        const dailyProfitAmt = todayVal - yesterdayVal;
+        const dailyProfitPct = yesterdayVal > 0 ? (dailyProfitAmt / yesterdayVal) * 100 : 0;
+
+        // 2. คำนวณกำไร 3 เดือน (บาท และ %)
+        const r3m = Number(item.return3m) || 0;
+        const start3mVal = r3m !== -100 ? todayVal / (1 + (r3m / 100)) : 0;
+        const profit3mAmt = todayVal - start3mVal;
+
+        // 3. คำนวณกำไร YTD (บาท และ %)
+        const rYtd = Number(item.returnYtd) || 0;
+        const startYtdVal = rYtd !== -100 ? todayVal / (1 + (rYtd / 100)) : 0;
+        const profitYtdAmt = todayVal - startYtdVal;
+
+        // ฟังก์ชันช่วยจัด Format ยอดเงิน (บาท) พร้อม % ในวงเล็บ
+        const fmtAmtAndPct = (amt, pct) => {
+            const sign = amt >= 0 ? '+' : '';
+            const color = amt >= 0 ? 'text-emerald-400' : 'text-rose-400';
+            const formattedAmt = Math.abs(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            return `<span class="${color}">${sign}฿${formattedAmt} (${sign}${pct.toFixed(2)}%)</span>`;
+        };
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/60 transition-colors border-b border-slate-800/80";
+
+        tr.innerHTML = `
+            <td class="p-3">
+                <span class="font-bold text-mfc-orange">${item.code}</span>
+                <span class="text-[10px] text-slate-400 block truncate max-w-[120px]">${item.name}</span>
+            </td>
+            <td class="p-3 text-center font-mono font-medium">${units.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
+            <td class="p-3 text-right font-mono font-bold text-sky-400">${navUnitCost.toFixed(4)}</td>
+            <td class="p-3 text-right font-mono font-bold text-amber-400">${navToday.toFixed(4)}</td>
+            <td class="p-3 text-right font-bold text-slate-300">฿${costVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+            <td class="p-3 text-right font-bold text-slate-100">฿${todayVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+            <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(dailyProfitAmt, dailyProfitPct)}</td>
+            <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(profit3mAmt, r3m)}</td>
+            <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(profitYtdAmt, rYtd)}</td>
+            <td class="p-3 text-center space-x-1">
+                <button type="button" onclick="editPolicy(${item.id})" class="text-slate-400 hover:text-sky-400 p-1"><i class="fa-solid fa-pen"></i></button>
+                <button type="button" onclick="deletePolicy(${item.id})" class="text-slate-400 hover:text-rose-400 p-1"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Portfolio Summary Calculations
+    const totalProfitAmt = totalBalToday - totalCostSum;
+    const overallProfitPct = totalCostSum > 0 ? (totalProfitAmt * 100) / totalCostSum : 0;
+
+    const totalDailyAmt = totalBalToday - totalBalPrev;
+    const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
+
+    const overall3mPct = totalBalToday > 0 ? (weighted3mSum / totalBalToday) : 0;
+
+    const totalYtdProfitAmt = totalBalToday - totalYtdStartVal;
+    const overallYtdPct = totalYtdStartVal > 0 ? (totalYtdProfitAmt / totalYtdStartVal) * 100 : 0;
+
+    const formatCardText = (amt, pct) => {
+        const sign = amt >= 0 ? '+' : '';
+        return `${sign}฿${Math.abs(amt).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pct.toFixed(2)}%)`;
+    };
+
+    const formatPctOnly = (pct) => {
+        const sign = pct >= 0 ? '+' : '';
+        return `${sign}${pct.toFixed(2)}%`;
+    };
+
+    document.getElementById('portfolioBalance').innerText = '฿' + totalBalToday.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('totalCostAmt').innerText = '฿' + totalCostSum.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('totalUnitsBadge').innerText = totalUnitsSum.toLocaleString('en-US', {minimumFractionDigits: 4}) + ' Units';
+
+    const dailyEl = document.getElementById('totalDailySummary');
+    dailyEl.innerText = formatCardText(totalDailyAmt, overallDailyReturnPct);
+    dailyEl.className = `text-sm sm:text-base font-bold ${totalDailyAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
+
+    const profEl = document.getElementById('totalProfitSummary');
+    profEl.innerText = formatCardText(totalProfitAmt, overallProfitPct);
+    profEl.className = `text-sm sm:text-base font-bold ${totalProfitAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
+
+    const r3mEl = document.getElementById('total3mSummary');
+    r3mEl.innerText = formatPctOnly(overall3mPct);
+    r3mEl.className = `text-sm sm:text-base font-bold ${overall3mPct >= 0 ? 'text-sky-400' : 'text-rose-400'} mt-0.5`;
+
+    const ytdEl = document.getElementById('totalYtdSummary');
+    ytdEl.innerText = formatCardText(totalYtdProfitAmt, overallYtdPct);
+    ytdEl.className = `text-sm sm:text-base font-bold ${totalYtdProfitAmt >= 0 ? 'text-amber-400' : 'text-rose-400'} mt-0.5`;
+
+    // Render Analytics Charts
+    renderCharts(totalBalToday, totalCostSum);
+}
 
         broadcastChannel.onmessage = () => fetchLocalData();
 
