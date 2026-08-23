@@ -908,10 +908,10 @@ function renderTable() {
         totalCostSum += costVal;
         totalUnitsSum += units;
 
-        const r3m = Number(item.return3m) || 0;
+        const r3m = Number(item.return3m ?? item.return_3m ?? item.r3m ?? 0);
         weighted3mSum += todayVal * r3m;
 
-        const rYtd = Number(item.returnYtd) || 0;
+        const rYtd = Number(item.returnYtd ?? item.return_ytd ?? item.rYtd ?? 0);
         const startYtdVal = todayVal / (1 + (rYtd / 100));
         totalYtdStartVal += startYtdVal;
     });
@@ -964,12 +964,12 @@ function renderTable() {
         const dailyProfitPct = yesterdayVal > 0 ? (dailyProfitAmt / yesterdayVal) * 100 : 0;
 
         // 2. คำนวณกำไร 3 เดือน (บาท และ %)
-        const r3m = Number(item.return3m) || 0;
+        const r3m = Number(item.return3m ?? item.return_3m ?? item.r3m ?? 0);
         const start3mVal = r3m !== -100 ? todayVal / (1 + (r3m / 100)) : 0;
         const profit3mAmt = todayVal - start3mVal;
 
         // 3. คำนวณกำไร YTD (บาท และ %)
-        const rYtd = Number(item.returnYtd) || 0;
+        const rYtd = Number(item.returnYtd ?? item.return_ytd ?? item.rYtd ?? 0);
         const startYtdVal = rYtd !== -100 ? todayVal / (1 + (rYtd / 100)) : 0;
         const profitYtdAmt = todayVal - startYtdVal;
 
