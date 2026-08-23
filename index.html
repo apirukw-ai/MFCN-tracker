@@ -722,53 +722,101 @@
 
         // Render Bar Chart & History Line Chart
         function renderCharts(totalBalToday, totalCostSum) {
-            // 1. Profit Bar Chart
-            const ctxBar = document.getElementById('profitBarChart')?.getContext('2d');
-            if (ctxBar && policies.length > 0) {
-                const labels = policies.map(p => p.code);
-                const profitData = policies.map(p => {
-                    const units = Number(p.units) || 0;
-                    const navCost = Number(p.navUnitCost !== undefined ? p.navUnitCost : 0);
-                    const navToday = Number(p.navToday !== undefined ? p.navToday : p.nav) || 0;
-                    return (units * navToday) - (units * navCost);
+// 1. Profit Bar Chart
+const ctxBar = document.getElementById('profitBarChart')?.getContext('2d');
+if (ctxBar && policies.length > 0) {
+    const labels = policies.map(p => p.code);
+    const profitData = [];
+    const pctData = [];
+
+    // คำนวณทั้งยอดเงิน (บาท) และเปอร์เซ็นต์ (%)
+    policies.forEach(p => {
+        const units = Number(p.units) || 0;
+        const navCost = Number(p.navUnitCost !== undefined ? p.navUnitCost : 0);
+        const navToday = Number(p.navToday !== undefined ? p.navToday : p.nav) || 0;
+        
+        const costVal = units * navCost;
+        const todayVal = units * navToday;
+        const profitAmt = todayVal - costVal;
+        const profitPct = costVal > 0 ? (profitAmt / costVal) * 100 : 0;
+
+        profitData.push(profitAmt);
+        pctData.push(profitPct);
+    });
+
+    const bgColors = profitData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.75)' : 'rgba(244, 63, 94, 0.75)');
+    const borderColors = profitData.map(v => v >= 0 ? '#10B981' : '#F43F5E');
+
+    // Custom Plugin วาดตัวเลข % บนหัวแท่งกราฟ
+    const barPctPlugin = {
+        id: 'barPctPlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    const pct = dataset.pctData[index];
+                    if (pct === undefined || isNaN(pct)) return;
+                    
+                    const sign = pct >= 0 ? '+' : '';
+                    const text = `${sign}${pct.toFixed(2)}%`;
+                    
+                    ctx.save();
+                    ctx.fillStyle = pct >= 0 ? '#34D399' : '#F87171'; // สีเขียว / สีแดง
+                    ctx.font = '600 11px Prompt, sans-serif';
+                    ctx.textAlign = 'center';
+                    
+                    // ปรับตำแหน่ง Y: กำไรไว้เหนือแท่ง ขาดทุนไว้ใต้แท่ง
+                    const yPos = pct >= 0 ? bar.y - 6 : bar.y + 14;
+                    ctx.fillText(text, bar.x, yPos);
+                    ctx.restore();
                 });
+            });
+        }
+    };
 
-                const bgColors = profitData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.75)' : 'rgba(244, 63, 94, 0.75)');
-                const borderColors = profitData.map(v => v >= 0 ? '#10B981' : '#F43F5E');
-
-                if (barChartInstance) barChartInstance.destroy();
-                barChartInstance = new Chart(ctxBar, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'กำไร/ขาดทุน (บาท)',
-                            data: profitData,
-                            backgroundColor: bgColors,
-                            borderColor: borderColors,
-                            borderWidth: 1.5,
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: (ctx) => `กำไร/ขาดทุน: ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-                                }
-                            }
-                        },
-                        scales: {
-                            x: { ticks: { color: '#94A3B8', font: { family: 'Prompt' } }, grid: { display: false } },
-                            y: { ticks: { color: '#94A3B8', font: { family: 'Prompt' } }, grid: { color: '#1E293B' } }
+    if (barChartInstance) barChartInstance.destroy();
+    barChartInstance = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'กำไร/ขาดทุน (บาท)',
+                data: profitData,
+                pctData: pctData, // แนบข้อมูล % ไปกับ dataset
+                backgroundColor: bgColors,
+                borderColor: borderColors,
+                borderWidth: 1.5,
+                borderRadius: 6
+            }]
+        },
+        plugins: [barPctPlugin], // เรียกใช้ Custom Plugin
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: { top: 20, bottom: 10 } // เว้นพื้นที่ด้านบนเพื่อไม่ให้ % โดนขอบกราฟบัง
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const amt = ctx.raw;
+                            const pct = ctx.dataset.pctData[ctx.dataIndex];
+                            const sign = amt >= 0 ? '+' : '';
+                            return `กำไร/ขาดทุน: ${sign}฿${Math.abs(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pct.toFixed(2)}%)`;
                         }
                     }
-                });
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#94A3B8', font: { family: 'Prompt' } }, grid: { display: false } },
+                y: { ticks: { color: '#94A3B8', font: { family: 'Prompt' } }, grid: { color: '#1E293B' } }
             }
-
+        }
+    });
+}
             // 2. History Line Chart
             const ctxHistory = document.getElementById('historyLineChart')?.getContext('2d');
             if (ctxHistory) {
