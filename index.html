@@ -303,6 +303,11 @@
                     </thead>
                     <tbody id="policyTableBody" class="divide-y divide-slate-800/80 font-medium text-slate-200">
                     </tbody>
+
+                    <!-- วางแทรกตรงบรรทัด 305 ตรงนี้ครับ -->
+        <tfoot id="policyTableFoot" class="bg-slate-900/90 border-t-2 border-slate-700">
+        </tfoot>
+                    
                 </table>
             </div>
 
@@ -994,6 +999,47 @@ function renderTable() {
     ytdEl.innerText = formatCardText(totalYtdProfitAmt, overallYtdPct);
     ytdEl.className = `text-sm sm:text-base font-bold ${totalYtdProfitAmt >= 0 ? 'text-amber-400' : 'text-rose-400'} mt-0.5`;
 
+// --- สรุปผลรวมท้ายตารางแผนการลงทุน (policyTableFoot) ---
+    const policyTfoot = document.getElementById('policyTableFoot');
+    if (policyTfoot) {
+        policyTfoot.innerHTML = '';
+
+        if (policies.length > 0) {
+            const totalDailyAmt = totalBalToday - totalBalPrev;
+            const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
+
+            const overall3mPct = totalBalToday > 0 ? (weighted3mSum / totalBalToday) : 0;
+            const start3mValTotal = weighted3mSum !== 0 ? totalBalToday / (1 + (overall3mPct / 100)) : totalBalToday;
+            const total3mAmt = totalBalToday - start3mValTotal;
+
+            const totalYtdProfitAmt = totalBalToday - totalYtdStartVal;
+            const overallYtdPct = totalYtdStartVal > 0 ? (totalYtdProfitAmt / totalYtdStartVal) * 100 : 0;
+
+            const fmtAmtAndPct = (amt, pct) => {
+                const sign = amt >= 0 ? '+' : '';
+                const color = amt >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const formattedAmt = Math.abs(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                return `<span class="${color}">${sign}฿${formattedAmt} (${sign}${pct.toFixed(2)}%)</span>`;
+            };
+
+            const trFoot = document.createElement('tr');
+            trFoot.className = "font-bold text-slate-100";
+            trFoot.innerHTML = `
+                <td class="p-3 font-bold text-slate-200">รวมทั้งหมด</td>
+                <td class="p-3 text-center font-mono text-slate-300">${totalUnitsSum.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
+                <td class="p-3 text-right text-slate-500">-</td>
+                <td class="p-3 text-right text-slate-500">-</td>
+                <td class="p-3 text-right font-bold text-slate-300">฿${totalCostSum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="p-3 text-right font-bold text-emerald-400">฿${totalBalToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalDailyAmt, overallDailyReturnPct)}</td>
+                <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(total3mAmt, overall3mPct)}</td>
+                <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalYtdProfitAmt, overallYtdPct)}</td>
+                <td class="p-3 text-center text-slate-500">-</td>
+            `;
+            policyTfoot.appendChild(trFoot);
+        }
+    }
+    
     // Render Analytics Charts
     renderCharts(totalBalToday, totalCostSum);
 }
