@@ -26,6 +26,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- PDF.js for Direct PDF Parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Chart.js for Portfolio Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -53,7 +55,10 @@
         body { font-family: 'Prompt', sans-serif; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
-<body class="bg-mfc-darkBg text-slate-100 antialiased min-h-screen flex flex-col selection:bg-mfc-orange selection:text-white">
+<body class="bg-mfc-darkBg text-slate-100 antialiased min-h-screen flex flex-col selection:bg-mfc-orange selection:text-white relative">
+
+    <!-- Dynamic Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
     <!-- Header Section -->
     <header class="bg-mfc-darkHeader text-white border-b border-mfc-darkBorder shadow-2xl relative">
@@ -206,6 +211,40 @@
             </div>
         </div>
 
+        <!-- Visual Analytics Section (Bar Chart & History Line Chart) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <!-- Fund Profit Bar Chart -->
+            <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-5 shadow-2xl border border-mfc-darkBorder flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-mfc-orange"></i> กำไร/ขาดทุน รายกองทุน (บาท)
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">เปรียบเทียบกำไรสะสมเป็นจำนวนเงินของแต่ละกองทุน</p>
+                </div>
+                <div class="mt-4 relative h-48 sm:h-56 w-full">
+                    <canvas id="profitBarChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Portfolio History Line Chart -->
+            <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-5 shadow-2xl border border-mfc-darkBorder flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-sky-400"></i> ประวัติการเติบโตของพอร์ต (Portfolio History)
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">แนวโน้มมูลค่าพอร์ตเทียบต้นทุนย้อนหลัง</p>
+                    </div>
+                    <button type="button" id="btnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-400 transition-colors">
+                        <i class="fa-solid fa-trash-can"></i> ล้างประวัติ
+                    </button>
+                </div>
+                <div class="mt-4 relative h-48 sm:h-56 w-full">
+                    <canvas id="historyLineChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- Target Allocation Table Section -->
         <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-6 shadow-2xl border border-mfc-darkBorder space-y-4">
             <div class="flex items-center justify-between">
@@ -221,10 +260,11 @@
                 <table class="w-full text-xs sm:text-sm text-left border-collapse whitespace-nowrap">
                     <thead>
                         <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-semibold">
-                            <th class="p-3">แผน / กองทุน</th>
-                            <th class="p-3 text-right">สัดส่วนเป้าหมาย (%)</th>
-                            <th class="p-3 text-right">สัดส่วนปัจจุบัน (%)</th>
-                            <th class="p-3 text-right">ส่วนต่าง (%)</th>
+                            <th class="p-3">แผน</th>
+                            <th class="p-3 text-center">มูลค่าวันนี้</th>
+                            <th class="p-3 text-center">สัดส่วนเป้าหมาย (%)</th>
+                            <th class="p-3 text-center">สัดส่วนปัจจุบัน (%)</th>
+                            <th class="p-3 text-center">ส่วนต่าง (%)</th>
                         </tr>
                     </thead>
                     <tbody id="targetTableBody" class="divide-y divide-slate-800/80 font-medium text-slate-200">
@@ -249,7 +289,7 @@
                 <table class="w-full text-xs sm:text-sm text-left border-collapse whitespace-nowrap">
                     <thead>
                         <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-semibold">
-                            <th class="p-3">แผน / นโยบาย</th>
+                            <th class="p-3">แผน</th>
                             <th class="p-3 text-center">จำนวนหน่วยรวม</th>
                             <th class="p-3 text-right text-sky-400">NAV ต้นทุน</th>
                             <th class="p-3 text-right text-amber-400">NAV วันนี้</th>
@@ -401,7 +441,6 @@
             'MPF27': 20.00
         };
 
-        // Realistic distinct cost values vs today values
         const initialDefaultData = [
             { id: 1, code: 'MPF07', name: 'IGOLD-G', units: 611.5193, navUnitCost: 14.5020, navToday: 18.0512, navYesterday: 18.0400, return3m: 3.50, returnYtd: 8.20 },
             { id: 2, code: 'MPF15', name: 'MGTECH', units: 2254.7689, navUnitCost: 8.1200, navToday: 10.8043, navYesterday: 10.7900, return3m: 5.80, returnYtd: 12.40 },
@@ -413,7 +452,43 @@
 
         let policies = [];
         let supabaseClient = null;
+        let barChartInstance = null;
+        let historyChartInstance = null;
         const broadcastChannel = new BroadcastChannel('mfc_local_sync');
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const bgColors = {
+                success: 'bg-emerald-950/90 border-emerald-500/50 text-emerald-100',
+                error: 'bg-rose-950/90 border-rose-500/50 text-rose-100',
+                warning: 'bg-amber-950/90 border-amber-500/50 text-amber-100',
+                info: 'bg-sky-950/90 border-sky-500/50 text-sky-100'
+            };
+            const icons = {
+                success: 'fa-circle-check text-emerald-400',
+                error: 'fa-circle-xmark text-rose-400',
+                warning: 'fa-triangle-exclamation text-amber-400',
+                info: 'fa-circle-info text-sky-400'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md transition-all duration-300 transform translate-y-2 opacity-0 text-xs sm:text-sm ${bgColors[type] || bgColors.info}`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-base"></i> <span class="font-medium">${message}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
 
         async function initSyncEngine() {
             fetchLocalData();
@@ -454,7 +529,6 @@
             if (local) {
                 try { 
                     let parsed = JSON.parse(local); 
-                    // Auto-Migration: If local cache contains identical navUnitCost & navToday across all items, reset to clean default data
                     const isOldBuggedData = parsed.length > 0 && parsed.every(p => {
                         const cost = p.navUnitCost !== undefined ? p.navUnitCost : (p.nav || 0);
                         const today = p.navToday !== undefined ? p.navToday : (p.nav || 0);
@@ -511,7 +585,7 @@
 
                 const matches = [...fullText.matchAll(/(MPF\d{2})/g)];
                 if (matches.length === 0) {
-                    alert('ไม่พบข้อมูลรหัสแผน MPF ในไฟล์ PDF นี้');
+                    showToast('ไม่พบข้อมูลรหัสแผน MPF ในไฟล์ PDF นี้', 'warning');
                     return;
                 }
 
@@ -543,14 +617,14 @@
 
                 if (updateCount > 0) {
                     await syncData(updated);
-                    alert(`อัปเดต NAV ต้นทุน และจำนวนหน่วยรวม ของทั้ง ${updateCount} กองทุนเรียบร้อยแล้ว`);
+                    showToast(`นำเข้า PDF และอัปเดต ${updateCount} กองทุนเรียบร้อยแล้ว`, 'success');
                 } else {
-                    alert('ไม่พบรายการกองทุนที่ตรงกับในระบบ');
+                    showToast('ไม่พบรายการกองทุนที่ตรงกับในระบบ', 'warning');
                 }
 
             } catch (err) {
                 console.error("PDF Parsing error:", err);
-                alert("เกิดข้อผิดพลาดในการอ่านไฟล์ PDF");
+                showToast("เกิดข้อผิดพลาดในการอ่านไฟล์ PDF", "error");
             }
         }
 
@@ -621,6 +695,130 @@
             document.getElementById('liveApiTimer').innerText = 'อัปเดตแล้วเมื่อ ' + new Date().toLocaleTimeString('th-TH');
         }
 
+        // Portfolio History Recording Engine
+        function updateHistoryLog(totalValue, totalCost) {
+            if (totalValue <= 0) return [];
+            let history = JSON.parse(localStorage.getItem('mfc_history_log') || '[]');
+            const todayStr = new Date().toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
+            
+            const record = { date: todayStr, value: Math.round(totalValue), cost: Math.round(totalCost) };
+            const existingIdx = history.findIndex(h => h.date === todayStr);
+
+            if (existingIdx >= 0) {
+                history[existingIdx] = record;
+            } else {
+                history.push(record);
+            }
+
+            if (history.length > 20) history = history.slice(history.length - 20);
+            localStorage.setItem('mfc_history_log', JSON.stringify(history));
+            return history;
+        }
+
+        // Render Bar Chart & History Line Chart
+        function renderCharts(totalBalToday, totalCostSum) {
+            // 1. Profit Bar Chart
+            const ctxBar = document.getElementById('profitBarChart')?.getContext('2d');
+            if (ctxBar && policies.length > 0) {
+                const labels = policies.map(p => p.code);
+                const profitData = policies.map(p => {
+                    const units = Number(p.units) || 0;
+                    const navCost = Number(p.navUnitCost !== undefined ? p.navUnitCost : 0);
+                    const navToday = Number(p.navToday !== undefined ? p.navToday : p.nav) || 0;
+                    return (units * navToday) - (units * navCost);
+                });
+
+                const bgColors = profitData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.75)' : 'rgba(244, 63, 94, 0.75)');
+                const borderColors = profitData.map(v => v >= 0 ? '#10B981' : '#F43F5E');
+
+                if (barChartInstance) barChartInstance.destroy();
+                barChartInstance = new Chart(ctxBar, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'กำไร/ขาดทุน (บาท)',
+                            data: profitData,
+                            backgroundColor: bgColors,
+                            borderColor: borderColors,
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `กำไร/ขาดทุน: ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#94A3B8', font: { family: 'Prompt' } }, grid: { display: false } },
+                            y: { ticks: { color: '#94A3B8', font: { family: 'Prompt' } }, grid: { color: '#1E293B' } }
+                        }
+                    }
+                });
+            }
+
+            // 2. History Line Chart
+            const ctxHistory = document.getElementById('historyLineChart')?.getContext('2d');
+            if (ctxHistory) {
+                const history = updateHistoryLog(totalBalToday, totalCostSum) || [];
+                const histLabels = history.map(h => h.date);
+                const histValData = history.map(h => h.value);
+                const histCostData = history.map(h => h.cost);
+
+                if (historyChartInstance) historyChartInstance.destroy();
+                historyChartInstance = new Chart(ctxHistory, {
+                    type: 'line',
+                    data: {
+                        labels: histLabels.length > 0 ? histLabels : ['วันนี้'],
+                        datasets: [
+                            {
+                                label: 'มูลค่าพอร์ต',
+                                data: histValData.length > 0 ? histValData : [totalBalToday],
+                                borderColor: '#F36F21',
+                                backgroundColor: 'rgba(243, 111, 33, 0.15)',
+                                fill: true,
+                                tension: 0.35,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#F36F21'
+                            },
+                            {
+                                label: 'ต้นทุนสะสม',
+                                data: histCostData.length > 0 ? histCostData : [totalCostSum],
+                                borderColor: '#64748B',
+                                borderDash: [4, 4],
+                                fill: false,
+                                tension: 0.1,
+                                pointRadius: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: '#CBD5E1', font: { family: 'Prompt', size: 11 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `${ctx.dataset.label}: ฿${ctx.raw.toLocaleString()}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#94A3B8', font: { family: 'Prompt' } }, grid: { display: false } },
+                            y: { ticks: { color: '#94A3B8', font: { family: 'Prompt' } }, grid: { color: '#1E293B' } }
+                        }
+                    }
+                });
+            }
+        }
+
         function renderTable() {
             const tbody = document.getElementById('policyTableBody');
             const targetTbody = document.getElementById('targetTableBody');
@@ -637,7 +835,7 @@
 
             if (policies.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-slate-500">ไม่พบข้อมูลแผนลงทุน</td></tr>';
-                targetTbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-500">ไม่พบข้อมูลสัดส่วนเป้าหมาย</td></tr>';
+                targetTbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-500">ไม่พบข้อมูลสัดส่วนเป้าหมาย</td></tr>';
                 return;
             }
 
@@ -678,7 +876,10 @@
                 const trTarget = document.createElement('tr');
                 trTarget.className = "hover:bg-slate-800/60 transition-colors border-b border-slate-800/80";
 
-                const diffColor = Math.abs(diffPct) < 0.01 ? 'text-slate-400' : (diffPct > 0 ? 'text-amber-400' : 'text-sky-400');
+                let diffColor = 'text-slate-400';
+                if (Math.abs(diffPct) >= 0.01) {
+                    diffColor = diffPct > 0 ? 'text-amber-400' : 'text-rose-400';
+                }
                 const diffSign = diffPct > 0 ? '+' : '';
 
                 trTarget.innerHTML = `
@@ -686,9 +887,10 @@
                         <span class="font-bold text-mfc-orange">${item.code}</span>
                         <span class="text-[10px] text-slate-400 block truncate max-w-[150px]">${item.name}</span>
                     </td>
-                    <td class="p-3 text-right font-mono font-bold text-slate-300">${targetPct.toFixed(2)}%</td>
-                    <td class="p-3 text-right font-mono font-bold text-slate-100">${currentPct.toFixed(2)}%</td>
-                    <td class="p-3 text-right font-mono font-bold ${diffColor}">${diffSign}${diffPct.toFixed(2)}%</td>
+                    <td class="p-3 text-center font-bold text-slate-100">฿${todayVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="p-3 text-center font-mono font-bold text-slate-300">${targetPct.toFixed(2)}%</td>
+                    <td class="p-3 text-center font-mono font-bold text-slate-100">${currentPct.toFixed(2)}%</td>
+                    <td class="p-3 text-center font-mono font-bold ${diffColor}">${diffSign}${diffPct.toFixed(2)}%</td>
                 `;
                 targetTbody.appendChild(trTarget);
             });
@@ -781,6 +983,9 @@
             const ytdEl = document.getElementById('totalYtdSummary');
             ytdEl.innerText = formatCardText(totalYtdProfitAmt, overallYtdPct);
             ytdEl.className = `text-sm sm:text-base font-bold ${totalYtdProfitAmt >= 0 ? 'text-amber-400' : 'text-rose-400'} mt-0.5`;
+
+            // Render Analytics Charts
+            renderCharts(totalBalToday, totalCostSum);
         }
 
         broadcastChannel.onmessage = () => fetchLocalData();
@@ -851,6 +1056,7 @@
 
             await syncData(updated);
             document.getElementById('batchNavModal').classList.add('hidden');
+            showToast('อัปเดต NAV ทั้งหมดเรียบร้อยแล้ว', 'success');
         }
 
         function editPolicy(id) {
@@ -883,6 +1089,7 @@
                     try { await supabaseClient.from('mfc_policies').delete().eq('id', id); } catch(e){}
                 }
                 await syncData(updated);
+                showToast('ลบรายการเรียบร้อยแล้ว', 'info');
             }
         }
 
@@ -895,6 +1102,14 @@
             document.getElementById('importPdfInput').addEventListener('change', (e) => {
                 if (e.target.files[0]) {
                     processPDFStatement(e.target.files[0]);
+                }
+            });
+
+            document.getElementById('btnClearHistory').addEventListener('click', () => {
+                if (confirm('ยืนยันล้างประวัติมูลค่าพอร์ตย้อนหลังทั้งหมด?')) {
+                    localStorage.removeItem('mfc_history_log');
+                    renderTable();
+                    showToast('ล้างประวัติมูลค่าพอร์ตเรียบร้อยแล้ว', 'info');
                 }
             });
 
@@ -911,6 +1126,7 @@
                 document.body.appendChild(dlAnchor);
                 dlAnchor.click();
                 dlAnchor.remove();
+                showToast('ส่งออกไฟล์ Backup สำเร็จ', 'success');
             });
             
             document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFileInput').click());
@@ -922,9 +1138,9 @@
                             const importedData = JSON.parse(evt.target.result);
                             if (Array.isArray(importedData)) {
                                 await syncData(importedData);
-                                alert('นำเข้าข้อมูลเรียบร้อยแล้ว!');
+                                showToast('นำเข้าข้อมูล JSON เรียบร้อยแล้ว!', 'success');
                             }
-                        } catch (err) { alert('รูปแบบไฟล์ไม่ถูกต้อง'); }
+                        } catch (err) { showToast('รูปแบบไฟล์ไม่ถูกต้อง', 'error'); }
                     };
                     reader.readAsText(e.target.files[0]);
                 }
@@ -944,7 +1160,8 @@
                 localStorage.setItem('mfc_sp_url', url);
                 localStorage.setItem('mfc_sp_key', key);
                 document.getElementById('cloudModal').classList.add('hidden');
-                location.reload();
+                showToast('บันทึกการตั้งค่า Cloud เรียบร้อย กำลังรีโหลด...', 'info');
+                setTimeout(() => location.reload(), 1000);
             });
 
             document.getElementById('btnAddPlan').addEventListener('click', () => {
@@ -979,6 +1196,7 @@
 
                 await syncData(updated);
                 document.getElementById('policyModal').classList.add('hidden');
+                showToast('บันทึกแผนการลงทุนเรียบร้อย', 'success');
             });
         });
     </script>
