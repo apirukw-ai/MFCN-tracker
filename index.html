@@ -651,22 +651,17 @@
                 const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodedTicker}?interval=1d`;
                 
                 const proxies = [
-                    `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
-                    `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`
-                ];
+    `https://fancy-thunder-5a69.apirukw.workers.dev/?url=${encodeURIComponent(yahooUrl)}`
+];
+                
 
                 for (const proxy of proxies) {
                     try {
                         const res = await fetch(proxy);
                         if (!res.ok) continue;
 
-                        let data;
-                        if (proxy.includes('allorigins')) {
-                            const json = await res.json();
-                            data = JSON.parse(json.contents);
-                        } else {
-                            data = await res.json();
-                        }
+                        // เปลี่ยนบรรทัด 663-669 ให้เหลือแค่นี้:
+                const data = await res.json();
 
                         if (data && data.chart && data.chart.result && data.chart.result[0]) {
                             const meta = data.chart.result[0].meta;
