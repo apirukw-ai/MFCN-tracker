@@ -297,7 +297,6 @@
                             <th class="p-3 text-center">จำนวนหน่วยรวม</th>
                             <th class="p-3 text-right text-sky-400">NAV ต้นทุน</th>
                             <th class="p-3 text-right text-amber-400">NAV วันนี้</th>
-                            <th class="p-3 text-center">วันที่ NAV</th>
                             <th class="p-3 text-right">ต้นทุน</th>
                             <th class="p-3 text-right">มูลค่าวันนี้</th>
                             <th class="p-3 text-right text-emerald-400">กำไรวันนี้</th>
@@ -991,8 +990,13 @@ function renderTable() {
             </td>
             <td class="p-3 text-center font-mono font-medium">${units.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
             <td class="p-3 text-right font-mono font-bold text-sky-400">${navUnitCost.toFixed(4)}</td>
-            <td class="p-3 text-right font-mono font-bold text-amber-400">
-  ${navToday.toFixed(4)}
+            <td class="p-3 text-right">
+  <div class="font-mono font-bold text-amber-400">
+    ${navToday.toFixed(4)}
+  </div>
+  <div class="text-xs text-slate-500">
+    ${item.navDate || '-'}
+  </div>
 </td>
 
 <td class="p-3 text-center text-slate-300">
