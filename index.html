@@ -1298,6 +1298,28 @@ function renderTable() {
                 showToast('บันทึกแผนการลงทุนเรียบร้อย', 'success');
             });
         });
+
+async function testNAVUpdate() {
+
+    const target = policies.find(
+        p => p.code === 'MPF07'
+    );
+
+    if (!target) {
+        showToast('ไม่พบ MPF07','error');
+        return;
+    }
+
+    target.navToday = 34.6772;
+
+    await syncData(policies);
+
+    showToast(
+        'เปลี่ยน NAV MPF07 เป็น 34.6772 แล้ว',
+        'success'
+    );
+}
+        
     </script>
 </body>
 </html>
