@@ -622,7 +622,7 @@
 
                     if (floats && floats.length >= 2) {
                         const billNavVal = parseFloat(floats[0]);
-                        const unitsVal = parseFloat(floats[floats.length - 1]);
+                        const unitsVal = parseFloat(floats[1]);
 
                         if (unitsVal > 0.1) {
                             const target = updated.find(p => p.code === code);
