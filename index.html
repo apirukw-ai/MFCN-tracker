@@ -105,6 +105,10 @@
                         <i class="fa-solid fa-download text-sky-400"></i> Export JSON
                     </button>
 
+                    <button onclick="updateNAVAll()">
+                    🔄 Update NAV ล่าสุด
+                    </button>
+
                     <button type="button" id="btnAddPlan" class="bg-mfc-orange hover:bg-mfc-hover text-white px-3 py-1.5 rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-mfc-orange/20 transition-all col-span-2 sm:col-span-1">
                         <i class="fa-solid fa-plus"></i> เพิ่มแผน
                     </button>
@@ -1323,6 +1327,57 @@ async function testNAVUpdate() {
         'success'
     );
 }
+
+async function updateNAVAll() {
+
+    const FUND_MAP = {
+        MPF07: "IGOLD-G",
+        MPF15: "MGTECH",
+        MPF18: "M-EM",
+        MPF19: "MEURO-G",
+        MPF23: "MGFPVD",
+        MPF27: "M-ASIA"
+    };
+
+    try {
+
+        for (const policy of policies) {
+
+            const fundCode = FUND_MAP[policy.code];
+
+            if (!fundCode) continue;
+
+            const response = await fetch(
+                `https://iproktvvetsbxxmpptuj.supabase.co/functions/v1/get-nav?fund=${encodeURIComponent(fundCode)}`
+            );
+
+            const data = await response.json();
+
+            policy.navToday = data.nav;
+
+            console.log(
+                `${policy.code} → ${data.nav}`
+            );
+        }
+
+        await syncData(policies);
+
+        showToast(
+            'อัปเดต NAV ล่าสุดสำเร็จ',
+            'success'
+        );
+
+    } catch (err) {
+
+        console.error(err);
+
+        showToast(
+            'อัปเดต NAV ไม่สำเร็จ',
+            'error'
+        );
+    }
+}
+
         
     </script>
 </body>
