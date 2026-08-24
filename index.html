@@ -1354,6 +1354,7 @@ async function updateNAVAll() {
             const data = await response.json();
 
             policy.navToday = data.nav;
+            policy.navDate = data.date;
 
             console.log(
                 `${policy.code} → ${data.nav}`
