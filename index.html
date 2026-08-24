@@ -1313,31 +1313,6 @@ function renderTable() {
             });
         });
 
-async function testNAVUpdate() {
-
-    const navs = {
-        MPF07: 34.6772,
-        MPF15: 12.3456,
-        MPF18: 9.8765,
-        MPF19: 15.4321,
-        MPF23: 18.7654,
-        MPF27: 22.1111
-    };
-
-    policies.forEach(p => {
-        if (navs[p.code]) {
-            p.navToday = navs[p.code];
-        }
-    });
-
-    await syncData(policies);
-
-    showToast(
-        'อัปเดต NAV ทั้งพอร์ตแล้ว',
-        'success'
-    );
-}
-
 async function updateNAVAll() {
 
     const FUND_MAP = {
