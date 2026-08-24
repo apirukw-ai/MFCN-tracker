@@ -618,6 +618,8 @@
 
                     const floats = block.match(/\d+\.\d{4}/g);
 
+                    console.log(code, floats);
+
                     if (floats && floats.length >= 2) {
                         const billNavVal = parseFloat(floats[0]);
                         const unitsVal = parseFloat(floats[floats.length - 1]);
