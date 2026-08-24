@@ -1005,9 +1005,11 @@ function renderTable() {
   <div class="font-mono font-bold text-amber-400">
     ${navToday.toFixed(4)}
   </div>
-  <div class="text-xs text-slate-500">
-    ${item.navDate || '-'}
-  </div>
+  ${item.navDate ? `
+<div class="text-xs text-slate-500">
+    ${item.navDate}
+</div>
+` : ''}
 </td>
 
 <td class="p-3 text-right font-mono text-slate-300">
