@@ -1121,18 +1121,19 @@ const overallYtdPct = baseCapital > 0 ? (totalYtdProfitAmt / baseCapital) * 100 
             };
 
             const trFoot = document.createElement('tr');
-            trFoot.className = "font-bold text-slate-100";
+            trFoot.className =
+  "font-bold text-slate-100 border-t border-cyan-500/40 bg-cyan-500/5";
             trFoot.innerHTML = `
-    <td class="p-3 font-bold text-slate-200">รวมทั้งหมด</td>
-    <td class="p-3 text-right font-mono text-slate-300">${totalUnitsSum.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
-    <td class="p-3 text-right">-</td>
-    <td class="p-3 text-right">-</td>
-    <td class="p-3 text-right font-mono text-slate-300">฿${totalCostSum.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-    <td class="p-3 text-right font-bold text-slate-100">฿${totalBalToday.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-    <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalProfitAmt, overallProfitPct)}</td>
-    <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalDailyAmt, overallDailyReturnPct)}</td>
-    <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalYtdProfitAmt, overallYtdPct)}</td>
-    <td class="p-3 text-right">-</td>
+    <td class="px-3 py-4 font-bold text-slate-200">รวมทั้งหมด</td>
+    <td class="px-3 py-4 text-right font-mono text-slate-300">${totalUnitsSum.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
+    <td class="px-3 py-4 text-right">-</td>
+    <td class="px-3 py-4 text-right">-</td>
+    <td class="px-3 py-4 text-right font-mono text-slate-300">฿${totalCostSum.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+    <td class="px-3 py-4 text-right font-extrabold text-lg text-white">฿${totalBalToday.toLocaleString(...)}</td>
+    <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalProfitAmt, overallProfitPct)}</td>
+    <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalDailyAmt, overallDailyReturnPct)}</td>
+    <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalYtdProfitAmt, overallYtdPct)}</td>
+    <td class="px-3 py-4 text-right">-</td>
 `;
             policyTfoot.appendChild(trFoot);
         }
