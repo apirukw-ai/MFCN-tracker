@@ -793,7 +793,7 @@ if (ctxBar && policies.length > 0) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'กำไร/ขาดทุน (บาท)',
+                label: 'กำไร (บาท)',
                 data: profitData,
                 pctData: pctData, // แนบข้อมูล % ไปกับ dataset
                 backgroundColor: bgColors,
@@ -817,7 +817,7 @@ if (ctxBar && policies.length > 0) {
                             const amt = ctx.raw;
                             const pct = ctx.dataset.pctData[ctx.dataIndex];
                             const sign = amt >= 0 ? '+' : '';
-                            return `กำไร/ขาดทุน: ${sign}฿${Math.abs(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pct.toFixed(2)}%)`;
+                            return `กำไร: ${sign}฿${Math.abs(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pct.toFixed(2)}%)`;
                         }
                     }
                 }
