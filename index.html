@@ -1118,10 +1118,14 @@ const overallYtdPct = baseCapital > 0 ? (totalYtdProfitAmt / baseCapital) * 100 
             const overallYtdPct = totalYtdStartVal > 0 ? (totalYtdProfitAmt / totalYtdStartVal) * 100 : 0;
 
             const fmtAmtAndPct = (amt, pct) => {
-                const sign = amt >= 0 ? '+' : '';
-                const color = amt >= 0 ? 'text-emerald-400' : 'text-rose-400';
-                const formattedAmt = Math.abs(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-               return `
+    const sign = amt >= 0 ? '+' : '-';
+    const color = amt >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const formattedAmt = Math.abs(amt).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    return `
 <div class="flex flex-col items-end leading-tight">
     <div class="text-slate-100 font-bold">
         ${sign}${formattedAmt}
@@ -1131,6 +1135,7 @@ const overallYtdPct = baseCapital > 0 ? (totalYtdProfitAmt / baseCapital) * 100 
     </div>
 </div>
 `;
+};
 
             const trFoot = document.createElement('tr');
             trFoot.className =
