@@ -704,7 +704,14 @@
                 if (!success) {
                     const elVal = document.getElementById(item.idVal);
                     if (elVal && (elVal.innerText === '--' || elVal.innerText === '')) {
-                        elVal.innerText = item.fallback.toLocaleString(undefined, {minimumFractionDigits: 2});
+                        elVal.innerText = item.fallback.toLocaleString(
+    undefined,
+    {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }
+);
+
                     }
                 }
             }
@@ -1081,8 +1088,17 @@ const overallYtdPct = baseCapital > 0 ? (totalYtdProfitAmt / baseCapital) * 100 
         return `${sign}${pct.toFixed(2)}%`;
     };
 
-    document.getElementById('portfolioBalance').innerText = '฿' + totalBalToday.toLocaleString('en-US', {minimumFractionDigits: 2});
-    document.getElementById('totalCostAmt').innerText = '฿' + totalCostSum.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('portfolioBalance').innerText =
+'฿' + totalBalToday.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+});
+
+document.getElementById('totalCostAmt').innerText =
+'฿' + totalCostSum.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+});
     document.getElementById('totalUnitsBadge').innerText = totalUnitsSum.toLocaleString('en-US', {minimumFractionDigits: 4}) + ' Units';
 
     const dailyEl = document.getElementById('totalDailySummary');
@@ -1145,11 +1161,19 @@ const overallYtdPct = baseCapital > 0 ? (totalYtdProfitAmt / baseCapital) * 100 
     <td class="px-3 py-4 text-right font-mono text-slate-300">${totalUnitsSum.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
     <td class="px-3 py-4 text-right">-</td>
     <td class="px-3 py-4 text-right">-</td>
-    <td class="px-3 py-4 text-right font-mono text-slate-300">฿${totalCostSum.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+    <td class="px-3 py-4 text-right font-mono text-slate-300">
+  ฿${totalCostSum.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+  })}
+</td>
 
     <td class="px-3 py-4 text-right font-extrabold text-lg text-white">
-        ฿${totalBalToday.toLocaleString(undefined, {minimumFractionDigits: 2})}
-    </td>
+    ฿${totalBalToday.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}
+</td>
 
     <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalProfitAmt, overallProfitPct)}</td>
     <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalDailyAmt, overallDailyReturnPct)}</td>
