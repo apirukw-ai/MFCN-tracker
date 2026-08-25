@@ -1005,13 +1005,15 @@ function renderTable() {
     const formattedPct = Math.abs(pct).toFixed(2);
 
     return `
-<div style="background:red;color:white;padding:4px;font-size:12px;">
-    TOP: ${sign}${formattedAmt}
-    <br>
-    BOT: ${sign}${formattedPct}%
+<div class="flex flex-col items-end leading-tight">
+    <span class="text-slate-100 font-bold">
+        ${sign}${formattedAmt}
+    </span>
+    <span class="text-xs ${colorClass} font-medium">
+        ${sign}${formattedPct}%
+    </span>
 </div>
 `;
-};
 
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-800/60 transition-colors border-b border-slate-800/80";
@@ -1118,8 +1120,16 @@ const overallYtdPct = baseCapital > 0 ? (totalYtdProfitAmt / baseCapital) * 100 
                 const sign = amt >= 0 ? '+' : '';
                 const color = amt >= 0 ? 'text-emerald-400' : 'text-rose-400';
                 const formattedAmt = Math.abs(amt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                return `<span class="${color}">${sign}฿${formattedAmt} (${sign}${pct.toFixed(2)}%)</span>`;
-            };
+               return `
+<div class="flex flex-col items-end leading-tight">
+    <div class="text-slate-100 font-bold">
+        ${sign}${formattedAmt}
+    </div>
+    <div class="text-xs ${color} font-medium">
+        ▲ ${pct.toFixed(2)}%
+    </div>
+</div>
+`;
 
             const trFoot = document.createElement('tr');
             trFoot.className =
