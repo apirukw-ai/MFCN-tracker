@@ -312,7 +312,6 @@
                             <th class="p-3 text-right">มูลค่าวันนี้</th>
                             <th class="px-3 py-2 text-right text-sky-400">กำไรสะสม</th>
                             <th class="p-3 text-right text-emerald-400">ผลงานวันนี้</th>
-                            <th class="p-3 text-right text-sky-300">ผลงาน 3 เดือน</th>
                             <th class="p-3 text-right text-amber-300">ผลงานต้นปี (YTD)</th>
                             <th class="p-3 text-center">จัดการ</th>
                         </tr>
@@ -1033,7 +1032,6 @@ function renderTable() {
             <td class="p-3 text-right font-bold text-slate-100">฿${todayVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
             <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalProfit, totalProfitPct)}</td>
             <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(dailyProfitAmt, dailyProfitPct)}</td>
-            <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(profit3mAmt, r3m)}</td>
             <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(profitYtdAmt, rYtd)}</td>
             <td class="p-3 text-center space-x-1">
                 <button type="button" onclick="editPolicy(${item.id})" class="text-slate-400 hover:text-sky-400 p-1"><i class="fa-solid fa-pen"></i></button>
@@ -1126,7 +1124,6 @@ const overallYtdPct = baseCapital > 0 ? (totalYtdProfitAmt / baseCapital) * 100 
                 <td class="p-3 text-right font-bold text-emerald-400">฿${totalBalToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                 <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalProfitAmt, overallProfitPct)}</td>
                 <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalDailyAmt, overallDailyReturnPct)}</td>
-                <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(total3mAmt, overall3mPct)}</td>
                 <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalYtdProfitAmt, overallYtdPct)}</td>
                 <td class="p-3 text-center text-slate-500">-</td>
             `;
