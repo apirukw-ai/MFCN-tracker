@@ -1045,9 +1045,15 @@ function renderTable() {
 </td>
 
 <td class="p-3 text-right font-mono text-slate-300">
-  ฿${costVal.toLocaleString(undefined, {minimumFractionDigits: 2})}
+  ฿${costVal.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+})}
 </td>
-            <td class="p-3 text-right font-bold text-slate-100">฿${todayVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+            <td class="p-3 text-right font-bold text-slate-100">฿$${todayVal.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+})}</td>
             <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(totalProfit, totalProfitPct)}</td>
             <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(dailyProfitAmt, dailyProfitPct)}</td>
             <td class="p-3 text-right font-bold font-mono">${fmtAmtAndPct(profitYtdAmt, rYtd)}</td>
@@ -1146,9 +1152,9 @@ document.getElementById('totalCostAmt').innerText =
     <div class="text-slate-100 font-bold">
         ${sign}${formattedAmt}
     </div>
-    <div class="text-xs ${color} font-medium">
-        ▲ ${pct.toFixed(2)}%
-    </div>
+    <div class="text-xs ${color} font-medium mt-1">
+    ▲ ${pct.toFixed(2)}%
+</div>
 </div>
 `;
 };
@@ -1158,10 +1164,10 @@ document.getElementById('totalCostAmt').innerText =
   "font-bold text-slate-100 border-t border-cyan-500/40 bg-cyan-500/5";
    trFoot.innerHTML = `
     <td class="px-3 py-4 font-bold text-slate-200">รวมทั้งหมด</td>
-    <td class="px-3 py-4 text-right font-mono text-slate-300">${totalUnitsSum.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
+    <td class="px-3 py-4 text-right font-semibold text-slate-200">${totalUnitsSum.toLocaleString(undefined, {minimumFractionDigits: 4})}</td>
     <td class="px-3 py-4 text-right">-</td>
     <td class="px-3 py-4 text-right">-</td>
-    <td class="px-3 py-4 text-right font-mono text-slate-300">
+    <td class="px-3 py-4 text-right font-mono text-slate-200">
   ฿${totalCostSum.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
