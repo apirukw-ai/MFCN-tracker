@@ -1005,11 +1005,12 @@ function renderTable() {
     const formattedPct = Math.abs(pct).toFixed(2);
 
     return `
-        <div class="flex flex-col items-end leading-tight">
-            <span class="text-slate-100 font-bold">${sign}฿${formattedAmt}</span>
-            <span class="text-xs ${colorClass} font-medium">${sign}${formattedPct}%</span>
-        </div>
-    `;
+<div style="background:red;color:white;padding:4px;font-size:12px;">
+    TOP: ${sign}${formattedAmt}
+    <br>
+    BOT: ${sign}${formattedPct}%
+</div>
+`;
 };
 
         const tr = document.createElement('tr');
