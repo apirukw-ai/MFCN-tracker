@@ -1052,8 +1052,15 @@ function renderTable() {
 
     const overall3mPct = totalBalToday > 0 ? (weighted3mSum / totalBalToday) : 0;
 
-    const totalYtdProfitAmt = totalBalToday - totalYtdStartVal;
-    const overallYtdPct = totalYtdStartVal > 0 ? (totalYtdProfitAmt / totalYtdStartVal) * 100 : 0;
+    // กำหนดค่าต้นปีจาก Statement (1 ม.ค. 69)
+const costAtStartOfYear = 68018.00;
+const valAtStartOfYear = 76010.79;
+
+// คำนวณ YTD สุทธิ (ตัดเงินเติม DCA รายเดือนออก)
+const ytdContributions = Math.max(0, totalCostSum - costAtStartOfYear);
+const totalYtdProfitAmt = totalBalToday - (valAtStartOfYear + ytdContributions);
+const baseCapital = valAtStartOfYear + ytdContributions;
+const overallYtdPct = baseCapital > 0 ? (totalYtdProfitAmt / baseCapital) * 100 : 0;
 
     const formatCardText = (amt, pct) => {
         const sign = amt >= 0 ? '+' : '';
