@@ -1164,12 +1164,12 @@ document.getElementById('totalCostAmt').innerText =
 "align-middle font-bold text-slate-100 border-t border-cyan-500/40 bg-cyan-500/5";
    trFoot.innerHTML = `
     <td class="px-3 py-4 font-bold text-slate-200">รวมทั้งหมด</td>
-    <td class="px-3 py-4 text-right font-mono font-semibold text-slate-200 align-middle">${totalUnitsSum.toLocaleString(undefined, {
+    <td class="p-3 text-center font-mono font-medium text-slate-200">${totalUnitsSum.toLocaleString(undefined, {
     minimumFractionDigits: 4,
     maximumFractionDigits: 4
 })}</td>
-    <td class="px-3 py-4 text-right align-middle">-</td>
-    <td class="px-3 py-4 text-right align-middle">-</td>
+    <td class="px-3 py-4 text-center align-middle text-slate-500">-</td>
+    <td class="px-3 py-4 text-center align-middle text-slate-500">-</td>
     <td class="px-3 py-4 text-right font-mono text-slate-200">
   ฿${totalCostSum.toLocaleString(undefined, {
       minimumFractionDigits: 2,
