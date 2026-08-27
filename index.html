@@ -1090,7 +1090,10 @@ fetch(
 
 // UI ต่อ
 document.getElementById('portfolioBalance').innerText =
-    '฿' + totalBalToday.toLocaleString(...);
+    '฿' + totalBalToday.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 
     const totalDailyAmt = totalBalToday - totalBalPrev;
     const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
