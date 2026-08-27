@@ -1067,7 +1067,30 @@ function renderTable() {
 
     // Portfolio Summary Calculations
     const totalProfitAmt = totalBalToday - totalCostSum;
-    const overallProfitPct = totalCostSum > 0 ? (totalProfitAmt * 100) / totalCostSum : 0;
+const overallProfitPct =
+    totalCostSum > 0
+        ? (totalProfitAmt * 100) / totalCostSum
+        : 0;
+
+// ส่ง MFC Summary ไป Firebase
+
+fetch(
+    'https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/mfc_summary/current.json',
+    {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            value: totalBalToday,
+            updatedAt: new Date().toISOString()
+        })
+    }
+).catch(err => console.error(err));
+
+// UI ต่อ
+document.getElementById('portfolioBalance').innerText =
+    '฿' + totalBalToday.toLocaleString(...);
 
     const totalDailyAmt = totalBalToday - totalBalPrev;
     const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
