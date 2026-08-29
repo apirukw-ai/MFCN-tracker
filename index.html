@@ -892,6 +892,9 @@ if (ctxBar && policies.length > 0) {
         }
 
 function renderTable() {
+    // 1. เพิ่มบรรทัดนี้: บังคับเรียงลำดับตามรหัสกองทุน (code) จาก A-Z เสมอ
+    policies.sort((a, b) => a.code.localeCompare(b.code));
+
     const tbody = document.getElementById('policyTableBody');
     const targetTbody = document.getElementById('targetTableBody');
     if (!tbody || !targetTbody) return;
