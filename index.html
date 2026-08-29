@@ -534,15 +534,22 @@ async function initSyncEngine() {
             }
         }
 
-        async function fetchCloudData() {
-            if (!supabaseClient) return;
-            const { data, error } = await supabaseClient.from('mfc_policies').select('*').order('id', { ascending: true });
-            if (!error && data && data.length > 0) {
-                policies = data;
-                saveToLocalStorage();
-                renderTable();
-            }
-        }
+async function fetchCloudData() {
+
+    const { data, error } = await supabaseClient
+        .from('mfc_policies')
+        .select('*')
+        .order('id', { ascending: true });
+
+    console.log("SUPABASE DATA =", data);
+    console.log("SUPABASE ERROR =", error);
+
+    if (!error && data && data.length > 0) {
+        policies = data;
+        saveToLocalStorage();
+        renderTable();
+    }
+}
 
         function fetchLocalData() {
             const local = localStorage.getItem('mfc_policies');
