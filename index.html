@@ -535,6 +535,7 @@ async function initSyncEngine() {
         }
 
 async function fetchCloudData() {
+    console.log("FETCH CLOUD DATA START");
 
     const { data, error } = await supabaseClient
         .from('mfc_policies')
