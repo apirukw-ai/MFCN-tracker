@@ -535,7 +535,37 @@ async function initSyncEngine() {
         }
 
 async function fetchCloudData() {
+
     console.log("FETCH CLOUD DATA START");
+
+    if (!supabaseClient) {
+        console.log("SUPABASE CLIENT = NULL");
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from('mfc_policies')
+        .select('*')
+        .order('id', { ascendin*: true });
+
+    console.log("SUPAB*SE DATA =", data);
+    console.log*"SUPABASE ERROR =", error);
+
+    i* (!error && data && data.length > *) {
+        policies = data;
+
+    *   console.log(
+          "APPLY C*OUD DATA",
+          policies.map(* => ({
+            code: p.code,
+ *          navToday: p.navToday
+   *      }))
+        );
+
+        save*oLocalStorage();
+        renderTab*e();
+    }
+}
 
     try {
 
