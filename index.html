@@ -573,6 +573,9 @@ async function loadMasterData() {
                         navToday: navVal,
                         costNav: Number(localItem.costNav || navVal),
                         navPrev: Number(localItem.navPrev || navVal),
+                        navYesterday: Number(item.navYesterday ?? localItem.navYesterday ?? navVal),
+                        return3m: Number(item.return3m ?? localItem.return3m ?? 0),
+                        returnYtd: Number(item.returnYtd ?? localItem.returnYtd ?? 0),
                         navYtd: Number(localItem.navYtd || navVal),
                         nav3m: Number(localItem.nav3m || navVal)
                     };
@@ -1178,7 +1181,13 @@ document.getElementById('portfolioBalance').innerText =
     const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
 
     const overall3mPct = totalBalToday > 0 ? (weighted3mSum / totalBalToday) : 0;
+    const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
 
+    const overall3mPct = totalBalToday > 0 ? (weighted3mSum / totalBalToday) : 0;
+    // 🟢 แทรกบรรทัดคำนวณยอดเงินบาท (total3mAmt) เพิ่มตรงนี้ครับ
+    const start3mValTotal = weighted3mSum !== 0 ? totalBalToday / (1 + (overall3mPct / 100)) : totalBalToday;
+    const total3mAmt = totalBalToday - start3mValTotal;
+     
     // กำหนดค่าต้นปีจาก Statement (1 ม.ค. 69)
 const costAtStartOfYear = 68018.00;
 const valAtStartOfYear = 76010.79;
@@ -1221,8 +1230,8 @@ document.getElementById('totalCostAmt').innerText =
     profEl.className = `text-sm sm:text-base font-bold ${totalProfitAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5`;
 
     const r3mEl = document.getElementById('total3mSummary');
-    r3mEl.innerText = formatPctOnly(overall3mPct);
-    r3mEl.className = `text-sm sm:text-base font-bold ${overall3mPct >= 0 ? 'text-sky-400' : 'text-rose-400'} mt-0.5`;
+    r3mEl.innerText = formatCardText(total3mAmt, overall3mPct);
+    r3mEl.className = `text-sm sm:text-base font-bold ${total3mAmt >= 0 ? 'text-sky-400' : 'text-rose-400'} mt-0.5`;
 
     const ytdEl = document.getElementById('totalYtdSummary');
     ytdEl.innerText = formatCardText(totalYtdProfitAmt, overallYtdPct);
