@@ -546,7 +546,6 @@ async function initSyncEngine() {
 async function loadMasterData() {
     let cloudLoaded = false;
 
-    // 🟢 ลองดึงจาก Cloud ก่อนเสมอ (Source of Truth)
     if (supabaseClient) {
         try {
             const { data, error } = await supabaseClient
@@ -555,9 +554,26 @@ async function loadMasterData() {
                 .order('id', { ascending: true });
 
             if (!error && data && data.length > 0) {
-                policies = data;
+                // 🟢 แปลงข้อมูลจาก Supabase ให้รองรับทั้ง camelCase และ snake_case
+                policies = data.map(item => {
+                    const navVal = Number(item.nav || item.navToday || 0);
+                    return {
+                        ...item,
+                        id: Number(item.id),
+                        code: String(item.code || ''),
+                        name: String(item.name || ''),
+                        units: Number(item.units || 0),
+                        nav: navVal,
+                        navToday: navVal,
+                        costNav: Number(item.costNav || item.cost_nav || navVal),
+                        navPrev: Number(item.navPrev || item.nav_prev || navVal),
+                        navYtd: Number(item.navYtd || item.nav_ytd || navVal),
+                        nav3m: Number(item.nav3m || item.nav_3m || navVal)
+                    };
+                });
+
                 renderTable();
-                saveToLocalStorage(); // 🟢 อัปเดต Emergency Cache ในเครื่อง
+                saveToLocalStorage(); // 🟢 อัปเดต Emergency Cache
                 cloudLoaded = true;
                 console.log("☁️ โหลดข้อมูลหลักจาก Supabase สำเร็จ");
             }
@@ -566,7 +582,6 @@ async function loadMasterData() {
         }
     }
 
-    // 🔴 ถ้าดึงจาก Cloud ไม่ได้ (เช่น เน็ตหลุด) ให้ดึงจาก Emergency Cache ในเครื่อง
     if (!cloudLoaded) {
         console.log("📦 กำลังดึงข้อมูลจาก Emergency Cache (LocalStorage)...");
         fetchLocalData();
@@ -616,13 +631,21 @@ async function syncData(updatedList) {
         try {
             console.log("⏳ กำลังอัปเดตข้อมูลขึ้น Cloud...");
 
-            // 🟢 รักษาข้อมูลทุกฟิลด์เดิมไว้ (รวมถึง costNav, navPrev, navYtd)
-            const cleanPayload = policies.map(item => ({
-                ...item,
-                id: Number(item.id),
-                units: Number(item.units || 0),
-                nav: Number(item.navToday || item.nav || 0)
-            }));
+            // 🟢 ส่งข้อมูลครบทุกฟิลด์การคำนวณขึ้น Supabase
+            const cleanPayload = policies.map(item => {
+                const navVal = Number(item.navToday || item.nav || 0);
+                return {
+                    id: Number(item.id),
+                    code: String(item.code || ''),
+                    name: String(item.name || ''),
+                    units: Number(item.units || 0),
+                    nav: navVal,
+                    cost_nav: Number(item.costNav || item.cost_nav || navVal),
+                    nav_prev: Number(item.navPrev || item.nav_prev || navVal),
+                    nav_ytd: Number(item.navYtd || item.nav_ytd || navVal),
+                    nav_3m: Number(item.nav3m || item.nav_3m || navVal)
+                };
+            });
 
             const { error } = await supabaseClient
                 .from('policies')
