@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MFC Policies Cloud Sync</title>
-    <!-- Tailwind CSS สำหรับจัดแต่งหน้าตา -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -28,14 +28,14 @@
     <div class="max-w-2xl mx-auto bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
         <h1 class="text-2xl font-bold mb-4 text-orange-400">ระบบจัดการ MFC Policies</h1>
         
-        <!-- สถานะการเชื่อมต่อ -->
+        <!-- แถบแสดงสถานะ -->
         <div id="status" class="mb-4 p-3 text-sm rounded-xl bg-slate-700 text-slate-300">
             สถานะ: กำลังเตรียมการ...
         </div>
 
-        <!-- รายการข้อมูล -->
+        <!-- รายการข้อมูลจากตาราง policies -->
         <div class="space-y-3 mb-6" id="policyList">
-            <!-- ข้อมูลจะแสดงตรงนี้ -->
+            <!-- ข้อมูลจะแสดงตรงนี้อัตโนมัติ -->
         </div>
 
         <!-- ปุ่มกดบันทึก -->
@@ -46,78 +46,52 @@
     </div>
 
     <script>
-    // 🟢 1. ประกาศสร้าง 2 ตัวแปรนี้ไว้บนสุดเสมอ
-    const SUPABASE_URL = "https://iproktvvetsbxxmpptuj.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw"; // 👈 เช็กว่ามีบรรทัดนี้และสะกดถูกต้อง
-
-    // 2. ตัวแปรสำหรับระบบ
-    let supabaseClient = null;
-    let policies = [
-        { id: 1, policy_name: "MFC Policy A", nav: 10.5, units: 100, amount: 1050 },
-        { id: 2, policy_name: "MFC Policy B", nav: 25.0, units: 200, amount: 5000 }
-    ];
-
-    // 3. เริ่มเชื่อมต่อ Supabase
-    try {
-        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            document.getElementById('status').innerText = "สถานะ: เชื่อมต่อ Supabase พร้อมใช้งาน";
-            document.getElementById('status').className = "mb-4 p-3 text-sm rounded-xl bg-emerald-900/50 text-emerald-300 border border-emerald-700";
-        }
-    } catch (err) {
-        console.error("Initialization Error:", err);
-        document.getElementById('status').innerText = "สถานะ: เชื่อมต่อล้มเหลว ตรวจสอบ URL/Key";
-    }
+        // ==========================================
+        // 1. ป้อนข้อมูล Supabase ของคุณตรงนี้
+        // ==========================================
+        const SUPABASE_URL = 'https://iproktvvetsbxxmpptuj.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
 
         // ==========================================
-        // 3. ฟังก์ชันแสดงผลบนหน้าจอ
+        // 2. สร้าง Client สำหรับเชื่อมต่อ
         // ==========================================
-        function renderPolicies() {
-            const container = document.getElementById('policyList');
-            container.innerHTML = '';
-            
-            policies.forEach((item, index) => {
-                container.innerHTML += `
-                    <div class="p-3 bg-slate-700/50 rounded-xl flex justify-between items-center border border-slate-600">
-                        <div>
-                            <p class="font-bold text-slate-200">${item.policy_name}</p>
-                            <p class="text-xs text-slate-400">NAV: ${item.nav} | Units: ${item.units}</p>
-                        </div>
-                        <div class="text-right">
-                            <input type="number" step="0.01" value="${item.nav}" 
-                                onchange="updateNav(${index}, this.value)"
-                                class="bg-slate-900 text-amber-400 px-3 py-1 rounded-lg w-28 text-right border border-slate-600 focus:outline-none focus:border-orange-500">
-                        </div>
-                    </div>
-                `;
-            });
-        }
+        let supabaseClient = null;
+        let policies = [];
 
-        // อัปเดตค่า NAV เมื่อมีการแก้ไขตัวเลขบนหน้าจอ
-        function updateNav(index, newValue) {
-            policies[index].nav = parseFloat(newValue) || 0;
-            policies[index].amount = policies[index].nav * policies[index].units;
-            console.log("อัปเดตข้อมูลในหน่วยความจำ:", policies[index]);
+        try {
+            if (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes("วาง_ANON_KEY")) {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                document.getElementById('status').innerText = "สถานะ: เชื่อมต่อตาราง policies พร้อมใช้งาน";
+                document.getElementById('status').className = "mb-4 p-3 text-sm rounded-xl bg-emerald-900/50 text-emerald-300 border border-emerald-700";
+            } else {
+                document.getElementById('status').innerText = "สถานะ: กรุณาใส่ SUPABASE_ANON_KEY ในโค้ดให้ถูกต้อง";
+                document.getElementById('status').className = "mb-4 p-3 text-sm rounded-xl bg-amber-900/50 text-amber-300 border border-amber-700";
+            }
+        } catch (err) {
+            console.error("Initialization Error:", err);
+            document.getElementById('status').innerText = "สถานะ: เชื่อมต่อล้มเหลว ตรวจสอบ URL/Key";
         }
 
         // ==========================================
-        // 4. ฟังก์ชันดึงข้อมูลล่าสุดจาก Supabase (Fetch)
+        // 3. ฟังก์ชันดึงข้อมูลจากตาราง policies
         // ==========================================
         async function fetchCloudData() {
             if (!supabaseClient) return;
 
             try {
+                // ดึงข้อมูลจากตาราง policies หลักของคุณ
                 const { data, error } = await supabaseClient
-                    .from('mfc_policies')
+                    .from('policies')
                     .select('*')
                     .order('id', { ascending: true });
 
                 if (error) {
                     console.error("Fetch Error:", error);
-                } else if (data && data.length > 0) {
+                    alert("ดึงข้อมูลล้มเหลว: " + error.message);
+                } else if (data) {
                     policies = data;
                     renderPolicies();
-                    console.log("ดึงข้อมูลจาก Cloud สำเร็จ:", data);
+                    console.log("ดึงข้อมูลจาก policies สำเร็จ:", data);
                 }
             } catch (err) {
                 console.error("System Error:", err);
@@ -125,26 +99,63 @@
         }
 
         // ==========================================
-        // 5. ฟังก์ชันส่งข้อมูลลง Supabase (Save)
+        // 4. ฟังก์ชันแสดงผลบนหน้าจอ
+        // ==========================================
+        function renderPolicies() {
+            const container = document.getElementById('policyList');
+            container.innerHTML = '';
+            
+            if (policies.length === 0) {
+                container.innerHTML = `<div class="text-center py-4 text-slate-400">กำลังโหลดข้อมูล หรือ ไม่มีข้อมูลในตาราง policies...</div>`;
+                return;
+            }
+
+            policies.forEach((item, index) => {
+                container.innerHTML += `
+                    <div class="p-3 bg-slate-700/50 rounded-xl flex justify-between items-center border border-slate-600">
+                        <div>
+                            <p class="font-bold text-slate-200"><span class="text-orange-400">${item.code || ''}</span> ${item.name || ''}</p>
+                            <p class="text-xs text-slate-400">Units: ${item.units || 0}</p>
+                        </div>
+                        <div class="text-right">
+                            <label class="text-xs text-slate-400 block mb-1">NAV</label>
+                            <input type="number" step="0.0001" value="${item.nav || 0}" 
+                                onchange="updateNav(${index}, this.value)"
+                                class="bg-slate-900 text-amber-400 px-3 py-1 rounded-lg w-28 text-right border border-slate-600 focus:outline-none focus:border-orange-500 font-mono">
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // อัปเดตค่า NAV ในความจำ
+        function updateNav(index, newValue) {
+            policies[index].nav = parseFloat(newValue) || 0;
+            console.log("แก้ไข NAV รายการ:", policies[index].code, "->", policies[index].nav);
+        }
+
+        // ==========================================
+        // 5. ฟังก์ชันส่งข้อมูลลงตาราง policies (Save)
         // ==========================================
         async function saveDataToCloud() {
             console.log("👉 เริ่มทำงาน: กดปุ่มบันทึกแล้ว");
 
             if (!supabaseClient) {
-                alert("ยังไม่ได้เชื่อมต่อ Supabase! กรุณาใส่ URL และ Key ในไฟล์ index.html ก่อน");
+                alert("ยังไม่ได้เชื่อมต่อ Supabase! กรุณาตรวจสอบ URL และ Key");
                 return;
             }
 
             if (!policies || policies.length === 0) {
-                alert("ไม่มีข้อมูลในตารางที่จะบันทึก");
+                alert("ไม่มีข้อมูลที่จะบันทึก");
                 return;
             }
 
             try {
-                console.log("กำลังส่งข้อมูลไป mfc_policies:", policies);
+                console.log("กำลังอัปเดตข้อมูลลงตาราง policies:", policies);
 
+                // บันทึกอัปเดตกลับไปยังตาราง policies
                 const { data, error } = await supabaseClient
-                    .from('mfc_policies')
+                    .from('policies')
                     .upsert(policies);
 
                 if (error) {
@@ -152,7 +163,7 @@
                     alert("บันทึกล้มเหลว: " + error.message);
                 } else {
                     console.log("บันทึกสำเร็จ:", data);
-                    alert("บันทึกข้อมูลลง Cloud เรียบร้อยแล้ว!");
+                    alert("บันทึกข้อมูลลง Cloud (ตาราง policies) เรียบร้อยแล้ว!");
                     await fetchCloudData(); // โหลดข้อมูลใหม่มายืนยันอีกครั้ง
                 }
             } catch (err) {
@@ -161,9 +172,8 @@
             }
         }
 
-        // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+        // โหลดข้อมูลอัตโนมัติเมื่อเปิดหน้าเว็บ
         window.onload = () => {
-            renderPolicies();
             if (supabaseClient) {
                 fetchCloudData();
             }
