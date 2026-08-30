@@ -586,38 +586,37 @@
             try { broadcastChannel.postMessage('update'); } catch(e) {}
         }
 
-    async function syncData(updatedList) {
+async function syncData(updatedList) {
+    // 1. บันทึกลงเครื่องก่อน
     policies = updatedList;
-    renderTable();
-    saveToLocalStorage();
+    if (typeof renderTable === 'function') renderTable();
+    if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
 
+    // 2. ส่งขึ้น Supabase
     if (supabaseClient) {
         try {
-            // ดึงค่า NAV ล่าสุดพร้อมแปลงชนิดข้อมูลเป็นตัวเลขให้ถูกต้อง
-            const cleanPayload = policies.map(item => ({
-                id: Number(item.id),
-                code: String(item.code || ''),
-                name: String(item.name || ''),
-                units: Number(item.units || 0),
-                nav: Number(item.navToday || item.nav || item.navUnitCost || 0)
-            }));
+            console.log("⏳ กำลังเริ่มส่งข้อมูลขึ้น Supabase...");
 
-            console.log("📤 ข้อมูลที่เตรียมส่งเข้า Supabase:", cleanPayload);
+            // วนลูปอัปเดตทีละกองทุนโดยอ้างอิงจาก code
+            for (const item of policies) {
+                const { data, error } = await supabaseClient
+                    .from('policies')
+                    .update({ 
+                        nav: Number(item.nav || item.navToday || 0) 
+                    })
+                    .eq('code', item.code); // 🟢 อัปเดตแถวที่มี code ตรงกัน
 
-            const { data, error } = await supabaseClient
-                .from('policies')
-                .upsert(cleanPayload);
-
-            if (error) {
-                console.error("❌ เกิด Error จาก Supabase:", error);
-                alert("Supabase ปฏิเสธการบันทึก: " + error.message);
-            } else {
-                console.log("✅ อัปเดต NAV ลง Supabase สำเร็จ!");
-                alert("อัปเดต NAV ลง Supabase สำเร็จเรียบร้อย!");
+                if (error) {
+                    console.error(`❌ อัปเดต ${item.code} ล้มเหลว:`, error.message);
+                } else {
+                    console.log(`✅ อัปเดต ${item.code} ขึ้น Supabase สำเร็จ`);
+                }
             }
         } catch (err) {
-            console.error("System Error:", err);
+            console.error("Cloud sync error:", err);
         }
+    } else {
+        console.warn("⚠️ supabaseClient ยังไม่ได้เชื่อมต่อ");
     }
 }
         async function processPDFStatement(file) {
