@@ -537,18 +537,33 @@ async function initSyncEngine() {
 async function fetchCloudData() {
     console.log("FETCH CLOUD DATA START");
 
-    const { data, error } = await supabaseClient
-        .from('mfc_policies')
-        .select('*')
-        .order('id', { ascending: true });
+    try {
 
-    console.log("SUPABASE DATA =", data);
-    console.log("SUPABASE ERROR =", error);
+        const result = await supabaseClient
+            .from('mfc_policies')
+            .select('*')
+            .order('id', { ascending: true });
 
-    if (!error && data && data.length > 0) {
-        policies = data;
-        saveToLocalStorage();
-        renderTable();
+        console.log("FULL RESULT =", result);
+
+        const { data, error } = result;
+
+        console.log("SUPABASE DATA =", data);
+        console.log("SUPABASE ERROR =", error);
+
+        if (!error && data && data.length > 0) {
+            policies = data;
+            saveToLocalStorage();
+            renderTable();
+        }
+
+    } catch (err) {
+
+        console.error(
+            "FETCH CLOUD FAILED",
+            err
+        );
+
     }
 }
 
