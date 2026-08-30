@@ -433,7 +433,7 @@
 
                 <div class="flex justify-end space-x-2 pt-4 border-t border-slate-800 mt-2">
                     <button type="button" id="btnCancelModal" class="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-200">ยกเลิก</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-mfc-orange hover:bg-mfc-hover text-white font-medium shadow-lg">บันทึก</button>
+                    <button type="button" onclick="saveDataToCloud()" class="px-5 py-2 rounded-xl bg-mfc-orange hover:bg-mfc-hover text-white font-medium shadow-lg">บันทึก</button>
                 </div>
             </form>
         </div>
@@ -1406,6 +1406,42 @@
                 showToast('อัปเดต NAV ไม่สำเร็จ', 'error');
             }
         }
+    async function saveDataToCloud() {
+    console.log("👉 เริ่มทำงาน: กดปุ่มบันทึกแล้ว");
+
+    // 1. ตรวจสอบการเชื่อมต่อ Supabase
+    if (!supabaseClient) {
+        alert("ยังไม่ได้เชื่อมต่อ Supabase! กรุณาเช็กการตั้งค่า URL/Key");
+        return;
+    }
+
+    // 2. ตรวจสอบข้อมูลที่จะส่ง (ปรับชื่อตัวแปร policies ให้ตรงกับโค้ดของคุณ)
+    if (!policies || policies.length === 0) {
+        alert("ไม่มีข้อมูลในตารางที่จะบันทึก");
+        return;
+    }
+
+    // 3. ส่งข้อมูลไปที่ Supabase
+    try {
+        console.log("ส่งข้อมูลไป Supabase:", policies);
+        
+        const { data, error } = await supabaseClient
+            .from('mfc_policies')
+            .upsert(policies);
+
+        if (error) {
+            console.error("บันทึกล้มเหลว:", error);
+            alert("บันทึกล้มเหลว: " + error.message);
+        } else {
+            console.log("บันทึกสำเร็จ:", data);
+            alert("บันทึกข้อมูลลง Cloud เรียบร้อยแล้ว!");
+            await fetchCloudData(); // ดึงข้อมูลล่าสุดกลับมาอัปเดตหน้าจอ
+        }
+    } catch (err) {
+        console.error("เกิดข้อผิดพลาดในการเชื่อมต่อ:", err);
+        alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
+    }
+}
     </script>
 </body>
 </html>
