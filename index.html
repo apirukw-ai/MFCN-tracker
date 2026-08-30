@@ -447,6 +447,7 @@
 
 <script>
     // 🟢 1. เชื่อมต่อ Supabase (แก้ไขชื่อตัวแปรให้ตรงกันแล้ว)
+    let supabaseClient = null;
     const SUPABASE_URL = 'https://iproktvvetsbxxmpptuj.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -479,7 +480,7 @@
         ];
 
         let policies = [];
-        let supabaseClient = null;
+        supabaseClient = null;
         let barChartInstance = null;
         let historyChartInstance = null;
         const broadcastChannel = new BroadcastChannel('mfc_local_sync');
@@ -532,7 +533,7 @@
 
                     supabaseClient
                         .channel('mfc_realtime')
-                        .on('postgres_changes', { event: '*', schema: 'public', table: 'mfc_policies' }, () => fetchCloudData())
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'policies' }, () => fetchCloudData())
                         .subscribe();
 
                     await fetchCloudData();
@@ -1351,7 +1352,7 @@ document.getElementById('totalCostAmt').innerText =
             if (confirm('ยืนยันลบแผนลงทุนนี้?')) {
                 const updated = policies.filter(p => p.id !== id);
                 if (supabaseClient) {
-                    try { await supabaseClient.from('mfc_policies').delete().eq('id', id); } catch(e){}
+                    try { await supabaseClient.from('policies').delete().eq('id', id); } catch(e){}
                 }
                 await syncData(updated);
                 showToast('ลบรายการเรียบร้อยแล้ว', 'info');
