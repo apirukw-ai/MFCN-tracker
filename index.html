@@ -46,34 +46,28 @@
     </div>
 
     <script>
-        // ==========================================
-        // 1. ป้อนข้อมูล Supabase ของคุณตรงนี้
-        // ==========================================
-        const SUPABASE_URL = 'https://iproktvsetsbxompptuj.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
+    // 🟢 1. ประกาศสร้าง 2 ตัวแปรนี้ไว้บนสุดเสมอ
+    const SUPABASE_URL = "https://iproktvvetsbxxmpptuj.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw"; // 👈 เช็กว่ามีบรรทัดนี้และสะกดถูกต้อง
 
-        // ==========================================
-        // 2. สร้าง Client สำหรับเชื่อมต่อ Supabase
-        // ==========================================
-        let supabaseClient = null;
-        let policies = [
-            { id: 1, policy_name: "MFC Policy A", nav: 10.5, units: 100, amount: 1050 },
-            { id: 2, policy_name: "MFC Policy B", nav: 25.0, units: 200, amount: 5000 }
-        ];
+    // 2. ตัวแปรสำหรับระบบ
+    let supabaseClient = null;
+    let policies = [
+        { id: 1, policy_name: "MFC Policy A", nav: 10.5, units: 100, amount: 1050 },
+        { id: 2, policy_name: "MFC Policy B", nav: 25.0, units: 200, amount: 5000 }
+    ];
 
-        try {
-            if (SUPABASE_URL !== "วาง_PROJECT_URL_ที่นี่" && SUPABASE_ANON_KEY !== "วาง_ANON_KEY_ที่นี่") {
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                document.getElementById('status').innerText = "สถานะ: เชื่อมต่อ Supabase พร้อมใช้งาน";
-                document.getElementById('status').className = "mb-4 p-3 text-sm rounded-xl bg-emerald-900/50 text-emerald-300 border border-emerald-700";
-            } else {
-                document.getElementById('status').innerText = "สถานะ: ยังไม่ได้ใส่ Supabase URL หรือ Key ในโค้ด";
-                document.getElementById('status').className = "mb-4 p-3 text-sm rounded-xl bg-amber-900/50 text-amber-300 border border-amber-700";
-            }
-        } catch (err) {
-            console.error("Initialization Error:", err);
-            document.getElementById('status').innerText = "สถานะ: เชื่อมต่อล้มเหลว ตรวจสอบ URL/Key";
+    // 3. เริ่มเชื่อมต่อ Supabase
+    try {
+        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            document.getElementById('status').innerText = "สถานะ: เชื่อมต่อ Supabase พร้อมใช้งาน";
+            document.getElementById('status').className = "mb-4 p-3 text-sm rounded-xl bg-emerald-900/50 text-emerald-300 border border-emerald-700";
         }
+    } catch (err) {
+        console.error("Initialization Error:", err);
+        document.getElementById('status').innerText = "สถานะ: เชื่อมต่อล้มเหลว ตรวจสอบ URL/Key";
+    }
 
         // ==========================================
         // 3. ฟังก์ชันแสดงผลบนหน้าจอ
