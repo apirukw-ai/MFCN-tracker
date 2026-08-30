@@ -442,26 +442,23 @@
         </div>
     </div>
 
-    <!-- 1. ดึง SDK ของ Supabase มาใช้งาน -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script>
-    // 🟢 1. วางโค้ดเชื่อมต่อ Supabase ไว้บรรทัดแรกสุดตรงนี้
+<!-- 1. ดึง SDK ของ Supabase มาใช้งาน -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+    // 🟢 1. เชื่อมต่อ Supabase (แก้ไขชื่อตัวแปรให้ตรงกันแล้ว)
     const SUPABASE_URL = 'https://iproktvvetsbxxmpptuj.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 🟢 2. ตามด้วยโค้ด Service Worker เดิมของคุณ
-        if ('serviceWorker' in navigator) {
+    // 🟢 2. โค้ด Service Worker (ลบบล็อกที่ซ้ำและแก้ไขวงเล็บเรียบร้อย)
+    if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            // ... โค้ดเดิมของคุณ ...
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then((reg) => console.log('PWA Service Worker registered:', reg.scope))
-                    .catch((err) => console.error('PWA Service Worker registration failed:', err));
-            });
-        }
+            navigator.serviceWorker.register('./sw.js')
+                .then((reg) => console.log('PWA Service Worker registered:', reg.scope))
+                .catch((err) => console.error('PWA Service Worker registration failed:', err));
+        });
+    }
 
         const TARGET_ALLOCATIONS = {
             'MPF07': 10.00,
