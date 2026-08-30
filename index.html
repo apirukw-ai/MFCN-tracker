@@ -511,7 +511,7 @@
         }
 
 async function initSyncEngine() {
-    fetchLocalData();
+    // fetchLocalData();
 
             const url = localStorage.getItem('mfc_sp_url');
             const key = localStorage.getItem('mfc_sp_key');
@@ -553,7 +553,6 @@ async function fetchCloudData() {
 
         if (!error && data && data.length > 0) {
             policies = data;
-            saveToLocalStorage();
             renderTable();
         }
 
@@ -580,7 +579,6 @@ async function fetchCloudData() {
 
                     if (isOldBuggedData) {
                         policies = [...initialDefaultData];
-                        saveToLocalStorage();
                     } else {
                         policies = parsed;
                     }
@@ -589,21 +587,18 @@ async function fetchCloudData() {
                 }
             } else {
                 policies = [...initialDefaultData];
-                saveToLocalStorage();
             }
             renderTable();
         }
 
         function saveToLocalStorage() {
-            localStorage.setItem('mfc_policies', JSON.stringify(policies));
-            try { broadcastChannel.postMessage('update'); } catch(e) {}
+    // disabled
         }
 
         async function syncData(updatedList) {
             policies = updatedList;
             renderTable();
-            saveToLocalStorage();
-
+            
             if (supabaseClient) {
                 try {
                     await supabaseClient.from('mfc_policies').upsert(policies);
