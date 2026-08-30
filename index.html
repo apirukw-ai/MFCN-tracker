@@ -521,37 +521,61 @@
         }
 
 async function initSyncEngine() {
-    fetchLocalData();
-
-    // 🟢 ดึงจาก localStorage ถ้าหาไม่เจอ ให้ใช้ค่า URL และ KEY จริงทันที
+    // 1. ตั้งค่าการเชื่อมต่อ Supabase
     const url = localStorage.getItem('mfc_sp_url') || 'https://iproktvvetsbxxmpptuj.supabase.co';
     const key = localStorage.getItem('mfc_sp_key') || 'sb_publishable_AxQGY0HEUL-kKRC3lPfGcw_6fxYQfgT';
 
     if (url && key) {
         try {
             supabaseClient = supabase.createClient(url, key);
+            
+            // เปิด Realtime Sync (หากข้อมูลบน Cloud เปลี่ยน ให้โหลดใหม่ทันที)
             supabaseClient
                 .channel('mfc_realtime')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'policies' }, () => fetchCloudData())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'policies' }, () => loadMasterData())
                 .subscribe();
-
-            await fetchCloudData();
         } catch (e) {
-            console.error("Supabase connect error:", e);
+            console.error("Supabase init error:", e);
+        }
+    }
+
+    // 2. เริ่มโหลดข้อมูลแบบ Cloud First
+    await loadMasterData();
+}
+
+async function loadMasterData() {
+    let cloudLoaded = false;
+
+    // 🟢 ลองดึงจาก Cloud ก่อนเสมอ (Source of Truth)
+    if (supabaseClient) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('policies')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (!error && data && data.length > 0) {
+                policies = data;
+                renderTable();
+                saveToLocalStorage(); // 🟢 อัปเดต Emergency Cache ในเครื่อง
+                cloudLoaded = true;
+                console.log("☁️ โหลดข้อมูลหลักจาก Supabase สำเร็จ");
+            }
+        } catch (e) {
+            console.warn("⚠️ ไม่สามารถเชื่อมต่อ Cloud ได้:", e);
+        }
+    }
+
+    // 🔴 ถ้าดึงจาก Cloud ไม่ได้ (เช่น เน็ตหลุด) ให้ดึงจาก Emergency Cache ในเครื่อง
+    if (!cloudLoaded) {
+        console.log("📦 กำลังดึงข้อมูลจาก Emergency Cache (LocalStorage)...");
+        fetchLocalData();
+        renderTable();
+        if (typeof showToast === 'function') {
+            showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
         }
     }
 }
-
-        async function fetchCloudData() {
-            if (!supabaseClient) return;
-            const { data, error } = await supabaseClient.from('policies').select('*').order('id', { ascending: true });
-            if (!error && data && data.length > 0) {
-                policies = data;
-                saveToLocalStorage();
-                renderTable();
-            }
-        }
-
         function fetchLocalData() {
             const local = localStorage.getItem('mfc_policies');
             if (local) {
@@ -585,36 +609,44 @@ async function initSyncEngine() {
         }
 
 async function syncData(updatedList) {
-    // 1. บันทึกลงเครื่องก่อน
     policies = updatedList;
-    if (typeof renderTable === 'function') renderTable();
-    if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
+    let cloudSuccess = false;
 
-    // 2. ส่งขึ้น Supabase
+    // 1. ส่งข้อมูลไปอัปเดตที่ Cloud ก่อนเสมอ (Source of Truth)
     if (supabaseClient) {
         try {
-            console.log("⏳ กำลังเริ่มส่งข้อมูลขึ้น Supabase...");
+            console.log("⏳ กำลังอัปเดตข้อมูลขึ้น Cloud...");
 
-            // วนลูปอัปเดตทีละกองทุนโดยอ้างอิงจาก code
-            for (const item of policies) {
-                const { data, error } = await supabaseClient
-                    .from('policies')
-                    .update({ 
-                        nav: Number(item.nav || item.navToday || 0) 
-                    })
-                    .eq('code', item.code); // 🟢 อัปเดตแถวที่มี code ตรงกัน
+            const cleanPayload = policies.map(item => ({
+                id: Number(item.id),
+                code: String(item.code || ''),
+                name: String(item.name || ''),
+                units: Number(item.units || 0),
+                nav: Number(item.navToday || item.nav || 0)
+            }));
 
-                if (error) {
-                    console.error(`❌ อัปเดต ${item.code} ล้มเหลว:`, error.message);
-                } else {
-                    console.log(`✅ อัปเดต ${item.code} ขึ้น Supabase สำเร็จ`);
-                }
+            const { error } = await supabaseClient
+                .from('policies')
+                .upsert(cleanPayload);
+
+            if (!error) {
+                cloudSuccess = true;
+                console.log("✅ บันทึกลง Supabase สำเร็จ");
+            } else {
+                console.error("❌ Supabase Error:", error.message);
             }
         } catch (err) {
-            console.error("Cloud sync error:", err);
+            console.error("❌ Cloud connection error:", err);
         }
-    } else {
-        console.warn("⚠️ supabaseClient ยังไม่ได้เชื่อมต่อ");
+    }
+
+    // 2. อัปเดต Emergency Cache และแสดงผลหน้าเว็บ
+    if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
+    if (typeof renderTable === 'function') renderTable();
+
+    // แจ้งเตือนกรณีออฟไลน์หรือ Cloud มีปัญหา
+    if (!cloudSuccess && typeof showToast === 'function') {
+        showToast('บันทึกในเครื่องแล้ว (ไม่สามารถส่งขึ้น Cloud ได้)', 'warning');
     }
 }
         async function processPDFStatement(file) {
