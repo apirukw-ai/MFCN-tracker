@@ -1448,34 +1448,34 @@ async function updateNAVAll() {
         MPF27: "M-ASIA"
     };
 
-    try {
+try {
+    for (const policy of policies) {
+        const fundCode = FUND_MAP[policy.code];
+        if (!fundCode) continue;
 
-        for (const policy of policies) {
-
-            const fundCode = FUND_MAP[policy.code];
-
-            if (!fundCode) continue;
-
-            const response = await fetch(
-                `https://iproktvvetsbxxmpptuj.supabase.co/functions/v1/get-nav?fund=${encodeURIComponent(fundCode)}`
-            );
-
-            const data = await response.json();
-
-            policy.navToday = data.nav;
-            policy.navDate = data.date;
-
-            console.log(
-                `${policy.code} → ${data.nav}`
-            );
-        }
-
-        await syncData(policies);
-
-        showToast(
-            'อัปเดต NAV ล่าสุดสำเร็จ',
-            'success'
+        const response = await fetch(
+            `https://iproktvvetsbxxmpptuj.supabase.co/functions/v1/get-nav?fund=${encodeURIComponent(fundCode)}`
         );
+
+        const data = await response.json();
+
+        policy.navToday = data.nav;
+        policy.navDate = data.date;
+        
+        // 🟢 เพิ่มบรรทัดนี้ลงไป เพื่อให้อัปเดตคอลัมน์ nav ของ Supabase ด้วย
+        policy.nav = data.nav; 
+
+        console.log(
+            `${policy.code} → ${data.nav}`
+        );
+    }
+
+    await syncData(policies);
+
+    showToast(
+        'อัปเดต NAV ล่าสุดสำเร็จ',
+        'success'
+    );
 
     } catch (err) {
 
