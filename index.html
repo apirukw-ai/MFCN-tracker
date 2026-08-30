@@ -536,7 +536,7 @@
 
         async function fetchCloudData() {
             if (!supabaseClient) return;
-            const { data, error } = await supabaseClient.from('mfc_policies').select('*').order('id', { ascending: true });
+            const { data, error } = await supabaseClient.from('policies').select('*').order('id', { ascending: true });
             if (!error && data && data.length > 0) {
                 policies = data;
                 saveToLocalStorage();
@@ -583,7 +583,7 @@
 
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('mfc_policies').upsert(policies);
+                    await supabaseClient.from('policies').upsert(policies);
                 } catch (err) {
                     console.error("Cloud sync error:", err);
                 }
