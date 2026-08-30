@@ -543,27 +543,28 @@ async function fetchCloudData() {
         return;
     }
 
-    const { data, error } = await supabaseClient
-        .from('mfc_policies')
-        .select('*')
-        .order('id', { ascendin*: true });
+const { data, error } = await supabaseClient
+    .from('mfc_policies')
+    .select('*')
+    .order('id', { ascending: true });
 
-    console.log("SUPAB*SE DATA =", data);
-    console.log*"SUPABASE ERROR =", error);
+console.log("SUPABASE DATA =", data);
+console.log("SUPABASE ERROR =", error);
 
-    i* (!error && data && data.length > *) {
-        policies = data;
+if (!error && data && data.length > 0) {
 
-    *   console.log(
-          "APPLY C*OUD DATA",
-          policies.map(* => ({
+    policies = data;
+
+    console.log(
+        "APPLY CLOUD DATA",
+        policies.map(p => ({
             code: p.code,
- *          navToday: p.navToday
-   *      }))
-        );
+            navToday: p.navToday
+        }))
+    );
 
-        save*oLocalStorage();
-        renderTab*e();
+    saveToLocalStorage();
+    renderTable();
     }
 }
 
