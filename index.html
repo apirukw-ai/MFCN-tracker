@@ -612,15 +612,14 @@ async function syncData(updatedList) {
     policies = updatedList;
     let cloudSuccess = false;
 
-    // 1. ส่งข้อมูลไปอัปเดตที่ Cloud ก่อนเสมอ (Source of Truth)
     if (supabaseClient) {
         try {
             console.log("⏳ กำลังอัปเดตข้อมูลขึ้น Cloud...");
 
+            // 🟢 รักษาข้อมูลทุกฟิลด์เดิมไว้ (รวมถึง costNav, navPrev, navYtd)
             const cleanPayload = policies.map(item => ({
+                ...item,
                 id: Number(item.id),
-                code: String(item.code || ''),
-                name: String(item.name || ''),
                 units: Number(item.units || 0),
                 nav: Number(item.navToday || item.nav || 0)
             }));
@@ -640,11 +639,9 @@ async function syncData(updatedList) {
         }
     }
 
-    // 2. อัปเดต Emergency Cache และแสดงผลหน้าเว็บ
     if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
     if (typeof renderTable === 'function') renderTable();
 
-    // แจ้งเตือนกรณีออฟไลน์หรือ Cloud มีปัญหา
     if (!cloudSuccess && typeof showToast === 'function') {
         showToast('บันทึกในเครื่องแล้ว (ไม่สามารถส่งขึ้น Cloud ได้)', 'warning');
     }
