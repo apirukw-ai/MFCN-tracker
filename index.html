@@ -554,26 +554,32 @@ async function loadMasterData() {
                 .order('id', { ascending: true });
 
             if (!error && data && data.length > 0) {
-                // 🟢 แปลงข้อมูลจาก Supabase ให้รองรับทั้ง camelCase และ snake_case
+                // 🟢 อ่านแคชเดิมในเครื่องเตรียมไว้ เพื่อดึงค่าต้นทุน/ประวัติย้อนหลังมาผสาน
+                const localData = JSON.parse(localStorage.getItem('mfc_policies') || '[]');
+                const localMap = new Map(localData.map(item => [item.code, item]));
+
                 policies = data.map(item => {
-                    const navVal = Number(item.nav || item.navToday || 0);
+                    const localItem = localMap.get(item.code) || {};
+                    const navVal = Number(item.nav || item.navToday || localItem.nav || 0);
+
                     return {
-                        ...item,
+                        ...localItem, // คงค่าเดิมในเครื่องไว้ (costNav, navPrev, ฯลฯ)
+                        ...item,      // อัปเดตข้อมูลหลักจาก Supabase (id, code, name, units, nav)
                         id: Number(item.id),
                         code: String(item.code || ''),
                         name: String(item.name || ''),
                         units: Number(item.units || 0),
                         nav: navVal,
                         navToday: navVal,
-                        costNav: Number(item.costNav || item.cost_nav || navVal),
-                        navPrev: Number(item.navPrev || item.nav_prev || navVal),
-                        navYtd: Number(item.navYtd || item.nav_ytd || navVal),
-                        nav3m: Number(item.nav3m || item.nav_3m || navVal)
+                        costNav: Number(localItem.costNav || navVal),
+                        navPrev: Number(localItem.navPrev || navVal),
+                        navYtd: Number(localItem.navYtd || navVal),
+                        nav3m: Number(localItem.nav3m || navVal)
                     };
                 });
 
                 renderTable();
-                saveToLocalStorage(); // 🟢 อัปเดต Emergency Cache
+                saveToLocalStorage();
                 cloudLoaded = true;
                 console.log("☁️ โหลดข้อมูลหลักจาก Supabase สำเร็จ");
             }
@@ -627,25 +633,22 @@ async function syncData(updatedList) {
     policies = updatedList;
     let cloudSuccess = false;
 
+    // 🟢 1. บันทึกลง Emergency Cache (LocalStorage) ไว้ก่อน
+    if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
+    if (typeof renderTable === 'function') renderTable();
+
+    // 🟢 2. ส่งเฉพาะคอลัมน์ที่มีใน Supabase (id, code, name, units, nav)
     if (supabaseClient) {
         try {
             console.log("⏳ กำลังอัปเดตข้อมูลขึ้น Cloud...");
 
-            // 🟢 ส่งข้อมูลครบทุกฟิลด์การคำนวณขึ้น Supabase
-            const cleanPayload = policies.map(item => {
-                const navVal = Number(item.navToday || item.nav || 0);
-                return {
-                    id: Number(item.id),
-                    code: String(item.code || ''),
-                    name: String(item.name || ''),
-                    units: Number(item.units || 0),
-                    nav: navVal,
-                    cost_nav: Number(item.costNav || item.cost_nav || navVal),
-                    nav_prev: Number(item.navPrev || item.nav_prev || navVal),
-                    nav_ytd: Number(item.navYtd || item.nav_ytd || navVal),
-                    nav_3m: Number(item.nav3m || item.nav_3m || navVal)
-                };
-            });
+            const cleanPayload = policies.map(item => ({
+                id: Number(item.id),
+                code: String(item.code || ''),
+                name: String(item.name || ''),
+                units: Number(item.units || 0),
+                nav: Number(item.navToday || item.nav || 0)
+            }));
 
             const { error } = await supabaseClient
                 .from('policies')
@@ -661,9 +664,6 @@ async function syncData(updatedList) {
             console.error("❌ Cloud connection error:", err);
         }
     }
-
-    if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
-    if (typeof renderTable === 'function') renderTable();
 
     if (!cloudSuccess && typeof showToast === 'function') {
         showToast('บันทึกในเครื่องแล้ว (ไม่สามารถส่งขึ้น Cloud ได้)', 'warning');
