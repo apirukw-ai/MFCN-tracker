@@ -520,29 +520,27 @@
             }, 3200);
         }
 
-        async function initSyncEngine() {
-            fetchLocalData();
+async function initSyncEngine() {
+    fetchLocalData();
 
-            const url = localStorage.getItem('mfc_sp_url');
-            const key = localStorage.getItem('mfc_sp_key');
+    // 🟢 ดึงจาก localStorage ถ้าหาไม่เจอ ให้ใช้ค่า URL และ KEY จริงทันที
+    const url = localStorage.getItem('mfc_sp_url') || 'https://iproktvvetsbxxmpptuj.supabase.co';
+    const key = localStorage.getItem('mfc_sp_key') || 'sb_publishable_AxQGY0HEUL-kKRC3lPfGcw_6fxYQfgT';
 
-            if (url && key) {
-                try {
-                    supabaseClient = supabase.createClient(url, key);
-                    document.getElementById('cloudStatusText').innerText = 'Cloud Active';
-                    document.getElementById('syncTextMobile').innerText = 'Cloud';
+    if (url && key) {
+        try {
+            supabaseClient = supabase.createClient(url, key);
+            supabaseClient
+                .channel('mfc_realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'policies' }, () => fetchCloudData())
+                .subscribe();
 
-                    supabaseClient
-                        .channel('mfc_realtime')
-                        .on('postgres_changes', { event: '*', schema: 'public', table: 'policies' }, () => fetchCloudData())
-                        .subscribe();
-
-                    await fetchCloudData();
-                } catch (e) {
-                    console.error("Supabase connect error:", e);
-                }
-            }
+            await fetchCloudData();
+        } catch (e) {
+            console.error("Supabase connect error:", e);
         }
+    }
+}
 
         async function fetchCloudData() {
             if (!supabaseClient) return;
