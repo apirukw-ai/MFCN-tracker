@@ -1181,9 +1181,6 @@ document.getElementById('portfolioBalance').innerText =
     const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
 
     const overall3mPct = totalBalToday > 0 ? (weighted3mSum / totalBalToday) : 0;
-    const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
-
-    const overall3mPct = totalBalToday > 0 ? (weighted3mSum / totalBalToday) : 0;
     // 🟢 แทรกบรรทัดคำนวณยอดเงินบาท (total3mAmt) เพิ่มตรงนี้ครับ
     const start3mValTotal = weighted3mSum !== 0 ? totalBalToday / (1 + (overall3mPct / 100)) : totalBalToday;
     const total3mAmt = totalBalToday - start3mValTotal;
