@@ -1489,18 +1489,18 @@ try {
 
         const data = await response.json();
 
-        policy.navToday = data.nav;
+policy.navToday = data.nav;
         policy.navDate = data.date;
-        
-        // 🟢 เพิ่มบรรทัดนี้ลงไป เพื่อให้อัปเดตคอลัมน์ nav ของ Supabase ด้วย
         policy.nav = data.nav; 
 
         console.log(
             `${policy.code} → ${data.nav}`
         );
-    }
+    } // 👈 ปีกกาปิดของลูปอัปเดต NAV
 
-    await syncData(policies);
+    // 🟢 วาดตารางใหม่ และส่งข้อมูลขึ้น Supabase
+    renderTable();             // วาดตารางหน้าเว็บใหม่
+    await syncData(policies);  // บันทึกลง LocalStorage และอัปเดตขึ้น Supabase (ใช้แค่บรรทัดนี้บรรทัดเดียว)
 
     showToast(
         'อัปเดต NAV ล่าสุดสำเร็จ',
