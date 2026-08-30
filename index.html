@@ -577,18 +577,37 @@
         }
 
         async function syncData(updatedList) {
-            policies = updatedList;
-            renderTable();
-            saveToLocalStorage();
+    policies = updatedList;
+    renderTable();
+    saveToLocalStorage();
 
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('policies').upsert(policies);
-                } catch (err) {
-                    console.error("Cloud sync error:", err);
-                }
+    if (supabaseClient) {
+        try {
+            // 🟢 คัดเลือกเฉพาะฟิลด์ที่มีจริงในตาราง policies ส่งไป Supabase
+            const cleanPayload = policies.map(item => ({
+                id: item.id,
+                code: item.code,
+                name: item.name,
+                units: item.units,
+                nav: item.navToday || item.nav || item.navUnitCost
+            }));
+
+            console.log("📤 กำลังส่งข้อมูลเข้า Supabase:", cleanPayload);
+
+            const { data, error } = await supabaseClient
+                .from('policies')
+                .upsert(cleanPayload);
+
+            if (error) {
+                console.error("❌ Cloud sync error:", error);
+            } else {
+                console.log("✅ Sync ลง Supabase สำเร็จ!");
             }
+        } catch (err) {
+            console.error("Cloud sync error:", err);
         }
+    }
+}
 
         async function processPDFStatement(file) {
             try {
