@@ -576,39 +576,40 @@
             try { broadcastChannel.postMessage('update'); } catch(e) {}
         }
 
-        async function syncData(updatedList) {
+    async function syncData(updatedList) {
     policies = updatedList;
     renderTable();
     saveToLocalStorage();
 
     if (supabaseClient) {
         try {
-            // 🟢 คัดเลือกเฉพาะฟิลด์ที่มีจริงในตาราง policies ส่งไป Supabase
+            // ดึงค่า NAV ล่าสุดพร้อมแปลงชนิดข้อมูลเป็นตัวเลขให้ถูกต้อง
             const cleanPayload = policies.map(item => ({
-                id: item.id,
-                code: item.code,
-                name: item.name,
-                units: item.units,
-                nav: item.navToday || item.nav || item.navUnitCost
+                id: Number(item.id),
+                code: String(item.code || ''),
+                name: String(item.name || ''),
+                units: Number(item.units || 0),
+                nav: Number(item.navToday || item.nav || item.navUnitCost || 0)
             }));
 
-            console.log("📤 กำลังส่งข้อมูลเข้า Supabase:", cleanPayload);
+            console.log("📤 ข้อมูลที่เตรียมส่งเข้า Supabase:", cleanPayload);
 
             const { data, error } = await supabaseClient
                 .from('policies')
                 .upsert(cleanPayload);
 
             if (error) {
-                console.error("❌ Cloud sync error:", error);
+                console.error("❌ เกิด Error จาก Supabase:", error);
+                alert("Supabase ปฏิเสธการบันทึก: " + error.message);
             } else {
-                console.log("✅ Sync ลง Supabase สำเร็จ!");
+                console.log("✅ อัปเดต NAV ลง Supabase สำเร็จ!");
+                alert("อัปเดต NAV ลง Supabase สำเร็จเรียบร้อย!");
             }
         } catch (err) {
-            console.error("Cloud sync error:", err);
+            console.error("System Error:", err);
         }
     }
 }
-
         async function processPDFStatement(file) {
             try {
                 const arrayBuffer = await file.arrayBuffer();
