@@ -1658,12 +1658,11 @@ policy.navToday = data.nav;
     await syncData(policies);  // บันทึกลง LocalStorage และอัปเดตขึ้น Supabase (ใช้แค่บรรทัดนี้บรรทัดเดียว)
 
     showToast(
-        'อัปเดต NAV ล่าสุดสำเร็จ',
-        'success'
-    );
+            'อัปเดต NAV ล่าสุดสำเร็จ',
+            'success'
+        );
 
     } catch (err) {
-
         console.error(err);
 
         showToast(
@@ -1673,17 +1672,14 @@ policy.navToday = data.nav;
     }
 }
 
-<script>
-    // ... โค้ด JavaScript เดิมที่มีอยู่แล้ว ...
+// ❌ ลบแท็ก <script> และบรรทัดคำอธิบายออก แล้วต่อด้วยฟังก์ชันนี้ได้เลย
+async function checkAndAutoUpdateNav() {
+    const todayStr = new Date().toISOString().split('T')[0]; // วันที่ปัจจุบัน (YYYY-MM-DD)
+    const lastUpdateStr = localStorage.getItem('last_auto_nav_date');
 
-    // 1. นำฟังก์ชันนี้ไปวางไว้เหนือบรรทัด </script>
-    async function checkAndAutoUpdateNav() {
-        const todayStr = new Date().toISOString().split('T')[0]; // วันที่ปัจจุบัน (YYYY-MM-DD)
-        const lastUpdateStr = localStorage.getItem('last_auto_nav_date');
-
-        // ถ้าเปิดเว็บวันใหม่ แล้วยังไม่ได้อัปเดต NAV ของวันนี้
-        if (lastUpdateStr !== todayStr) {
-            console.log("🔄 ตรวจพบวันใหม่ กำลังสั่งรัน Update NAV อัตโนมัติ...");
+    // ถ้าเปิดเว็บวันใหม่ แล้วยังไม่ได้อัปเดต NAV ของวันนี้
+    if (lastUpdateStr !== todayStr) {
+        console.log("🔄 ตรวจพบวันใหม่ กำลังสั่งรัน Update NAV อัตโนมัติ...");
             
             try {
                 // เรียกใช้ฟังก์ชันเดียวกับปุ่ม Update NAV (เปลี่ยนชื่อฟังก์ชันให้ตรงกับของเดิมในเว็บ)
