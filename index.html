@@ -1702,6 +1702,56 @@ policy.navToday = data.nav;
         }
     }
 </script>        
+    // 1. ฟังก์ชันเปิด Modal (สอดคล้องกับ onclick="openCloudModal()" บนปุ่ม)
+function openCloudModal() {
+    const modal = document.getElementById('cloudModal');
+    if (modal) {
+        // ดึงค่า URL และ Key เดิมจาก localStorage มาแสดงในช่อง input (ถ้ามี)
+        document.getElementById('cfgSupabaseUrl').value = localStorage.getItem('SUPABASE_URL') || '';
+        document.getElementById('cfgSupabaseKey').value = localStorage.getItem('SUPABASE_KEY') || '';
+        
+        modal.classList.remove('hidden'); // ปลด class hidden เพื่อแสดง Modal
+    }
+}
+
+// 2. ฟังก์ชันปิด Modal
+function closeCloudModal() {
+    const modal = document.getElementById('cloudModal');
+    if (modal) {
+        modal.classList.add('hidden'); // ใส่ class hidden เพื่อซ่อน Modal
+    }
+}
+
+// 3. ผูก Event Listener กับปุ่มปิด และ ปุ่มบันทึก
+document.addEventListener('DOMContentLoaded', () => {
+    // ปุ่มปิด Modal (ปุ่มไอคอน X)
+    const btnClose = document.getElementById('btnCloseCloudModal');
+    if (btnClose) {
+        btnClose.addEventListener('click', closeCloudModal);
+    }
+
+    // ปุ่มบันทึกการเชื่อมต่อ Cloud
+    const btnSave = document.getElementById('btnSaveCloudCfg');
+    if (btnSave) {
+        btnSave.addEventListener('click', () => {
+            const url = document.getElementById('cfgSupabaseUrl').value.trim();
+            const key = document.getElementById('cfgSupabaseKey').value.trim();
+
+            if (!url || !key) {
+                alert('กรุณากรอกทั้ง Supabase URL และ Anon Key ให้ครบถ้วน');
+                return;
+            }
+
+            // บันทึกลงใน Browser (localStorage)
+            localStorage.setItem('SUPABASE_URL', url);
+            localStorage.setItem('SUPABASE_KEY', key);
+
+            alert('✅ บันทึกการเชื่อมต่อ Cloud เรียบร้อยแล้ว');
+            closeCloudModal();
+            location.reload(); // รีโหลดหน้าเว็บเพื่อให้ระบบดึงข้อมูลตาม Key ใหม่
+        });
+    }
+});
     </script>
 </body>
 </html>
