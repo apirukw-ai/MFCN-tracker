@@ -15,23 +15,35 @@ if not url or not key:
 
 supabase: Client = create_client(url, key)
 
-def get_nav_from_mfc_page(fund_code, html_content):
-    """ค้นหาตัวเลข NAV ของ fund_code จากหน้าเว็บ MFC"""
+def get_nav_from_mfc_page(fund_code, fund_name, html_content):
+    """ค้นหาตัวเลข NAV โดยใช้ทั้งรหัสกองทุน และ ชื่อกองทุน"""
     if not html_content:
         return None
     try:
         soup = BeautifulSoup(html_content, 'html.parser')
-        # วนลูปค้นหาทุกแถวในตารางของหน้าเว็บ
+        
+        # ทำความสะอาดคำค้นหา (ตัดช่องว่างและเปลี่ยนเป็นตัวพิมพ์เล็ก)
+        clean_code = fund_code.replace(' ', '').lower() if fund_code else ""
+        clean_name = fund_name.replace(' ', '').lower() if fund_name else ""
+
         for row in soup.find_all('tr'):
             row_text = row.get_text(strip=True)
-            # ค้นหาแถวที่มีชื่อหรือรหัสกองทุนตรงกัน
-            if fund_code.lower() in row_text.lower():
+            clean_row = row_text.replace(' ', '').lower()
+            
+            # ตรวจสอบว่าในแถวนั้นมี รหัส หรือ ชื่อกองทุน ตรงกันหรือไม่
+            is_match = False
+            if clean_code and clean_code in clean_row:
+                is_match = True
+            elif clean_name and clean_name in clean_row:
+                is_match = True
+
+            if is_match:
                 # ดึงตัวเลขทศนิยม (NAV) จากแถวนั้น
                 numbers = re.findall(r'\d+\.\d{4}', row_text)
                 if numbers:
                     return float(numbers[0])
     except Exception as e:
-        print(f"⚠️ เกิดข้อผิดพลาดในการแกะข้อมูล {fund_code}: {e}")
+        print(f"⚠️ เกิดข้อผิดพลาดในการแกะข้อมูล {fund_code} / {fund_name}: {e}")
     return None
 
 def fetch_and_update():
@@ -51,21 +63,22 @@ def fetch_and_update():
         html_content = res.text if res.status_code == 200 else ""
 
         if res.status_code != 200:
-            print(f"❌ ไม่สามารถเข้าถึงหน้าเว็บ MFCได้ Status Code: {res.status_code}")
+            print(f"❌ ไม่สามารถเข้าถึงหน้าเว็บ MFC ได้ Status Code: {res.status_code}")
 
         # 3. ดึงรายการกองทุนทั้งหมดจาก Supabase
         db_res = supabase.table('policies').select('*').execute()
         policies = db_res.data
 
         for policy in policies:
-            code = policy.get('code')
+            code = policy.get('code', '')
+            name = policy.get('name', '')  # ดึงชื่อกองทุนจาก Supabase
             current_nav = float(policy.get('nav', 0))
             units = float(policy.get('units', 0))
 
-            print(f"🔄 กำลังค้นหา NAV ของ {code}...")
+            print(f"🔄 กำลังค้นหา NAV ของ {code} - {name}...")
 
-            # ดึงค่า NAV ล่าสุดจาก HTML
-            latest_nav = get_nav_from_mfc_page(code, html_content)
+            # ค้นหา NAV โดยใช้ทั้ง Code และ Name
+            latest_nav = get_nav_from_mfc_page(code, name, html_content)
 
             if latest_nav and latest_nav != current_nav:
                 prev_amt = current_nav * units
