@@ -2,8 +2,8 @@ name: Auto Update NAV Daily
 
 on:
   schedule:
-    # 09:15 UTC = 16:15 น. ไทย (จันทร์-ศุกร์)
-    - cron: '15 9 * * 1-5'
+    # 13:55 UTC = 20:55 น. ไทย (จันทร์-ศุกร์)
+    - cron: '55 13 * * 1-5'
   workflow_dispatch: # ปุ่มกดรันแบบ manual สำหรับทดสอบ
 
 jobs:
