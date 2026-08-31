@@ -563,13 +563,13 @@ async function loadMasterData() {
                     const prevAmtTotal = Number(item.prev_amt || 0);
                     const ytdPercent = Number(item.ytd || 0);
 
-                    // 1. คำนวณ NAV ต้นทุนต่อหน่วย
+                    // คำนวณ NAV ต้นทุนต่อหน่วยจากยอดเงินรวม cost
                     const calculatedCostNav = units > 0 ? (costTotal / units) : navVal;
                     
-                    // 2. คำนวณ NAV วันก่อนหน้า
+                    // คำนวณ NAV วันก่อนหน้า
                     const calculatedNavPrev = units > 0 ? (prevAmtTotal / units) : navVal;
 
-                    // 3. คำนวณย้อนหา NAV ต้นปี (navYtd) จากเปอร์เซ็นต์ ytd ใน DB
+                    // คำนวณย้อนหา NAV ต้นปี
                     const calculatedNavYtd = ytdPercent !== 0 ? (navVal / (1 + (ytdPercent / 100))) : navVal;
 
                     return {
@@ -579,13 +579,14 @@ async function loadMasterData() {
                         units: units,
                         nav: navVal,
                         navToday: navVal,
-                        costNav: calculatedCostNav,
+                        navUnitCost: calculatedCostNav,    // 👈 เพิ่มตัวแปรนี้ให้ตรงกับที่ renderTable() เรียกใช้งาน
+                        costNav: calculatedCostNav,        // ตัวแปรสำรอง
                         navPrev: calculatedNavPrev,
                         navYesterday: calculatedNavPrev,
-                        returnYtd: ytdPercent,              // ใช้เปอร์เซ็นต์ YTD จาก Supabase
-                        navYtd: calculatedNavYtd,           // NAV ต้นปีที่คำนวณได้
-                        return3m: 0,                        // DB ไม่มีคอลัมน์ 3M
-                        nav3m: navVal                       // Fallback สำหรับ 3M
+                        returnYtd: ytdPercent,
+                        navYtd: calculatedNavYtd,
+                        return3m: 0,
+                        nav3m: navVal
                     };
                 });
 
