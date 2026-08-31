@@ -521,21 +521,28 @@
         }
 
 async function initSyncEngine() {
-    // 1. ตั้งค่าการเชื่อมต่อ Supabase
     const url = localStorage.getItem('mfc_sp_url') || 'https://iproktvvetsbxxmpptuj.supabase.co';
     const key = localStorage.getItem('mfc_sp_key') || 'sb_publishable_AxQGY0HEUL-kKRC3lPfGcw_6fxYQfgT';
 
     if (url && key) {
         try {
-            supabaseClient = supabase.createClient(url, key);
+            supabaseClient = supabase.createClient(url, key, {
+                auth: {
+                    persistSession: false,
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false
+                }
+            });
+            console.log("☁️ เชื่อมต่อ Supabase สำเร็จด้วย URL ปัจจุบัน");
         } catch (e) {
             console.error("Supabase init error:", e);
         }
-    } // 👈 อันที่ 1: ปิด if (url && key)
+    }
 
-    // 2. เริ่มโหลดข้อมูลแบบ Cloud First
-    await loadMasterData();
-} // 👈 อันที่ 2: ปิด async function initSyncEngine()
+    if (typeof loadMasterData === 'function') {
+        await loadMasterData();
+    }
+}
 
 async function loadMasterData() {
     let cloudLoaded = false;
