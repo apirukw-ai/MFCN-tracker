@@ -1,0 +1,29 @@
+name: Auto Update NAV Daily
+
+on:
+  schedule:
+    # รันอัตโนมัติทุกวันจันทร์ - ศุกร์ เวลา 20:00 น. (เวลาไทย UTC+7 คือ 13:00 UTC)
+    - cron: '0 13 * * 1-5'
+  workflow_dispatch: # ปุ่มกดรันแบบ manual สำหรับทดสอบ
+
+jobs:
+  update-nav:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/python-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests supabase
+
+      - name: Run NAV Update Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python scripts/update_nav.py
