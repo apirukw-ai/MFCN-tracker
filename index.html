@@ -526,22 +526,16 @@ async function initSyncEngine() {
     const key = localStorage.getItem('mfc_sp_key') || 'sb_publishable_AxQGY0HEUL-kKRC3lPfGcw_6fxYQfgT';
 
     if (url && key) {
-            try {
-                supabaseClient = supabase.createClient(url, key);
-
-                // ปิด Realtime Sync เพื่อป้องกัน WebSocket Error
-                // supabaseClient
-                //     .channel('mfc_realtime')
-                //     .on('postgres_changes', { event: '*', schema: 'public', table: 'policies' }, () => loadMasterData())
-                //     .subscribe();
-            } catch (e) {
-                console.error("Supabase init error:", e);
-            }
+        try {
+            supabaseClient = supabase.createClient(url, key);
+        } catch (e) {
+            console.error("Supabase init error:", e);
         }
+    } // 👈 อันที่ 1: ปิด if (url && key)
 
     // 2. เริ่มโหลดข้อมูลแบบ Cloud First
     await loadMasterData();
-}
+} // 👈 อันที่ 2: ปิด async function initSyncEngine()
 
 async function loadMasterData() {
     let cloudLoaded = false;
@@ -1698,52 +1692,46 @@ async function checkAndAutoUpdateNav() {
         }
     }
         
-// 1. ฟังก์ชันเปิด Modal
 window.openCloudModal = function() {
     const modal = document.getElementById('cloudModal');
     if (modal) {
+        // ดึงค่าโดยใช้ Key เดียวกับ initSyncEngine
         const urlInput = document.getElementById('cfgSupabaseUrl');
         const keyInput = document.getElementById('cfgSupabaseKey');
-        if (urlInput) urlInput.value = localStorage.getItem('SUPABASE_URL') || '';
-        if (keyInput) keyInput.value = localStorage.getItem('SUPABASE_KEY') || '';
+        if (urlInput) urlInput.value = localStorage.getItem('mfc_sp_url') || '';
+        if (keyInput) keyInput.value = localStorage.getItem('mfc_sp_key') || '';
         
         modal.classList.remove('hidden');
     }
 };
 
-// 2. ฟังก์ชันปิด Modal
 window.closeCloudModal = function() {
     const modal = document.getElementById('cloudModal');
     if (modal) modal.classList.add('hidden');
-};    
+};
 
-// 3. ผูก Event Listener กับปุ่มปิด และ ปุ่มบันทึก
 document.addEventListener('DOMContentLoaded', () => {
-    // ปุ่มปิด Modal (ปุ่มไอคอน X)
     const btnClose = document.getElementById('btnCloseCloudModal');
-    if (btnClose) {
-        btnClose.addEventListener('click', closeCloudModal);
-    }
+    if (btnClose) btnClose.addEventListener('click', window.closeCloudModal);
 
-    // ปุ่มบันทึกการเชื่อมต่อ Cloud
     const btnSave = document.getElementById('btnSaveCloudCfg');
     if (btnSave) {
-        btnSave.addEventListener('click', () => {
-            const url = document.getElementById('cfgSupabaseUrl').value.trim();
-            const key = document.getElementById('cfgSupabaseKey').value.trim();
+        btnSave.addEventListener('click', async () => {
+            const url = document.getElementById('cfgSupabaseUrl')?.value.trim();
+            const key = document.getElementById('cfgSupabaseKey')?.value.trim();
 
             if (!url || !key) {
                 alert('กรุณากรอกทั้ง Supabase URL และ Anon Key ให้ครบถ้วน');
                 return;
             }
 
-            // บันทึกลงใน Browser (localStorage)
-            localStorage.setItem('SUPABASE_URL', url);
-            localStorage.setItem('SUPABASE_KEY', key);
+            // บันทึกชื่อ Key ให้ตรงกับ initSyncEngine
+            localStorage.setItem('mfc_sp_url', url);
+            localStorage.setItem('mfc_sp_key', key);
 
             alert('✅ บันทึกการเชื่อมต่อ Cloud เรียบร้อยแล้ว');
-            closeCloudModal();
-            location.reload(); // รีโหลดหน้าเว็บเพื่อให้ระบบดึงข้อมูลตาม Key ใหม่
+            window.closeCloudModal();
+            location.reload(); // รีโหลดเพื่อเริ่มทำงานกับ Cloud ใหม่
         });
     }
 });
