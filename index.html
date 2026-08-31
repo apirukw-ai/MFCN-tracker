@@ -569,17 +569,20 @@ async function loadMasterData() {
                     // 2. คำนวณ NAV วันก่อนหน้า
                     const calculatedNavPrev = units > 0 ? (prevAmtTotal / units) : navVal;
 
-                    // 3. จัดการ % YTD (หากใน DB เป็น 0 ให้คำนวณจาก NAV วันนี้ เทียบกับ NAV ต้นทุน เป็น Fallback)
+                    // 3. เปอร์เซ็นต์กำไร/ขาดทุนสะสมเทียบต้นทุน
                     const costReturnPercent = calculatedCostNav > 0 
                         ? ((navVal - calculatedCostNav) / calculatedCostNav) * 100 
                         : 0;
                     
+                    // 4. จัดการ % YTD
                     const finalYtdPercent = dbYtdPercent !== 0 ? dbYtdPercent : costReturnPercent;
-
-                    // 4. คำนวณย้อนหา NAV ต้นปี
                     const calculatedNavYtd = finalYtdPercent !== 0 
                         ? (navVal / (1 + (finalYtdPercent / 100))) 
                         : calculatedCostNav;
+
+                    // 5. จัดการ % 3 เดือนล่าสุด (Fallback ใช้ค่าเทียบต้นทุนเนื่องจาก DB ไม่มีคอลัมน์ 3M)
+                    const final3mPercent = costReturnPercent;
+                    const calculatedNav3m = calculatedCostNav;
 
                     return {
                         id: Number(item.id),
@@ -592,11 +595,11 @@ async function loadMasterData() {
                         costNav: calculatedCostNav,
                         navPrev: calculatedNavPrev,
                         navYesterday: calculatedNavPrev,
-                        returnYtd: finalYtdPercent,           // % YTD
+                        returnYtd: finalYtdPercent,
                         ytd: finalYtdPercent,
-                        navYtd: calculatedNavYtd,          // NAV ต้นปี
-                        return3m: 0,
-                        nav3m: navVal
+                        navYtd: calculatedNavYtd,
+                        return3m: final3mPercent,           // 👈 กำหนดค่า Fallback ให้ 3 เดือน
+                        nav3m: calculatedNav3m              // 👈 กำหนด NAV ต้นทางให้ 3 เดือน
                     };
                 });
 
