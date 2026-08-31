@@ -561,16 +561,25 @@ async function loadMasterData() {
                     const navVal = Number(item.nav || 0);
                     const costTotal = Number(item.cost || 0);
                     const prevAmtTotal = Number(item.prev_amt || 0);
-                    const ytdPercent = Number(item.ytd || 0);
+                    const dbYtdPercent = Number(item.ytd || 0);
 
-                    // คำนวณ NAV ต้นทุนต่อหน่วยจากยอดเงินรวม cost
+                    // 1. คำนวณ NAV ต้นทุนต่อหน่วย
                     const calculatedCostNav = units > 0 ? (costTotal / units) : navVal;
                     
-                    // คำนวณ NAV วันก่อนหน้า
+                    // 2. คำนวณ NAV วันก่อนหน้า
                     const calculatedNavPrev = units > 0 ? (prevAmtTotal / units) : navVal;
 
-                    // คำนวณย้อนหา NAV ต้นปี
-                    const calculatedNavYtd = ytdPercent !== 0 ? (navVal / (1 + (ytdPercent / 100))) : navVal;
+                    // 3. จัดการ % YTD (หากใน DB เป็น 0 ให้คำนวณจาก NAV วันนี้ เทียบกับ NAV ต้นทุน เป็น Fallback)
+                    const costReturnPercent = calculatedCostNav > 0 
+                        ? ((navVal - calculatedCostNav) / calculatedCostNav) * 100 
+                        : 0;
+                    
+                    const finalYtdPercent = dbYtdPercent !== 0 ? dbYtdPercent : costReturnPercent;
+
+                    // 4. คำนวณย้อนหา NAV ต้นปี
+                    const calculatedNavYtd = finalYtdPercent !== 0 
+                        ? (navVal / (1 + (finalYtdPercent / 100))) 
+                        : calculatedCostNav;
 
                     return {
                         id: Number(item.id),
@@ -579,18 +588,19 @@ async function loadMasterData() {
                         units: units,
                         nav: navVal,
                         navToday: navVal,
-                        navUnitCost: calculatedCostNav,    // 👈 เพิ่มตัวแปรนี้ให้ตรงกับที่ renderTable() เรียกใช้งาน
-                        costNav: calculatedCostNav,        // ตัวแปรสำรอง
+                        navUnitCost: calculatedCostNav,
+                        costNav: calculatedCostNav,
                         navPrev: calculatedNavPrev,
                         navYesterday: calculatedNavPrev,
-                        returnYtd: ytdPercent,
-                        navYtd: calculatedNavYtd,
+                        returnYtd: finalYtdPercent,           // % YTD
+                        ytd: finalYtdPercent,
+                        navYtd: calculatedNavYtd,          // NAV ต้นปี
                         return3m: 0,
                         nav3m: navVal
                     };
                 });
 
-                // เซฟลง Emergency Cache
+                // บันทิกลง Cache
                 localStorage.setItem('mfc_policies', JSON.stringify(policies));
                 cloudLoaded = true;
                 console.log("☁️ โหลดข้อมูลจาก Supabase สำเร็จ");
