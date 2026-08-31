@@ -20,7 +20,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install requests supabase
+          pip install requests supabase beautifulsoup4
 
       - name: Run NAV Update Script
         env:
