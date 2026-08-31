@@ -2,8 +2,8 @@ name: Auto Update NAV Daily
 
 on:
   schedule:
-    # รันอัตโนมัติทุกวันจันทร์ - ศุกร์ เวลา 20:00 น. (เวลาไทย UTC+7 คือ 13:00 UTC)
-    - cron: '0 13 * * 1-5'
+  - cron: '50 15 * * 1-5'
+    timezone: "Asia/Bangkok"
   workflow_dispatch: # ปุ่มกดรันแบบ manual สำหรับทดสอบ
 
 jobs:
