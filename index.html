@@ -522,7 +522,7 @@
 
 async function initSyncEngine() {
     const url = localStorage.getItem('mfc_sp_url') || 'https://iproktvvetsbxxmpptuj.supabase.co';
-    const key = localStorage.getItem('mfc_sp_key') || 'sb_publishable_AxQGY0HEUL-kKRC3lPfGcw_6fxYQfgT';
+    const key = localStorage.getItem('mfc_sp_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
 
     if (url && key) {
         try {
@@ -696,9 +696,9 @@ async function syncData(updatedList) {
         }
     }
 
-    if (!cloudSuccess && typeof showToast === 'function') {
-        showToast('บันทึกในเครื่องแล้ว (ไม่สามารถส่งขึ้น Cloud ได้)', 'warning');
-    }
+    // if (typeof showToast === 'function') {
+//     showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
+// }
 }
         async function processPDFStatement(file) {
             try {
