@@ -1,32 +1,49 @@
 import os
-import requests
+from datetime import datetime, timezone, timedelta
 from supabase import create_client, Client
 
-# 1. เชื่อมต่อ Supabase
+# 1. ตั้งค่าการเชื่อมต่อ Supabase
 url = os.environ.get("SUPABASE_URL")
-key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") # หรือ Anon Key
+key = os.environ.get("SUPABASE_KEY")
+
+if not url or not key:
+    print("❌ Missing Supabase Credentials")
+    exit(1)
+
 supabase: Client = create_client(url, key)
 
-# 2. ดึงข้อมูลกองทุนเดิมจาก Supabase
-response = supabase.table('policies').select('*').execute()
-policies = response.data
-
-for policy in policies:
-    fund_code = policy['code'] # เช่น MPF23, MPF15
-    
-    # 3. ดึงค่า NAV วันนี้จาก API หรือ Web Scraping (ตัวอย่าง API สมมติ / SEC Open API)
-    # หมายเหตุ: สามารถใช้ API ของ ก.ล.ต. (SEC Open API) หรือ API กองทุนรวมไทยได้
+def fetch_and_update():
     try:
-        # สมมติการเรียก API NAV กองทุน
-        nav_api_url = f"https://api.sec.or.th/FundFactsheet/fund/{fund_code}/nav"
-        # nav_today = ... ดึงค่า NAV จาก API ...
-        
-        # 4. หาก NAV มีการเปลี่ยนแปลง ให้ย้าย nav เดิมไปเป็น prev_amt แล้วบันทึก nav ใหม่
-        # supabase.table('policies').update({
-        #     'nav': nav_today,
-        #     'prev_amt': policy['nav'] * policy['units']
-        # }).eq('id', policy['id']).execute()
-        
-        print(f"✅ Updated {fund_code}")
+        # 2. คำนวณเวลาปัจจุบันของประเทศไทย (UTC+7)
+        thai_tz = timezone(timedelta(hours=7))
+        now_thai = datetime.now(thai_tz).strftime('%d/%m/%Y %H:%M:%S')
+
+        # 3. ดึงรายการกองทุนจาก Supabase
+        res = supabase.table('policies').select('*').execute()
+        policies = res.data
+
+        for policy in policies:
+            code = policy.get('code')
+            print(f"🔄 Checking {code}...")
+
+            # --- จุดที่มีการอัปเดต NAV ให้ส่ง updated_at ไปด้วย ---
+            # ตัวอย่างการอัปเดตค่าเมื่อได้ NAV ใหม่:
+            # new_nav = 18.7135 
+            # supabase.table('policies').update({
+            #     'nav': new_nav,
+            #     'prev_amt': policy['nav'] * policy['units'],
+            #     'updated_at': now_thai                     # 👈 ส่ง Timestamp เวลาไทยไปลง DB
+            # }).eq('id', policy['id']).execute()
+
+            # หรือหากต้องการบันทึกแค่เวลาอัปเดตล่าสุดไว้ทดสอบ:
+            supabase.table('policies').update({
+                'updated_at': now_thai
+            }).eq('id', policy['id']).execute()
+
+        print(f"✅ Updated timestamp at: {now_thai}")
+
     except Exception as e:
-        print(f"❌ Failed to update {fund_code}: {e}")
+        print(f"❌ Error: {e}")
+
+if __name__ == "__main__":
+    fetch_and_update()
