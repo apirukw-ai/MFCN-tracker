@@ -1697,26 +1697,25 @@ async function checkAndAutoUpdateNav() {
             }
         }
     }
-</script>        
-    // 1. ฟังก์ชันเปิด Modal (สอดคล้องกับ onclick="openCloudModal()" บนปุ่ม)
-function openCloudModal() {
+        
+// 1. ฟังก์ชันเปิด Modal
+window.openCloudModal = function() {
     const modal = document.getElementById('cloudModal');
     if (modal) {
-        // ดึงค่า URL และ Key เดิมจาก localStorage มาแสดงในช่อง input (ถ้ามี)
-        document.getElementById('cfgSupabaseUrl').value = localStorage.getItem('SUPABASE_URL') || '';
-        document.getElementById('cfgSupabaseKey').value = localStorage.getItem('SUPABASE_KEY') || '';
+        const urlInput = document.getElementById('cfgSupabaseUrl');
+        const keyInput = document.getElementById('cfgSupabaseKey');
+        if (urlInput) urlInput.value = localStorage.getItem('SUPABASE_URL') || '';
+        if (keyInput) keyInput.value = localStorage.getItem('SUPABASE_KEY') || '';
         
-        modal.classList.remove('hidden'); // ปลด class hidden เพื่อแสดง Modal
+        modal.classList.remove('hidden');
     }
-}
+};
 
 // 2. ฟังก์ชันปิด Modal
-function closeCloudModal() {
+window.closeCloudModal = function() {
     const modal = document.getElementById('cloudModal');
-    if (modal) {
-        modal.classList.add('hidden'); // ใส่ class hidden เพื่อซ่อน Modal
-    }
-}
+    if (modal) modal.classList.add('hidden');
+};    
 
 // 3. ผูก Event Listener กับปุ่มปิด และ ปุ่มบันทึก
 document.addEventListener('DOMContentLoaded', () => {
