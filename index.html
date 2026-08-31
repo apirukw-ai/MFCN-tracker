@@ -556,56 +556,57 @@ async function loadMasterData() {
             if (error) throw error;
 
             if (data && data.length > 0) {
-                // ☁️ 1. อ่านข้อมูลตรงจาก Cloud ทั้งหมด (Cloud = Source of Truth)
                 policies = data.map(item => {
-                    const navVal = Number(item.nav || item.navToday || item.nav_today || 0);
+                    const units = Number(item.units || 0);
+                    const navVal = Number(item.nav || 0);
+                    const costTotal = Number(item.cost || 0);
+                    const prevAmtTotal = Number(item.prev_amt || 0);
+                    const ytdPercent = Number(item.ytd || 0);
+
+                    // 1. คำนวณ NAV ต้นทุนต่อหน่วย
+                    const calculatedCostNav = units > 0 ? (costTotal / units) : navVal;
+                    
+                    // 2. คำนวณ NAV วันก่อนหน้า
+                    const calculatedNavPrev = units > 0 ? (prevAmtTotal / units) : navVal;
+
+                    // 3. คำนวณย้อนหา NAV ต้นปี (navYtd) จากเปอร์เซ็นต์ ytd ใน DB
+                    const calculatedNavYtd = ytdPercent !== 0 ? (navVal / (1 + (ytdPercent / 100))) : navVal;
 
                     return {
                         id: Number(item.id),
                         code: String(item.code || ''),
                         name: String(item.name || ''),
-                        units: Number(item.units || 0),
+                        units: units,
                         nav: navVal,
                         navToday: navVal,
-                        // รองรับทั้งแบบ camelCase และ snake_case จากฐานข้อมูล
-                        costNav: Number(item.costNav ?? item.cost_nav ?? navVal),
-                        navPrev: Number(item.navPrev ?? item.nav_prev ?? navVal),
-                        navYesterday: Number(item.navYesterday ?? item.nav_yesterday ?? navVal),
-                        return3m: Number(item.return3m ?? item.return_3m ?? 0),
-                        returnYtd: Number(item.returnYtd ?? item.return_ytd ?? 0),
-                        navYtd: Number(item.navYtd ?? item.nav_ytd ?? navVal),
-                        nav3m: Number(item.nav3m ?? item.nav_3m ?? navVal)
+                        costNav: calculatedCostNav,
+                        navPrev: calculatedNavPrev,
+                        navYesterday: calculatedNavPrev,
+                        returnYtd: ytdPercent,              // ใช้เปอร์เซ็นต์ YTD จาก Supabase
+                        navYtd: calculatedNavYtd,           // NAV ต้นปีที่คำนวณได้
+                        return3m: 0,                        // DB ไม่มีคอลัมน์ 3M
+                        nav3m: navVal                       // Fallback สำหรับ 3M
                     };
                 });
 
-                // 📦 2. เขียนทับลง LocalStorage ทันที (Emergency Cache)
+                // เซฟลง Emergency Cache
                 localStorage.setItem('mfc_policies', JSON.stringify(policies));
-                
                 cloudLoaded = true;
-                console.log("☁️ โหลดข้อมูลจาก Supabase และอัปเดต Emergency Cache สำเร็จ");
+                console.log("☁️ โหลดข้อมูลจาก Supabase สำเร็จ");
             }
         } catch (e) {
             console.warn("⚠️ ไม่สามารถเชื่อมต่อ Cloud ได้:", e.message || e);
         }
     }
 
-    // 🚨 3. หากดึง Cloud ล้มเหลว จึงดึงจาก Emergency Cache ในเครื่องมาแสดง
     if (!cloudLoaded) {
-        console.log("📦 กำลังดึงข้อมูลจาก Emergency Cache (LocalStorage)...");
         const cachedData = localStorage.getItem('mfc_policies');
-        
-        if (cachedData) {
-            policies = JSON.parse(cachedData);
-        } else {
-            policies = [...initialDefaultData]; // ข้อมูลเริ่มต้นกรณีไม่มีแคชเลย
-        }
-
+        policies = cachedData ? JSON.parse(cachedData) : [...initialDefaultData];
         if (typeof showToast === 'function') {
             showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
         }
     }
 
-    // 🎨 4. แสดงผลบน UI
     renderTable();
 }
         function fetchLocalData() {
@@ -1355,8 +1356,8 @@ document.getElementById('totalCostAmt').innerText =
             document.getElementById('batchNavModal').classList.remove('hidden');
         }
 
-        async function saveBatchNav() {
-    const submitBtn = document.getElementById('saveBatchBtn');
+async function saveBatchNav() {
+    const submitBtn = document.getElementById('saveBatchBtn') || document.getElementById('btnSaveBatchNav');
     if (submitBtn) submitBtn.disabled = true;
 
     try {
@@ -1368,41 +1369,53 @@ document.getElementById('totalCostAmt').innerText =
 
         const updatesMap = new Map();
 
-        // 1. รวบรวมค่า Cost ใหม่จาก Input
+        // 1. อ่านค่า NAV ต้นทุน จาก Input (รับเฉพาะตัวเลขที่มากกว่า 0 เท่านั้น)
         unitCostInputs.forEach(input => {
             const id = parseInt(input.getAttribute('data-id'));
-            const newCost = parseFloat(input.value) || 0;
-            if (!updatesMap.has(id)) updatesMap.set(id, {});
-            updatesMap.get(id).unitCost = newCost;
+            const val = parseFloat(input.value);
+            if (!isNaN(val) && val > 0) {
+                if (!updatesMap.has(id)) updatesMap.set(id, {});
+                updatesMap.get(id).unitCost = val;
+            }
         });
 
-        // 2. รวบรวมค่า NAV วันนี้ใหม่จาก Input
+        // 2. อ่านค่า NAV วันนี้ จาก Input (รับเฉพาะตัวเลขที่มากกว่า 0 เท่านั้น)
         navTodayInputs.forEach(input => {
             const id = parseInt(input.getAttribute('data-id'));
-            const newNavToday = parseFloat(input.value) || 0;
-            if (!updatesMap.has(id)) updatesMap.set(id, {});
-            updatesMap.get(id).navToday = newNavToday;
+            const val = parseFloat(input.value);
+            if (!isNaN(val) && val > 0) {
+                if (!updatesMap.has(id)) updatesMap.set(id, {});
+                updatesMap.get(id).navToday = val;
+            }
         });
 
-        // 3. แปลงข้อมูลเตรียมส่ง Supabase
+        // 3. เตรียมข้อมูลส่ง Cloud (ถ้าช่องไหนไม่ได้กรอก ให้ใช้ค่าเดิม ป้องกันกลายเป็น 0)
         const updates = policies.map(policy => {
             const inputData = updatesMap.get(policy.id) || {};
-            const finalNav = inputData.navToday !== undefined ? inputData.navToday : policy.nav;
-            const finalCostNav = inputData.unitCost !== undefined ? inputData.unitCost : policy.costNav;
+            
+            // NAV วันนี้ใหม่
+            const finalNavToday = inputData.navToday !== undefined ? inputData.navToday : policy.nav;
+            
+            // NAV ต้นทุนใหม่ (ถ้าไม่ได้ใส่ช่องนี้ ให้ใช้ costNav เดิม)
+            const finalCostNav = inputData.unitCost !== undefined ? inputData.unitCost : (policy.costNav || policy.nav);
+
+            // หากมีการเปลี่ยน NAV วันนี้ ให้ย้าย NAV วันนี้เดิม ไปเป็น NAV วันก่อนหน้า (prev_amt)
+            const isNavChanged = inputData.navToday !== undefined && inputData.navToday !== policy.nav;
+            const finalPrevAmt = isNavChanged ? (policy.nav * policy.units) : (policy.navPrev * policy.units);
 
             return {
                 id: policy.id,
                 code: policy.code,
                 name: policy.name,
                 units: policy.units,
-                nav: finalNav,
-                cost: finalCostNav * policy.units,     // คำนวณเป็นยอดเงินต้นทุนรวมส่งลง DB
-                prev_amt: policy.nav * policy.units,    // เก็บมูลค่า NAV เดิมเป็นมูลค่าวันก่อนหน้า
+                nav: finalNavToday,
+                cost: finalCostNav * policy.units,       // คำนวณเป็นยอดเงินต้นทุนรวมส่ง DB
+                prev_amt: finalPrevAmt,                  // มูลค่ารวมวันก่อนหน้า
                 ytd: policy.returnYtd || 0
             };
         });
 
-        // 4. บันทึกลง Cloud (Supabase = Source of Truth)
+        // 4. อัปเดตลง Cloud (Supabase = Source of Truth)
         if (!supabaseClient) throw new Error("ไม่ได้เชื่อมต่อฐานข้อมูล Cloud");
 
         const { error } = await supabaseClient
@@ -1411,15 +1424,14 @@ document.getElementById('totalCostAmt').innerText =
 
         if (error) throw error;
 
-        // 5. แสดง Toast และปิด Modal
         if (typeof showToast === 'function') {
-            showToast('อัพเดท NAV ทั้งหมดลง Cloud เรียบร้อยแล้ว', 'success');
+            showToast('อัปเดตข้อมูลลง Cloud เรียบร้อยแล้ว', 'success');
         }
 
         const modal = document.getElementById('batchNavModal');
         if (modal) modal.classList.add('hidden');
 
-        // 6. ดึงข้อมูลใหม่จาก Cloud มาลง Cache ในเครื่องและวาด UI ใหม่
+        // 5. โหลดข้อมูลสดใหม่จาก Cloud กลับมาอัปเดต LocalStorage และ UI
         await loadMasterData();
 
     } catch (err) {
