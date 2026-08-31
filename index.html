@@ -618,9 +618,9 @@ async function loadMasterData() {
     if (!cloudLoaded) {
         const cachedData = localStorage.getItem('mfc_policies');
         policies = cachedData ? JSON.parse(cachedData) : [...initialDefaultData];
-        if (typeof showToast === 'function') {
-            showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
-        }
+        //if (typeof showToast === 'function') {
+        //    showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
+        //}
     }
 
     renderTable();
