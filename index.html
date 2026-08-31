@@ -557,6 +557,7 @@ async function loadMasterData() {
             if (error) throw error;
 
             if (data && data.length > 0) {
+                return; // สั่งให้จบฟังก์ชันทันทีเมื่อดึงข้อมูล Cloud สำเร็จ
                 policies = data.map(item => {
                     const units = Number(item.units || 0);
                     const navVal = Number(item.nav || 0);
@@ -1722,26 +1723,31 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnClose) btnClose.addEventListener('click', window.closeCloudModal);
 
     const btnSave = document.getElementById('btnSaveCloudCfg');
-    if (btnSave) {
-        btnSave.addEventListener('click', async () => {
-            const url = document.getElementById('cfgSupabaseUrl')?.value.trim();
-            const key = document.getElementById('cfgSupabaseKey')?.value.trim();
+        if (btnSave) {
+            btnSave.addEventListener('click', async () => {
+                const url = document.getElementById('cfgSupabaseUrl')?.value.trim();
+                const key = document.getElementById('cfgSupabaseKey')?.value.trim();
 
-            if (!url || !key) {
-                alert('กรุณากรอกทั้ง Supabase URL และ Anon Key ให้ครบถ้วน');
-                return;
-            }
+                if (!url || !key) {
+                    alert('กรุณากรอกทั้ง Supabase URL และ Anon Key');
+                    return;
+                }
 
-            // บันทึกชื่อ Key ให้ตรงกับ initSyncEngine
-            localStorage.setItem('mfc_sp_url', url);
-            localStorage.setItem('mfc_sp_key', key);
+                // บันทึกค่าลง LocalStorage
+                localStorage.setItem('mfc_sp_url', url);
+                localStorage.setItem('mfc_sp_key', key);
 
-            alert('✅ บันทึกการเชื่อมต่อ Cloud เรียบร้อยแล้ว');
-            window.closeCloudModal();
-            location.reload(); // รีโหลดเพื่อเริ่มทำงานกับ Cloud ใหม่
-        });
-    }
-});
+                // ปิด Modal
+                window.closeCloudModal();
+
+                // สั่งเชื่อมต่อและโหลดข้อมูล Cloud ใหม่ทันทีโดยไม่ให้ขึ้นเตือนมั่ว
+                if (typeof initSyncEngine === 'function') {
+                    await initSyncEngine();
+                } else {
+                    location.reload();
+                }
+            });
+        }
     </script>
 </body>
 </html>
