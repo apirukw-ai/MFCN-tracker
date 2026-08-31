@@ -622,6 +622,9 @@ async function loadMasterData() {
     }
 
     renderTable();
+
+// ใส่ไว้ที่บรรทัดท้ายสุด ก่อนปิดปีกกา } ของ loadMasterData()
+await checkAndAutoUpdateNav();
 }
         function fetchLocalData() {
             const local = localStorage.getItem('mfc_policies');
@@ -1670,7 +1673,35 @@ policy.navToday = data.nav;
     }
 }
 
-        
+<script>
+    // ... โค้ด JavaScript เดิมที่มีอยู่แล้ว ...
+
+    // 1. นำฟังก์ชันนี้ไปวางไว้เหนือบรรทัด </script>
+    async function checkAndAutoUpdateNav() {
+        const todayStr = new Date().toISOString().split('T')[0]; // วันที่ปัจจุบัน (YYYY-MM-DD)
+        const lastUpdateStr = localStorage.getItem('last_auto_nav_date');
+
+        // ถ้าเปิดเว็บวันใหม่ แล้วยังไม่ได้อัปเดต NAV ของวันนี้
+        if (lastUpdateStr !== todayStr) {
+            console.log("🔄 ตรวจพบวันใหม่ กำลังสั่งรัน Update NAV อัตโนมัติ...");
+            
+            try {
+                // เรียกใช้ฟังก์ชันเดียวกับปุ่ม Update NAV (เปลี่ยนชื่อฟังก์ชันให้ตรงกับของเดิมในเว็บ)
+                if (typeof updateNAV === 'function') {
+                    await updateNAV();
+                } else if (typeof handleUpdateNav === 'function') {
+                    await handleUpdateNav();
+                }
+                
+                // บันทึกวันที่อัปเดตสำเร็จลงเครื่อง
+                localStorage.setItem('last_auto_nav_date', todayStr);
+                console.log("✅ อัปเดต NAV อัตโนมัติเรียบร้อยแล้ว");
+            } catch (err) {
+                console.error("❌ Auto-update NAV ล้มเหลว:", err);
+            }
+        }
+    }
+</script>        
     </script>
 </body>
 </html>
