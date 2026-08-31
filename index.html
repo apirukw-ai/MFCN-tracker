@@ -526,18 +526,18 @@ async function initSyncEngine() {
     const key = localStorage.getItem('mfc_sp_key') || 'sb_publishable_AxQGY0HEUL-kKRC3lPfGcw_6fxYQfgT';
 
     if (url && key) {
-        try {
-            supabaseClient = supabase.createClient(url, key);
-            
-            // เปิด Realtime Sync (หากข้อมูลบน Cloud เปลี่ยน ให้โหลดใหม่ทันที)
-            supabaseClient
-                .channel('mfc_realtime')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'policies' }, () => loadMasterData())
-                .subscribe();
-        } catch (e) {
-            console.error("Supabase init error:", e);
+            try {
+                supabaseClient = supabase.createClient(url, key);
+
+                // ปิด Realtime Sync เพื่อป้องกัน WebSocket Error
+                // supabaseClient
+                //     .channel('mfc_realtime')
+                //     .on('postgres_changes', { event: '*', schema: 'public', table: 'policies' }, () => loadMasterData())
+                //     .subscribe();
+            } catch (e) {
+                console.error("Supabase init error:", e);
+            }
         }
-    }
 
     // 2. เริ่มโหลดข้อมูลแบบ Cloud First
     await loadMasterData();
@@ -553,52 +553,60 @@ async function loadMasterData() {
                 .select('*')
                 .order('id', { ascending: true });
 
-            if (!error && data && data.length > 0) {
-                // 🟢 อ่านแคชเดิมในเครื่องเตรียมไว้ เพื่อดึงค่าต้นทุน/ประวัติย้อนหลังมาผสาน
-                const localData = JSON.parse(localStorage.getItem('mfc_policies') || '[]');
-                const localMap = new Map(localData.map(item => [item.code, item]));
+            if (error) throw error;
 
+            if (data && data.length > 0) {
+                // ☁️ 1. อ่านข้อมูลตรงจาก Cloud ทั้งหมด (Cloud = Source of Truth)
                 policies = data.map(item => {
-                    const localItem = localMap.get(item.code) || {};
-                    const navVal = Number(item.nav || item.navToday || localItem.nav || 0);
+                    const navVal = Number(item.nav || item.navToday || item.nav_today || 0);
 
                     return {
-                        ...localItem, // คงค่าเดิมในเครื่องไว้ (costNav, navPrev, ฯลฯ)
-                        ...item,      // อัปเดตข้อมูลหลักจาก Supabase (id, code, name, units, nav)
                         id: Number(item.id),
                         code: String(item.code || ''),
                         name: String(item.name || ''),
                         units: Number(item.units || 0),
                         nav: navVal,
                         navToday: navVal,
-                        costNav: Number(localItem.costNav || navVal),
-                        navPrev: Number(localItem.navPrev || navVal),
-                        navYesterday: Number(item.navYesterday ?? localItem.navYesterday ?? navVal),
-                        return3m: Number(item.return3m ?? localItem.return3m ?? 0),
-                        returnYtd: Number(item.returnYtd ?? localItem.returnYtd ?? 0),
-                        navYtd: Number(localItem.navYtd || navVal),
-                        nav3m: Number(localItem.nav3m || navVal)
+                        // รองรับทั้งแบบ camelCase และ snake_case จากฐานข้อมูล
+                        costNav: Number(item.costNav ?? item.cost_nav ?? navVal),
+                        navPrev: Number(item.navPrev ?? item.nav_prev ?? navVal),
+                        navYesterday: Number(item.navYesterday ?? item.nav_yesterday ?? navVal),
+                        return3m: Number(item.return3m ?? item.return_3m ?? 0),
+                        returnYtd: Number(item.returnYtd ?? item.return_ytd ?? 0),
+                        navYtd: Number(item.navYtd ?? item.nav_ytd ?? navVal),
+                        nav3m: Number(item.nav3m ?? item.nav_3m ?? navVal)
                     };
                 });
 
-                renderTable();
-                saveToLocalStorage();
+                // 📦 2. เขียนทับลง LocalStorage ทันที (Emergency Cache)
+                localStorage.setItem('mfc_policies', JSON.stringify(policies));
+                
                 cloudLoaded = true;
-                console.log("☁️ โหลดข้อมูลหลักจาก Supabase สำเร็จ");
+                console.log("☁️ โหลดข้อมูลจาก Supabase และอัปเดต Emergency Cache สำเร็จ");
             }
         } catch (e) {
-            console.warn("⚠️ ไม่สามารถเชื่อมต่อ Cloud ได้:", e);
+            console.warn("⚠️ ไม่สามารถเชื่อมต่อ Cloud ได้:", e.message || e);
         }
     }
 
+    // 🚨 3. หากดึง Cloud ล้มเหลว จึงดึงจาก Emergency Cache ในเครื่องมาแสดง
     if (!cloudLoaded) {
         console.log("📦 กำลังดึงข้อมูลจาก Emergency Cache (LocalStorage)...");
-        fetchLocalData();
-        renderTable();
+        const cachedData = localStorage.getItem('mfc_policies');
+        
+        if (cachedData) {
+            policies = JSON.parse(cachedData);
+        } else {
+            policies = [...initialDefaultData]; // ข้อมูลเริ่มต้นกรณีไม่มีแคชเลย
+        }
+
         if (typeof showToast === 'function') {
             showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
         }
     }
+
+    // 🎨 4. แสดงผลบน UI
+    renderTable();
 }
         function fetchLocalData() {
             const local = localStorage.getItem('mfc_policies');
@@ -1348,39 +1356,81 @@ document.getElementById('totalCostAmt').innerText =
         }
 
         async function saveBatchNav() {
-            const container = document.getElementById('batchNavContainer');
-            const unitCostInputs = container.querySelectorAll('input[data-type="unitCost"]');
-            const navTodayInputs = container.querySelectorAll('input[data-type="navToday"]');
+    const submitBtn = document.getElementById('saveBatchBtn');
+    if (submitBtn) submitBtn.disabled = true;
 
-            let updated = [...policies];
+    try {
+        const container = document.getElementById('batchNavContainer');
+        if (!container) throw new Error("ไม่พบคอนเทนเนอร์ batchNavContainer");
 
-            unitCostInputs.forEach(input => {
-                const id = parseInt(input.getAttribute('data-id'));
-                const newCost = parseFloat(input.value) || 0;
-                const target = updated.find(p => p.id === id);
-                if (target) {
-                    target.navUnitCost = newCost;
-                }
-            });
+        const unitCostInputs = container.querySelectorAll('input[data-type="unitCost"]');
+        const navTodayInputs = container.querySelectorAll('input[data-type="navToday"]');
 
-            navTodayInputs.forEach(input => {
-                const id = parseInt(input.getAttribute('data-id'));
-                const newNavToday = parseFloat(input.value) || 0;
-                const target = updated.find(p => p.id === id);
-                if (target) {
-                    const currentNavToday = Number(target.navToday) || 0;
-                    if (currentNavToday !== newNavToday) {
-                        target.navYesterday = currentNavToday;
-                        target.navToday = newNavToday;
-                    }
-                }
-            });
+        const updatesMap = new Map();
 
-            await syncData(updated);
-            document.getElementById('batchNavModal').classList.add('hidden');
-            showToast('อัปเดต NAV ทั้งหมดเรียบร้อยแล้ว', 'success');
+        // 1. รวบรวมค่า Cost ใหม่จาก Input
+        unitCostInputs.forEach(input => {
+            const id = parseInt(input.getAttribute('data-id'));
+            const newCost = parseFloat(input.value) || 0;
+            if (!updatesMap.has(id)) updatesMap.set(id, {});
+            updatesMap.get(id).unitCost = newCost;
+        });
+
+        // 2. รวบรวมค่า NAV วันนี้ใหม่จาก Input
+        navTodayInputs.forEach(input => {
+            const id = parseInt(input.getAttribute('data-id'));
+            const newNavToday = parseFloat(input.value) || 0;
+            if (!updatesMap.has(id)) updatesMap.set(id, {});
+            updatesMap.get(id).navToday = newNavToday;
+        });
+
+        // 3. แปลงข้อมูลเตรียมส่ง Supabase
+        const updates = policies.map(policy => {
+            const inputData = updatesMap.get(policy.id) || {};
+            const finalNav = inputData.navToday !== undefined ? inputData.navToday : policy.nav;
+            const finalCostNav = inputData.unitCost !== undefined ? inputData.unitCost : policy.costNav;
+
+            return {
+                id: policy.id,
+                code: policy.code,
+                name: policy.name,
+                units: policy.units,
+                nav: finalNav,
+                cost: finalCostNav * policy.units,     // คำนวณเป็นยอดเงินต้นทุนรวมส่งลง DB
+                prev_amt: policy.nav * policy.units,    // เก็บมูลค่า NAV เดิมเป็นมูลค่าวันก่อนหน้า
+                ytd: policy.returnYtd || 0
+            };
+        });
+
+        // 4. บันทึกลง Cloud (Supabase = Source of Truth)
+        if (!supabaseClient) throw new Error("ไม่ได้เชื่อมต่อฐานข้อมูล Cloud");
+
+        const { error } = await supabaseClient
+            .from('policies')
+            .upsert(updates, { onConflict: 'id' });
+
+        if (error) throw error;
+
+        // 5. แสดง Toast และปิด Modal
+        if (typeof showToast === 'function') {
+            showToast('อัพเดท NAV ทั้งหมดลง Cloud เรียบร้อยแล้ว', 'success');
         }
 
+        const modal = document.getElementById('batchNavModal');
+        if (modal) modal.classList.add('hidden');
+
+        // 6. ดึงข้อมูลใหม่จาก Cloud มาลง Cache ในเครื่องและวาด UI ใหม่
+        await loadMasterData();
+
+    } catch (err) {
+        console.error("❌ Save Batch Error:", err);
+        if (typeof showToast === 'function') {
+            showToast('บันทึกล้มเหลว: ' + err.message, 'error');
+        }
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
         function editPolicy(id) {
             const target = policies.find(p => p.id === id);
             if (!target) return;
@@ -1405,20 +1455,41 @@ document.getElementById('totalCostAmt').innerText =
         }
 
         async function deletePolicy(id) {
-            if (confirm('ยืนยันลบแผนลงทุนนี้?')) {
-                const updated = policies.filter(p => p.id !== id);
-                if (supabaseClient) {
-                    try { await supabaseClient.from('policies').delete().eq('id', id); } catch(e){}
-                }
-                await syncData(updated);
-                showToast('ลบรายการเรียบร้อยแล้ว', 'info');
-            }
+    if (!confirm('ยืนยันการลบแผนนี้?')) return;
+
+    try {
+        if (!supabaseClient) throw new Error("ไม่ได้เชื่อมต่อฐานข้อมูล Cloud");
+
+        // 1. ลบข้อมูลบน Cloud ก่อน (Cloud = Source of Truth)
+        const { error } = await supabaseClient
+            .from('policies')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        if (typeof showToast === 'function') {
+            showToast('ลบรายการเรียบร้อยแล้ว', 'info');
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initSyncEngine();
-            fetchLiveMarketData();
-            setInterval(fetchLiveMarketData, 30000);
+        // 2. ดึงข้อมูลล่าสุดจาก Cloud กลับมาอัปเดต LocalStorage Cache และ UI
+        await loadMasterData();
+
+    } catch (e) {
+        console.error("❌ Delete Error:", e);
+        if (typeof showToast === 'function') {
+            showToast('ไม่สามารถลบรายการได้: ' + (e.message || e), 'error');
+        }
+    }
+}
+
+        document.addEventListener('DOMContentLoaded', async () => {
+    await loadMasterData();
+    if (typeof initSyncEngine === 'function') initSyncEngine();
+    if (typeof fetchLiveMarketData === 'function') {
+        fetchLiveMarketData();
+        setInterval(fetchLiveMarketData, 30000);
+    }
 
             document.getElementById('btnImportPdf').addEventListener('click', () => document.getElementById('importPdfInput').click());
             document.getElementById('importPdfInput').addEventListener('change', (e) => {
