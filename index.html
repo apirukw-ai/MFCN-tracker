@@ -552,6 +552,7 @@ async function loadMasterData() {
             const { data, error } = await supabaseClient
                 .from('policies')
                 .select('*')
+                .eq('portfolio_type', 'mfc_fund') // 🔥 เพิ่มเงื่อนไขดึงเฉพาะกองทุน MFC
                 .order('id', { ascending: true });
 
             if (error) throw error;
