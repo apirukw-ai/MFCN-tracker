@@ -710,9 +710,7 @@ async function loadMasterData() {
                     if (supabaseClient) {
                         try {
                             for (const target of updated) {
-                                // คำนวณเงินต้นใหม่จากหน่วยจริงคูณต้นทุนเพื่อเก็บเข้าคอลัมน์ cost
                                 const newCost = target.units * target.navUnitCost;
-
                                 const { error } = await supabaseClient
                                     .from('policies')
                                     .update({ 
@@ -734,7 +732,7 @@ async function loadMasterData() {
                     policies = updated;
                     localStorage.setItem('cached_policies_mfc', JSON.stringify(updated));
 
-                    // 🛠️ 3. สั่งวาดหน้าจอแสดงผลใหม่ทันทีด้วยโค้ดเวอร์ชันล่าสุดที่เราช่วยกันแก้
+                    // 🛠️ 3. สั่งวาดหน้าจอแสดงผลใหม่
                     if (typeof renderTable === 'function') renderTable();
 
                     showToast(`นำเข้า PDF และอัปเดต ${updateCount} กองทุนเรียบร้อยแล้ว`, 'success');
@@ -746,6 +744,8 @@ async function loadMasterData() {
                 console.error("PDF Parsing error:", err);
                 showToast("เกิดข้อผิดพลาดในการอ่านไฟล์ PDF", "error");
             }
+        } // 👈 นี่คือปีกกาปิดตัวสำคัญของฟังก์ชัน processPDFStatement ที่อาจจะขาดไปครับ
+                
 
 
         async function fetchLiveMarketData() {
