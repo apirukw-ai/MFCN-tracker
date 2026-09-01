@@ -544,162 +544,114 @@ async function initSyncEngine() {
     }
 }
 
-async function loadMasterData() {
-    let cloudLoaded = false;
+const CACHE_KEY = 'mfc_policies';
 
+// ฟังก์ชันแปลงและคำนวณข้อมูลให้พร้อมใช้งาน
+function processPolicyData(dataList) {
+    return dataList.map(item => {
+        const units = Number(item.units || 0);
+        const navVal = Number(item.nav || 0);
+        const costTotal = Number(item.cost || 0);
+        const prevAmtTotal = Number(item.prev_amt || 0);
+        const dbYtdPercent = Number(item.ytd || 0);
+
+        // 1. คำนวณ NAV ต้นทุนต่อหน่วย
+        const calculatedCostNav = units > 0 ? (costTotal / units) : navVal;
+        
+        // 2. คำนวณ NAV วันก่อนหน้า
+        const calculatedNavPrev = units > 0 ? (prevAmtTotal / units) : navVal;
+
+        // 3. เปอร์เซ็นต์กำไร/ขาดทุนสะสมเทียบต้นทุน
+        const costReturnPercent = calculatedCostNav > 0 
+            ? ((navVal - calculatedCostNav) / calculatedCostNav) * 100 
+            : 0;
+        
+        // 4. จัดการ % YTD
+        const finalYtdPercent = dbYtdPercent !== 0 ? dbYtdPercent : costReturnPercent;
+        const calculatedNavYtd = finalYtdPercent !== 0 
+            ? (navVal / (1 + (finalYtdPercent / 100))) 
+            : calculatedCostNav;
+
+        // 5. จัดการ % 3 เดือนล่าสุด
+        const final3mPercent = costReturnPercent;
+        const calculatedNav3m = calculatedCostNav;
+
+        return {
+            id: Number(item.id),
+            code: String(item.code || ''),
+            name: String(item.name || ''),
+            units: units,
+            nav: navVal,
+            navToday: navVal,
+            navUnitCost: calculatedCostNav,
+            costNav: calculatedCostNav,
+            navPrev: calculatedNavPrev,
+            navYesterday: calculatedNavPrev,
+            returnYtd: finalYtdPercent,
+            ytd: finalYtdPercent,
+            navYtd: calculatedNavYtd,
+            return3m: final3mPercent,
+            nav3m: calculatedNav3m
+        };
+    });
+}
+
+async function loadMasterData() {
+    let hasCache = false;
+
+    // 1. [STALE] ดึง Cache ในเครื่องมาคำนวณและโชว์บนหน้าจอทันทีใน 0.01 วินาที
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+        try {
+            const rawCache = JSON.parse(cachedData);
+            // ถ้าข้อมูลใน Cache ยังไม่ได้แปลง ให้ผ่านกระบวนการแปลงก่อน
+            policies = Array.isArray(rawCache) && rawCache[0]?.costNav !== undefined 
+                ? rawCache 
+                : processPolicyData(rawCache);
+            
+            renderTable();
+            hasCache = true;
+            console.log("⚡ [SWR] แสดงข้อมูลด่วนจาก Cache ในเครื่อง");
+        } catch (e) {
+            console.error("Error loading cache:", e);
+        }
+    }
+
+    // 2. [REVALIDATION] ดึงข้อมูลล่าสุดจาก Supabase มาอัปเดตเบื้องหลัง
     if (supabaseClient) {
         try {
             const { data, error } = await supabaseClient
                 .from('policies')
                 .select('*')
-                .eq('portfolio_type', 'mfc_fund') // 🔥 เพิ่มเงื่อนไขดึงเฉพาะกองทุน MFC
+                .eq('portfolio_type', 'mfc_fund') // ดึงเฉพาะกองทุน MFC
                 .order('id', { ascending: true });
 
             if (error) throw error;
 
             if (data && data.length > 0) {
-                return; // สั่งให้จบฟังก์ชันทันทีเมื่อดึงข้อมูล Cloud สำเร็จ
-                policies = data.map(item => {
-                    const units = Number(item.units || 0);
-                    const navVal = Number(item.nav || 0);
-                    const costTotal = Number(item.cost || 0);
-                    const prevAmtTotal = Number(item.prev_amt || 0);
-                    const dbYtdPercent = Number(item.ytd || 0);
+                // คำนวณตัวเลขชุดใหม่สดๆ จาก Cloud
+                policies = processPolicyData(data);
 
-                    // 1. คำนวณ NAV ต้นทุนต่อหน่วย
-                    const calculatedCostNav = units > 0 ? (costTotal / units) : navVal;
-                    
-                    // 2. คำนวณ NAV วันก่อนหน้า
-                    const calculatedNavPrev = units > 0 ? (prevAmtTotal / units) : navVal;
+                // บันทึกข้อมูลที่คำนวณแล้วลง Cache
+                localStorage.setItem(CACHE_KEY, JSON.stringify(policies));
 
-                    // 3. เปอร์เซ็นต์กำไร/ขาดทุนสะสมเทียบต้นทุน
-                    const costReturnPercent = calculatedCostNav > 0 
-                        ? ((navVal - calculatedCostNav) / calculatedCostNav) * 100 
-                        : 0;
-                    
-                    // 4. จัดการ % YTD
-                    const finalYtdPercent = dbYtdPercent !== 0 ? dbYtdPercent : costReturnPercent;
-                    const calculatedNavYtd = finalYtdPercent !== 0 
-                        ? (navVal / (1 + (finalYtdPercent / 100))) 
-                        : calculatedCostNav;
-
-                    // 5. จัดการ % 3 เดือนล่าสุด (Fallback ใช้ค่าเทียบต้นทุนเนื่องจาก DB ไม่มีคอลัมน์ 3M)
-                    const final3mPercent = costReturnPercent;
-                    const calculatedNav3m = calculatedCostNav;
-
-                    return {
-                        id: Number(item.id),
-                        code: String(item.code || ''),
-                        name: String(item.name || ''),
-                        units: units,
-                        nav: navVal,
-                        navToday: navVal,
-                        navUnitCost: calculatedCostNav,
-                        costNav: calculatedCostNav,
-                        navPrev: calculatedNavPrev,
-                        navYesterday: calculatedNavPrev,
-                        returnYtd: finalYtdPercent,
-                        ytd: finalYtdPercent,
-                        navYtd: calculatedNavYtd,
-                        return3m: final3mPercent,           // 👈 กำหนดค่า Fallback ให้ 3 เดือน
-                        nav3m: calculatedNav3m              // 👈 กำหนด NAV ต้นทางให้ 3 เดือน
-                    };
-                });
-
-                // บันทิกลง Cache
-                localStorage.setItem('mfc_policies', JSON.stringify(policies));
-                cloudLoaded = true;
-                console.log("☁️ โหลดข้อมูลจาก Supabase สำเร็จ");
+                // วาด UI ใหม่ทันทีเพื่ออัปเดตตัวเลขล่าสุด
+                renderTable();
+                console.log("☁️ [SWR] อัปเดตข้อมูลสดใหม่จาก Supabase สำเร็จ");
             }
         } catch (e) {
             console.warn("⚠️ ไม่สามารถเชื่อมต่อ Cloud ได้:", e.message || e);
-        }
-    }
-
-    if (!cloudLoaded) {
-        const cachedData = localStorage.getItem('mfc_policies');
-        policies = cachedData ? JSON.parse(cachedData) : [...initialDefaultData];
-        //if (typeof showToast === 'function') {
-        //    showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
-        //}
-    }
-
-    renderTable();
-
-// ใส่ไว้ที่บรรทัดท้ายสุด ก่อนปิดปีกกา } ของ loadMasterData()
-await checkAndAutoUpdateNav();
-}
-        function fetchLocalData() {
-            const local = localStorage.getItem('mfc_policies');
-            if (local) {
-                try { 
-                    let parsed = JSON.parse(local); 
-                    const isOldBuggedData = parsed.length > 0 && parsed.every(p => {
-                        const cost = p.navUnitCost !== undefined ? p.navUnitCost : (p.nav || 0);
-                        const today = p.navToday !== undefined ? p.navToday : (p.nav || 0);
-                        return Math.abs(cost - today) < 0.0001;
-                    });
-
-                    if (isOldBuggedData) {
-                        policies = [...initialDefaultData];
-                        saveToLocalStorage();
-                    } else {
-                        policies = parsed;
-                    }
-                } catch(e) { 
-                    policies = [...initialDefaultData]; 
-                }
-            } else {
+            
+            // กรณีไม่มี Cache และ Cloud หลุด ค่อยไปใช้ Default
+            if (!hasCache) {
                 policies = [...initialDefaultData];
-                saveToLocalStorage();
+                renderTable();
             }
-            renderTable();
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('mfc_policies', JSON.stringify(policies));
-            try { broadcastChannel.postMessage('update'); } catch(e) {}
-        }
-
-async function syncData(updatedList) {
-    policies = updatedList;
-    let cloudSuccess = false;
-
-    // 🟢 1. บันทึกลง Emergency Cache (LocalStorage) ไว้ก่อน
-    if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
-    if (typeof renderTable === 'function') renderTable();
-
-    // 🟢 2. ส่งเฉพาะคอลัมน์ที่มีใน Supabase (id, code, name, units, nav)
-    if (supabaseClient) {
-        try {
-            console.log("⏳ กำลังอัปเดตข้อมูลขึ้น Cloud...");
-
-            const cleanPayload = policies.map(item => ({
-                id: Number(item.id),
-                code: String(item.code || ''),
-                name: String(item.name || ''),
-                units: Number(item.units || 0),
-                nav: Number(item.navToday || item.nav || 0)
-            }));
-
-            const { error } = await supabaseClient
-                .from('policies')
-                .upsert(cleanPayload);
-
-            if (!error) {
-                cloudSuccess = true;
-                console.log("✅ บันทึกลง Supabase สำเร็จ");
-            } else {
-                console.error("❌ Supabase Error:", error.message);
+            if (typeof showToast === 'function') {
+                showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
             }
-        } catch (err) {
-            console.error("❌ Cloud connection error:", err);
         }
     }
-
-    // if (typeof showToast === 'function') {
-//     showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
-// }
 }
         async function processPDFStatement(file) {
             try {
