@@ -995,10 +995,10 @@ function renderTable() {
         const deltaTodayVal = todayVal - yesterdayVal; 
 
         // 🔥 เปลี่ยนแปลงจุดนี้: บวกสะสมยอดรวมทั้งหมดเข้าตัวแปรส่วนกลางให้ถูกต้อง
-        totalDeltaToday += deltaTodayVal; // บวกผลงานวันนี้สะสม (บาท)
-        totalNavPrev += yesterdayVal;     // บวกมูลค่าตลาดเมื่อวานสะสม
-        totalCostSum += costVal;          // บวกต้นทุนสะสม
-        totalUnitsSum += units;           // บวกจำนวนหน่วยสะสม
+        totalBalToday += deltaTodayVal; // เปลี่ยนจาก totalDeltaToday เป็น totalBalToday
+        totalBalPrev += yesterdayVal;   // เปลี่ยนจาก totalNavPrev เป็น totalBalPrev
+        totalCostSum += costVal;          
+        totalUnitsSum += units;        
 
 
         const r3m = Number(item.return3m ?? item.return_3m ?? item.r3m ?? 0);
