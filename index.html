@@ -546,36 +546,41 @@ async function initSyncEngine() {
 
 const CACHE_KEY = 'mfc_policies';
 
-// ฟังก์ชันแปลงและคำนวณข้อมูลให้พร้อมใช้งาน
 function processPolicyData(dataList) {
+    if (!dataList || !Array.isArray(dataList)) return [];
+
     return dataList.map(item => {
         const units = Number(item.units || 0);
         const navVal = Number(item.nav || 0);
         const costTotal = Number(item.cost || 0);
         const prevAmtTotal = Number(item.prev_amt || 0);
         const dbYtdPercent = Number(item.ytd || 0);
+        const db3mPercent = Number(item.return3m || 0); // เผื่ออนาคตฐานข้อมูลมีฟีเจอร์นี้
 
-        // 1. คำนวณ NAV ต้นทุนต่อหน่วย
+        // 1. คำนวณ NAV ต้นทุนต่อหน่วย (Cost NAV)
         const calculatedCostNav = units > 0 ? (costTotal / units) : navVal;
         
-        // 2. คำนวณ NAV วันก่อนหน้า
+        // 2. คำนวณ NAV วันก่อนหน้า (Yesterday NAV)
         const calculatedNavPrev = units > 0 ? (prevAmtTotal / units) : navVal;
 
-        // 3. เปอร์เซ็นต์กำไร/ขาดทุนสะสมเทียบต้นทุน
+        // 3. เปอร์เซ็นต์กำไร/ขาดทุนสะสมทั้งหมดเทียบกับต้นทุน (Total Return %)
         const costReturnPercent = calculatedCostNav > 0 
             ? ((navVal - calculatedCostNav) / calculatedCostNav) * 100 
             : 0;
         
-        // 4. จัดการ % YTD
+        // 4. จัดการผลตอบแทน YTD และย้อนหาราคา NAV ต้นปี
         const finalYtdPercent = dbYtdPercent !== 0 ? dbYtdPercent : costReturnPercent;
-        const calculatedNavYtd = finalYtdPercent !== 0 
+        const calculatedNavYtd = calculatedCostNav > 0
             ? (navVal / (1 + (finalYtdPercent / 100))) 
-            : calculatedCostNav;
+            : navVal;
 
-        // 5. จัดการ % 3 เดือนล่าสุด
-        const final3mPercent = costReturnPercent;
-        const calculatedNav3m = calculatedCostNav;
+        // 5. จัดการผลตอบแทน 3 เดือนล่าสุด (ถ้าไม่มีข้อมูลให้ใช้ 0 ไปก่อนเพื่อให้กราฟไม่เพี้ยน)
+        const final3mPercent = db3mPercent !== 0 ? db3mPercent : 0; 
+        const calculatedNav3m = final3mPercent !== 0 
+            ? (navVal / (1 + (final3mPercent / 100))) 
+            : calculatedNavPrev; // ใช้ราคาเมื่อวานขัดตาทัพแทนราคา 3 เดือนก่อนถ้าไม่มีข้อมูล
 
+        // คืนค่าออบเจกต์กลับไปให้แอปใช้งาน (ปิดวงเล็บปีกกาและวงเล็บมนครบถ้วน)
         return {
             id: Number(item.id),
             code: String(item.code || ''),
@@ -592,8 +597,8 @@ function processPolicyData(dataList) {
             navYtd: calculatedNavYtd,
             return3m: final3mPercent,
             nav3m: calculatedNav3m
-        };
-    });
+        }; // ปิดวัตถุอย่างถูกต้อง
+    }); // ปิด .map อย่างถูกต้อง
 }
 
 async function loadMasterData() {
