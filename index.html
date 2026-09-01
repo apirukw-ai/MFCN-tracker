@@ -1079,7 +1079,8 @@ policies.forEach((item) => {
     });
 
     // Target Table Render
-    policies.forEach((item) => {
+    const sortedPolicies = [...policies].sort((a, b) => (TARGET_ALLOCATIONS[b.code] || 0) - (TARGET_ALLOCATIONS[a.code] || 0));
+    sortedPolicies.forEach((item) => {
         const units = Number(item.units) || 0;
         const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
         const todayVal = units * navToday;
