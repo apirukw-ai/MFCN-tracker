@@ -986,14 +986,20 @@ function renderTable() {
         const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
         const navYesterday = Number(item.navYesterday !== undefined ? item.navYesterday : navToday) || 0;
 
+                //คำนวณมูลค่าของแต่ละกองทุน
         const costVal = units * navUnitCost;
         const todayVal = units * navToday;
         const yesterdayVal = units * navYesterday;
+        
+        // 🔥 เปลี่ยนแปลงจุดนี้: หาผลต่างกำไร/ขาดทุนเป็นบาท "เฉพาะของวันนี้"
+        const deltaTodayVal = todayVal - yesterdayVal; 
 
-        totalBalToday += todayVal;
-        totalBalPrev += yesterdayVal;
-        totalCostSum += costVal;
-        totalUnitsSum += units;
+        // 🔥 เปลี่ยนแปลงจุดนี้: บวกสะสมยอดรวมทั้งหมดเข้าตัวแปรส่วนกลางให้ถูกต้อง
+        totalDeltaToday += deltaTodayVal; // บวกผลงานวันนี้สะสม (บาท)
+        totalNavPrev += yesterdayVal;     // บวกมูลค่าตลาดเมื่อวานสะสม
+        totalCostSum += costVal;          // บวกต้นทุนสะสม
+        totalUnitsSum += units;           // บวกจำนวนหน่วยสะสม
+
 
         const r3m = Number(item.return3m ?? item.return_3m ?? item.r3m ?? 0);
         weighted3mSum += todayVal * r3m;
