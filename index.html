@@ -321,34 +321,33 @@
     </main>
             
         <!-- Target Allocation Table Section -->
-        <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-6 shadow-2xl border border-mfc-darkBorder space-y-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="font-bold text-slate-100 text-base sm:text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-mfc-orange"></i> ตารางสัดส่วนเป้าหมาย
-                    </h3>
-                    <p class="text-xs text-slate-400 mt-0.5">เปรียบเทียบสัดส่วนมูลค่าปัจจุบันกับเป้าหมายที่ตั้งไว้</p>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto rounded-xl border border-slate-800">
-                <table class="w-full text-xs sm:text-sm text-left border-collapse whitespace-nowrap">
-                    <thead>
-                        <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-semibold">
-                            <th class="p-3">แผน</th>
-                            <th class="p-3 text-center">มูลค่าวันนี้</th>
-                            <th class="p-3 text-center">สัดส่วนเป้าหมาย (%)</th>
-                            <th class="p-3 text-center">สัดส่วนปัจจุบัน (%)</th>
-                            <th class="p-3 text-center">ส่วนต่าง (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="targetTableBody" class="divide-y divide-slate-800/80 font-medium text-slate-200">
-                    </tbody>
-                </table>
-            </div>
+<div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-5 shadow-2xl border border-mfc-darkBorder space-y-3">
+    <div class="flex items-center justify-between">
+        <div>
+            <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-mfc-orange"></i> ตารางสัดส่วนเป้าหมาย
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">เปรียบเทียบสัดส่วนมูลค่าปัจจุบันกับเป้าหมายที่ตั้งไว้</p>
         </div>
+    </div>
 
-
+    <div class="overflow-x-auto rounded-xl border border-slate-800">
+        <table class="w-full text-xs text-left border-collapse whitespace-nowrap">
+            <thead>
+                <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-semibold">
+                    <th class="py-2.5 px-3">แผน</th>
+                    <th class="py-2.5 px-3 text-right">มูลค่าวันนี้</th>
+                    <th class="py-2.5 px-3 text-center">สัดส่วนเป้าหมาย (%)</th>
+                    <th class="py-2.5 px-3 text-center">สัดส่วนปัจจุบัน (%)</th>
+                    <th class="py-2.5 px-3 text-right">ส่วนต่าง (%)</th>
+                </tr>
+            </thead>
+            <tbody id="targetAllocationBody" class="divide-y divide-slate-800/80 font-medium text-slate-200">
+                <!-- Data rows mapped here via JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
 
     <!-- Batch NAV Modal Pop-up -->
     <div id="batchNavModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
