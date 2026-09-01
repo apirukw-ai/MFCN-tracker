@@ -986,19 +986,20 @@ function renderTable() {
         const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
         const navYesterday = Number(item.navYesterday !== undefined ? item.navYesterday : navToday) || 0;
 
-        //คำนวณมูลค่าของแต่ละกองทุน
+        //คำนวณมูลค่าของแต่ละกองทุนในลูป (Calculation Loop)
         const costVal = units * navUnitCost;
         const todayVal = units * navToday;
-        const yesterdayVal = units * navYesterday;
         
-        // 1. ตรงนี้ปล่อยไว้เหมือนเดิมได้เลย (สำหรับส่งต่อให้ฟังก์ชันอื่นใช้ถ้าจำเป็น)
-        const deltaTodayVal = todayVal - yesterdayVal; 
+        // 🔥 จุดแก้ไขที่ 1: คำนวณมูลค่าเมื่อวานโดยใช้ค่า prev_amt จากตารางบนเซิร์ฟเวอร์โดยตรง
+        // (แทนที่จะใช้ units * navYesterday ซึ่งราคาในเครื่องมักไม่มีค่าเมื่อวานส่งมา)
+        const yesterdayVal = Number(item.prev_amt) || todayVal; 
 
-        // 🔥 2. จุดแก้ไขสำคัญ: เปลี่ยนกลับมาบวกสะสม "มูลค่าเต็มพอร์ต" เพื่อให้ตัวแปรไม่เพี้ยน
-        totalBalToday += todayVal;      // เปลี่ยนจาก deltaTodayVal เป็น todayVal
-        totalBalPrev += yesterdayVal;   // บรรทัดนี้ถูกต้องแล้ว (บวกมูลค่าพอร์ตเมื่อวานสะสม)
+        // 🔥 จุดแก้ไขที่ 2: บวกสะสมยอดรวมของทั้งพอร์ตให้ตรงกระปุก
+        totalBalToday += todayVal;      // สะสมมูลค่าพอร์ตปัจจุบัน
+        totalBalPrev += yesterdayVal;   // สะสมมูลค่าพอร์ตวันก่อนหน้าจากฐานข้อมูลจริง
         totalCostSum += costVal;          
         totalUnitsSum += units;        
+      
 
         const r3m = Number(item.return3m ?? item.return_3m ?? item.r3m ?? 0);
         weighted3mSum += todayVal * r3m;
