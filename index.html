@@ -1232,6 +1232,7 @@ document.getElementById('totalCostAmt').innerText =
         policyTfoot.innerHTML = '';
 
         if (policies.length > 0) {
+            // คำนวณผลงานรวมวันนี้ (บาท และ %) จากมูลค่าสะสมจริง
             const totalDailyAmt = totalBalToday - totalBalPrev;
             const overallDailyReturnPct = totalBalPrev > 0 ? (totalDailyAmt * 100) / totalBalPrev : 0;
 
@@ -1242,61 +1243,63 @@ document.getElementById('totalCostAmt').innerText =
             const totalYtdProfitAmt = totalBalToday - totalYtdStartVal;
             const overallYtdPct = totalYtdStartVal > 0 ? (totalYtdProfitAmt / totalYtdStartVal) * 100 : 0;
 
+            // 🎯 แก้ไขฟังก์ชันแปลงข้อความ: ให้คำนวณเครื่องหมาย +/- และทิศทางลูกศรตามจริง ไม่ล็อกตายตัว
             const fmtAmtAndPct = (amt, pct) => {
-    const sign = amt >= 0 ? '+' : '-';
-    const color = amt >= 0 ? 'text-emerald-400' : 'text-rose-400';
-    const formattedAmt = Math.abs(amt).toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
+                const sign = amt >= 0 ? '+' : ''; // ถ้าติดลบ เครื่องหมายลบจะมากับตัวเลขเองอัตโนมัติเมื่อถอด Math.abs ออก
+                const color = amt >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const arrow = amt >= 0 ? '▲' : '▼'; // 💡 เปลี่ยนลูกศรตามสภาวะตลาดจริง
+                
+                // ถอด Math.abs ออกจาก amt เพื่อให้ตัวเลขแสดงเครื่องหมายลบสีแดงอย่างถูกต้องเวลาพอร์ตติดลบ
+                const formattedAmt = amt.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
 
-    return `
-<div class="flex flex-col items-end leading-tight">
-    <div class="text-slate-100 font-bold">
-        ${sign}${formattedAmt}
-    </div>
-    <div class="text-xs ${color} font-medium mt-1">
-    ▲ ${pct.toFixed(2)}%
-</div>
-</div>
-`;
-};
+                return `
+                    <div class="flex flex-col items-end leading-tight">
+                        <div class="text-slate-100 font-bold">
+                            ${sign}${formattedAmt}
+                        </div>
+                        <div class="text-xs ${color} font-medium mt-1">
+                            ${arrow} ${Math.abs(pct).toFixed(2)}%
+                        </div>
+                    </div>
+                `;
+            };
 
             const trFoot = document.createElement('tr');
-            trFoot.className =
-"align-middle font-bold text-slate-100 border-t border-cyan-500/40 bg-cyan-500/5";
-   trFoot.innerHTML = `
-    <td class="px-3 py-4 font-bold text-slate-200 whitespace-nowrap">
-    รวมทั้งหมด
-</td>
-    <td class="p-3 text-center font-mono font-medium text-slate-200">${totalUnitsSum.toLocaleString(undefined, {
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4
-})}</td>
-    <td class="px-3 py-4 text-center text-slate-600">—</td>
-    <td class="px-3 py-4 text-center text-slate-600">—</td>
-    <td class="px-3 py-4 text-right font-mono text-slate-200">
-  ฿${totalCostSum.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-  })}
-</td>
-
-    <td class="px-3 py-4 text-right font-extrabold text-lg text-white">
-    ฿${totalBalToday.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    })}
-</td>
-
-    <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalProfitAmt, overallProfitPct)}</td>
-    <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalDailyAmt, overallDailyReturnPct)}</td>
-    <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalYtdProfitAmt, overallYtdPct)}</td>
-    <td class="px-3 py-4 text-right">-</td>
-`;
+            trFoot.className = "align-middle font-bold text-slate-100 border-t border-cyan-500/40 bg-cyan-500/5";
+            
+            // 🎯 รักษาโครงสร้างคลาสดีไซน์ (px-3 py-4, text-right, text-white) ของคุณไว้เหมือนเดิมทุกประการ
+            trFoot.innerHTML = `
+                <td class="px-3 py-4 font-bold text-slate-200 whitespace-nowrap">รวมทั้งหมด</td>
+                <td class="p-3 text-center font-mono font-medium text-slate-200">${totalUnitsSum.toLocaleString(undefined, {
+                    minimumFractionDigits: 4,
+                    maximumFractionDigits: 4
+                })}</td>
+                <td class="px-3 py-4 text-center text-slate-600">—</td>
+                <td class="px-3 py-4 text-center text-slate-600">—</td>
+                <td class="px-3 py-4 text-right font-mono text-slate-200">
+                    ฿${totalCostSum.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}
+                </td>
+                <td class="px-3 py-4 text-right font-extrabold text-lg text-white">
+                    ฿${totalBalToday.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}
+                </td>
+                <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalProfitAmt, overallProfitPct)}</td>
+                <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalDailyAmt, overallDailyReturnPct)}</td>
+                <td class="px-3 py-4 text-right font-bold font-mono">${fmtAmtAndPct(totalYtdProfitAmt, overallYtdPct)}</td>
+                <td class="px-3 py-4 text-right">-</td>
+            `;
             policyTfoot.appendChild(trFoot);
         }
     }
+
     
     // Render Analytics Charts
     renderCharts(totalBalToday, totalCostSum);
