@@ -1045,16 +1045,29 @@ policies.forEach((item) => {
         targetTbody.appendChild(trTarget);
     });
 
-    // Policy Table Render
-    policies.forEach((item) => {
-        const units = Number(item.units) || 0;
-        const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : 0);
-        const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
-        const navYesterday = Number(item.navYesterday !== undefined ? item.navYesterday : navToday) || 0;
+    // 🛠️ ย้ายมาแก้ปัญหาที่ลูปวาดตารางหลัก (// Policy Table Render)
+policies.forEach((item) => {
+    const units = Number(item.units) || 0;
+    const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : 0);
+    const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
+    const navYesterday = Number(item.navYesterday !== undefined ? item.navYesterday : navToday) || 0;
 
-        const costVal = units * navUnitCost;
-        const todayVal = units * navToday;
-        const yesterdayVal = units * navYesterday;
+    const costVal = units * navUnitCost;
+    const todayVal = units * navToday;
+    const yesterdayVal = units * navYesterday;
+
+    // 🔥 เติม 4 บรรทัดมหาประลัยนี้ลงไปท้ายส่วนคิดเงินในลูปนี้ครับ! 
+    // เพื่อบังคับบวกเลขสรุปจากยอดที่วาดจริงบนหน้าจอเท่านั้น ไม่โดนล้างค่าแน่นอน
+    if (item.id === 1) { // บังคับรีเซ็ตค่าตอนเริ่มแถวแรกเพื่อไม่ให้เลขทบเมื่อโหลดซ้ำ
+        totalCostSum = 0;
+        totalBalToday = 0;
+        totalBalPrev = 0;
+    }
+    totalCostSum += costVal;
+    totalBalToday += todayVal;
+    totalBalPrev += yesterdayVal;
+
+    // ... โค้ดที่เหลือคำนวณกำไรสะสม วาดแถว <tr> ของคุณปล่อยไว้ตามเดิม ...
 
         // --- 1. คำนวณกำไรสะสม ---
         const totalProfit = todayVal - costVal; // ใช้ todayVal - costVal
