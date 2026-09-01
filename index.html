@@ -705,8 +705,38 @@ async function loadMasterData() {
                     }
                 }
 
-                if (updateCount > 0) {
-                    await syncData(updated);
+                                if (updateCount > 0) {
+                    // ☁️ 1. อัปเดตข้อมูลขึ้น Supabase
+                    if (supabaseClient) {
+                        try {
+                            for (const target of updated) {
+                                // คำนวณเงินต้นใหม่จากหน่วยจริงคูณต้นทุนเพื่อเก็บเข้าคอลัมน์ cost
+                                const newCost = target.units * target.navUnitCost;
+
+                                const { error } = await supabaseClient
+                                    .from('policies')
+                                    .update({ 
+                                        units: target.units,
+                                        cost: newCost 
+                                    })
+                                    .eq('code', target.code)
+                                    .eq('portfolio_type', 'mfc_fund');
+
+                                if (error) throw error;
+                            }
+                            console.log("☁️ อัปเดตข้อมูลจาก PDF ลง Supabase สำเร็จ");
+                        } catch (supabaseErr) {
+                            console.error("เซฟข้อมูลลง Cloud ล้มเหลว:", supabaseErr);
+                        }
+                    }
+
+                    // 📦 2. อัปเดตตัวแปรหลักและ Cache ในเครื่อง
+                    policies = updated;
+                    localStorage.setItem('cached_policies_mfc', JSON.stringify(updated));
+
+                    // 🛠️ 3. สั่งวาดหน้าจอแสดงผลใหม่ทันทีด้วยโค้ดเวอร์ชันล่าสุดที่เราช่วยกันแก้
+                    if (typeof renderTable === 'function') renderTable();
+
                     showToast(`นำเข้า PDF และอัปเดต ${updateCount} กองทุนเรียบร้อยแล้ว`, 'success');
                 } else {
                     showToast('ไม่พบรายการกองทุนที่ตรงกับในระบบ', 'warning');
@@ -716,7 +746,7 @@ async function loadMasterData() {
                 console.error("PDF Parsing error:", err);
                 showToast("เกิดข้อผิดพลาดในการอ่านไฟล์ PDF", "error");
             }
-        }
+
 
         async function fetchLiveMarketData() {
             const symbols = [
