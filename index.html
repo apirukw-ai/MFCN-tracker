@@ -226,54 +226,53 @@
             </div>
         </div>
 
-        <!-- Visual Analytics Section (Bar Chart & History Line Chart) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <!-- Fund Profit Bar Chart -->
-            <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-5 shadow-2xl border border-mfc-darkBorder flex flex-col justify-between">
+<!-- Visual Analytics Section (Bar Chart & History Line Chart) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Fund Profit Bar Chart -->
+        <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-5 shadow-2xl border border-mfc-darkBorder flex flex-col justify-between">
+            <div>
+                <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-2">
+                    <i class="fa-solid fa-chart-column text-mfc-orange"></i> กำไรสะสมรายแผน (บาท)
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">เปรียบเทียบกำไรสะสมเป็นจำนวนเงินของแต่ละแผน</p>
+            </div>
+            <div class="mt-4 relative h-48 sm:h-56 w-full">
+                <canvas id="profitBarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Portfolio History Line Chart -->
+        <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-5 shadow-2xl border border-mfc-darkBorder flex flex-col justify-between">
+            <div class="flex items-center justify-between">
                 <div>
                     <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-2">
-                        <i class="fa-solid fa-chart-column text-mfc-orange"></i> กำไรสะสมรายแผน (บาท)
+                        <i class="fa-solid fa-clock-rotate-left text-sky-400"></i> ประวัติการเติบโตของพอร์ต (Portfolio History)
                     </h3>
-                    <p class="text-xs text-slate-400 mt-0.5">เปรียบเทียบกำไรสะสมเป็นจำนวนเงินของแต่ละแผน</p>
+                    <p class="text-xs text-slate-400 mt-0.5">แนวโน้มมูลค่าพอร์ตเทียบกับต้นทุนย้อนหลัง</p>
                 </div>
-                <div class="mt-4 relative h-48 sm:h-56 w-full">
-                    <canvas id="profitBarChart"></canvas>
+
+                <div class="flex items-center gap-2">
+                    <!-- ปุ่มสลับ 1D / 3M / YTD -->
+                    <div class="flex gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-800/80 w-fit">
+                        <button onclick="changeTimeline('1D')" class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all text-slate-400 hover:text-slate-100 focus:bg-cyan-500 focus:text-slate-950">1D</button>
+                        <button onclick="changeTimeline('3M')" class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all text-slate-400 hover:text-slate-100 focus:bg-cyan-500 focus:text-slate-950">3M</button>
+                        <button onclick="changeTimeline('YTD')" class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all text-slate-400 hover:text-slate-100 focus:bg-cyan-500 focus:text-slate-950">YTD</button>
+                    </div>
+
+                    <button type="button" id="btnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-400 transition-colors">
+                        <i class="fa-solid fa-trash-can"></i> ล้างประวัติ
+                    </button>
                 </div>
             </div>
 
-            <!-- Portfolio History Line Chart -->
-<div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-5 shadow-2xl border border-mfc-darkBorder flex flex-col justify-between">
-    <div class="flex items-center justify-between">
-        <div>
-            <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-2">
-                <i class="fa-solid fa-clock-rotate-left text-sky-400"></i> ประวัติการเติบโตของพอร์ต (Portfolio History)
-            </h3>
-            <p class="text-xs text-slate-400 mt-0.5">แนวโน้มมูลค่าพอร์ตเทียบกับต้นทุนย้อนหลัง</p>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <!-- 🎯 ปุ่มสลับ 1D / 3M / YTD -->
-            <div class="flex gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-800/80 w-fit">
-                <button onclick="changeTimeline('1D')" class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all text-slate-400 hover:text-slate-100 focus:bg-cyan-500 focus:text-slate-950">1D</button>
-                <button onclick="changeTimeline('3M')" class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all text-slate-400 hover:text-slate-100 focus:bg-cyan-500 focus:text-slate-950">3M</button>
-                <button onclick="changeTimeline('YTD')" class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all text-slate-400 hover:text-slate-100 focus:bg-cyan-500 focus:text-slate-950">YTD</button>
+            <div class="mt-4 relative h-48 sm:h-56 w-full">
+                <canvas id="historyLineChart"></canvas>
             </div>
-
-            <button type="button" id="btnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-400 transition-colors">
-                <i class="fa-solid fa-trash-can"></i> ล้างประวัติ
-            </button>
         </div>
     </div>
 
-<!-- ตัวกราฟแสดงผล -->
-        <div class="mt-4 relative h-48 sm:h-56 w-full">
-            <canvas id="historyLineChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- Main Table Section -->
-            <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-6 shadow-2xl border border-mfc-darkBorder space-y-6">
+    <!-- Main Table Section -->
+    <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-6 shadow-2xl border border-mfc-darkBorder space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
                     <h3 class="font-bold text-slate-100 text-base sm:text-lg flex items-center gap-2">
