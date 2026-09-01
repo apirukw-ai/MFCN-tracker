@@ -979,24 +979,27 @@ function renderTable() {
         return;
     }
 
-    // Calculation Loop
+// Calculation Loop
 policies.forEach((item) => {
     const units = Number(item.units) || 0;
-    const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : 0);
+    const costVal = Number(item.cost) || 0; // 🎯 ดึงค่าเงินต้นรวมจากคอลัมน์ cost บน Supabase โดยตรง
     const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
-    
-    // 🛠️ ปรับปรุงโค้ดใน Calculation Loop (แถวบรรทัด 989-995)
-    const costVal = units * navUnitCost;
+
+    // 🎯 คำนวณหายอด NAV ต้นทุนเฉลี่ยต่อหน่วยที่แท้จริงจากต้นทุนรวม (หารด้วยจำนวนหน่วย)
+    // ถ้ายูนิตเป็น 0 ให้ถอยกลับไปใช้ราคาปัจจุบันแทนเพื่อไม่ให้ระบบเอ๋อ (หารด้วย 0)
+    const navUnitCost = units > 0 ? (costVal / units) : navToday; 
+
+    // // ปรับปรุงโค้ดใน Calculation Loop (บล็อกคำนวณมูลค่ารวม)
     const todayVal = units * navToday;
-        
-    // 🎯 สูตรเดาะบั๊กขจัด NaN: ดึงค่าจาก item.prev_amt ตรงๆ 
+    
+    // สูตรดักจับ NaN ของช่องเมื่อวานที่เราซ่อมแซมไว้รอบก่อน (ปล่อยไว้เหมือนเดิมได้เลยครับ)
     const dbPrevAmt = item.prev_amt !== undefined && item.prev_amt !== null ? Number(item.prev_amt) : 0;
     const yesterdayVal = dbPrevAmt !== 0 ? dbPrevAmt : todayVal;
 
-    // บวกรวมสะสมเข้ากระปุกส่วนกลางตามปกติ
+    // บวกรวมสะสมเข้ากระปุกส่วนกลาง
     totalBalToday += todayVal;      
     totalBalPrev += yesterdayVal;   
-    totalCostSum += costVal;          
+    totalCostSum += costVal;        // 🎯 ใช้ค่า costVal ที่ดึงมาจากคอลัมน์ cost ตรงๆ สะสมทุนรวมพอร์ต
     totalUnitsSum += units;        
 
     
