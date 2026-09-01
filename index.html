@@ -980,23 +980,25 @@ function renderTable() {
     }
 
     // Calculation Loop
-    // Calculation Loop
 policies.forEach((item) => {
     const units = Number(item.units) || 0;
     const navUnitCost = Number(item.navUnitCost !== undefined ? item.navUnitCost : 0);
     const navToday = Number(item.navToday !== undefined ? item.navToday : item.nav) || 0;
     
-    // บรรทัด 987 เดิมโดนลบออกไปแล้วเพื่อความคลีน 
-
-    // // ปรับปรุงโค้ดใน Calculation Loop (บรรทัดแถบสีฟ้าของคุณ)
+    // 🛠️ ปรับปรุงโค้ดใน Calculation Loop (แถวบรรทัด 989-995)
     const costVal = units * navUnitCost;
     const todayVal = units * navToday;
-    const yesterdayVal = Number(item.prev_amt) !== 0 ? Number(item.prev_amt) : costVal;
+        
+    // 🎯 สูตรเดาะบั๊กขจัด NaN: ดึงค่าจาก item.prev_amt ตรงๆ 
+    const dbPrevAmt = item.prev_amt !== undefined && item.prev_amt !== null ? Number(item.prev_amt) : 0;
+    const yesterdayVal = dbPrevAmt !== 0 ? dbPrevAmt : todayVal;
 
-    totalBalToday += todayVal;
-    totalBalPrev += yesterdayVal;
-    totalCostSum += costVal;
-    totalUnitsSum += units;
+    // บวกรวมสะสมเข้ากระปุกส่วนกลางตามปกติ
+    totalBalToday += todayVal;      
+    totalBalPrev += yesterdayVal;   
+    totalCostSum += costVal;          
+    totalUnitsSum += units;        
+
     
     // ... โค้ดส่วนคำนวณ 3m และ ytd ด้านล่างทำงานต่อตามปกติ
     
