@@ -242,23 +242,34 @@
             </div>
 
             <!-- Portfolio History Line Chart -->
-            <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-5 shadow-2xl border border-mfc-darkBorder flex flex-col justify-between">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-2">
-                            <i class="fa-solid fa-clock-rotate-left text-sky-400"></i> ประวัติการเติบโตของพอร์ต (Portfolio History)
-                        </h3>
-                        <p class="text-xs text-slate-400 mt-0.5">แนวโน้มมูลค่าพอร์ตเทียบต้นทุนย้อนหลัง</p>
-                    </div>
-                    <button type="button" id="btnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-400 transition-colors">
-                        <i class="fa-solid fa-trash-can"></i> ล้างประวัติ
-                    </button>
-                </div>
-                <div class="mt-4 relative h-48 sm:h-56 w-full">
-                    <canvas id="historyLineChart"></canvas>
-                </div>
-            </div>
+<div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-5 shadow-2xl border border-mfc-darkBorder flex flex-col justify-between">
+    <div class="flex items-center justify-between">
+        <div>
+            <h3 class="font-bold text-slate-100 text-sm sm:text-base flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-sky-400"></i> ประวัติการเติบโตของพอร์ต (Portfolio History)
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">แนวโน้มมูลค่าพอร์ตเทียบกับต้นทุนย้อนหลัง</p>
         </div>
+
+        <div class="flex items-center gap-2">
+            <!-- 🎯 ปุ่มสลับ 1D / 3M / YTD -->
+            <div class="flex gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-800/80 w-fit">
+                <button onclick="changeTimeline('1D')" class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all text-slate-400 hover:text-slate-100 focus:bg-cyan-500 focus:text-slate-950">1D</button>
+                <button onclick="changeTimeline('3M')" class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all text-slate-400 hover:text-slate-100 focus:bg-cyan-500 focus:text-slate-950">3M</button>
+                <button onclick="changeTimeline('YTD')" class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all text-slate-400 hover:text-slate-100 focus:bg-cyan-500 focus:text-slate-950">YTD</button>
+            </div>
+
+            <button type="button" id="btnClearHistory" class="text-[11px] text-slate-400 hover:text-rose-400 transition-colors">
+                <i class="fa-solid fa-trash-can"></i> ล้างประวัติ
+            </button>
+        </div>
+    </div>
+
+    <!-- 🎯 ตัวกราฟแสดงผล (ห้ามลบ) -->
+    <div class="mt-4 relative h-48 sm:h-56 w-full">
+        <canvas id="historyLineChart"></canvas>
+    </div>
+</div>
 
         <!-- Target Allocation Table Section -->
         <div class="bg-mfc-darkCard rounded-2xl p-4 sm:p-6 shadow-2xl border border-mfc-darkBorder space-y-4">
@@ -484,7 +495,10 @@
         supabaseClient = null;
         let barChartInstance = null;
         let historyChartInstance = null;
+        // 🔥 เติมตัวแปรนี้เพิ่มเข้าไปตรงนี้ได้เลยครับ
+        let currentTimeline = 'YTD'; 
         const broadcastChannel = new BroadcastChannel('mfc_local_sync');
+
 
         // Toast Notification System
         function showToast(message, type = 'success') {
@@ -935,12 +949,31 @@ if (ctxBar && policies.length > 0) {
     });
 }
             // 2. History Line Chart
-            const ctxHistory = document.getElementById('historyLineChart')?.getContext('2d');
-            if (ctxHistory) {
-                const history = updateHistoryLog(totalBalToday, totalCostSum) || [];
-                const histLabels = history.map(h => h.date);
-                const histValData = history.map(h => h.value);
-                const histCostData = history.map(h => h.cost);
+            // 🛠️ ปรับปรุงโค้ดท่อน History Line Chart ของคุณใน GitHub
+const ctxHistory = document.getElementById('historyLineChart')?.getContext('2d');
+if (ctxHistory) {
+    let history = updateHistoryLog(totalBalToday, totalCostSum) || [];
+    
+    // 🎯 ท่อนคำสั่งไม้ตาย: กรองข้อมูลย้อนหลังตามปุ่มที่เราเลือกดู (1D, 3M, YTD)
+    const now = new Date();
+    if (currentTimeline === '1D') {
+        // 1D: ดึงเฉพาะข้อมูลของวันนี้และเมื่อวาน (2 จุดล่าสุดมาชนกัน)
+        history = history.slice(-2);
+    } else if (currentTimeline === '3M') {
+        // 3M: ย้อนกลับไป 90 วัน
+        const ninetyDaysAgo = new Date(now.getTime() - (90 * 24 * 60 * 60 * 1000));
+        history = history.filter(h => new Date(h.date) >= ninetyDaysAgo);
+    } else if (currentTimeline === 'YTD') {
+        // YTD: ดึงตั้งแต่ 1 มกราคมของปีปัจจุบันเป็นต้นมา
+        const currentYearStr = now.getFullYear().toString();
+        history = history.filter(h => h.date.startsWith(currentYearStr) || new Date(h.date).getFullYear() === now.getFullYear());
+    }
+
+    // โค้ดเดิมของคุณดึงค่าไปวาดกราฟทำงานต่อตามปกติได้เลยครับ
+    const histLabels = history.map(h => h.date);
+    const histValData = history.map(h => h.value);
+    const histCostData = history.map(h => h.cost);
+
 
                 if (historyChartInstance) historyChartInstance.destroy();
                 historyChartInstance = new Chart(ctxHistory, {
@@ -1765,6 +1798,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+    function changeTimeline(timeline) {
+    currentTimeline = timeline; // อัปเดตช่วงเวลาหลักของแอป
+    
+    // 🎯 สั่งรันฟังก์ชัน renderCharts และวาดหน้าจอใหม่ทันที ข้อมูลจะเปลี่ยนตามในพริบตา
+    if (typeof loadMasterData === 'function') {
+        loadMasterData(); 
+    }
+}
 </script>
 </body>
 </html>
