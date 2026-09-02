@@ -537,7 +537,10 @@ function processPolicyData(dataList) {
         const costTotal = Number(item.cost || 0);
         const prevAmtTotal = Number(item.prev_amt || 0);
         const dbYtdPercent = Number(item.ytd || 0);
-        const db3mPercent = Number(item.return3m || 0); // เผื่ออนาคตฐานข้อมูลมีฟีเจอร์นี้
+        // แก้ไขเป็น (ถ้าคอลัมน์ return3m เป็น 0 ให้คำนวณ % ผลตอบแทนจาก NAV ต้นทุนแทนชั่วคราว):
+        const db3mPercent = item.return3m !== undefined && item.return3m !== null && Number(item.return3m) !== 0
+        ? Number(item.return3m)
+        : (calculatedCostNav > 0 ? ((navVal - calculatedCostNav) / calculatedCostNav) * 100 : 0);
 
         // 1. คำนวณ NAV ต้นทุนต่อหน่วย (Cost NAV)
         const calculatedCostNav = units > 0 ? (costTotal / units) : navVal;
