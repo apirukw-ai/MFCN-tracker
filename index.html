@@ -537,35 +537,31 @@ function processPolicyData(dataList) {
         const costTotal = Number(item.cost || 0);
         const prevAmtTotal = Number(item.prev_amt || 0);
         const dbYtdPercent = Number(item.ytd || 0);
-        // แก้ไขเป็น (ถ้าคอลัมน์ return3m เป็น 0 ให้คำนวณ % ผลตอบแทนจาก NAV ต้นทุนแทนชั่วคราว):
-        const db3mPercent = item.return3m !== undefined && item.return3m !== null && Number(item.return3m) !== 0
-        ? Number(item.return3m)
-        : (calculatedCostNav > 0 ? ((navVal - calculatedCostNav) / calculatedCostNav) * 100 : 0);
+        const db3mPercent = Number(item.return3m || 0);
 
-        // 1. คำนวณ NAV ต้นทุนต่อหน่วย (Cost NAV)
+        // 🟢 1. ประกาศตัวแปรคำนวณ NAV ต้นทุนก่อนเสมอ (แก้ปัญหา ReferenceError)
         const calculatedCostNav = units > 0 ? (costTotal / units) : navVal;
         
-        // 2. คำนวณ NAV วันก่อนหน้า (Yesterday NAV)
+        // 🟢 2. คำนวณ NAV วันก่อนหน้า
         const calculatedNavPrev = units > 0 ? (prevAmtTotal / units) : navVal;
 
-        // 3. เปอร์เซ็นต์กำไร/ขาดทุนสะสมทั้งหมดเทียบกับต้นทุน (Total Return %)
+        // 🟢 3. เปอร์เซ็นต์ผลตอบแทนรวม
         const costReturnPercent = calculatedCostNav > 0 
             ? ((navVal - calculatedCostNav) / calculatedCostNav) * 100 
             : 0;
         
-        // 4. จัดการผลตอบแทน YTD และย้อนหาราคา NAV ต้นปี
+        // 🟢 4. คำนวณ YTD
         const finalYtdPercent = dbYtdPercent !== 0 ? dbYtdPercent : costReturnPercent;
         const calculatedNavYtd = calculatedCostNav > 0
             ? (navVal / (1 + (finalYtdPercent / 100))) 
             : navVal;
 
-        // 5. จัดการผลตอบแทน 3 เดือนล่าสุด (ถ้าไม่มีข้อมูลให้ใช้ 0 ไปก่อนเพื่อให้กราฟไม่เพี้ยน)
+        // 🟢 5. คำนวณ 3 เดือน
         const final3mPercent = db3mPercent !== 0 ? db3mPercent : 0; 
         const calculatedNav3m = final3mPercent !== 0 
             ? (navVal / (1 + (final3mPercent / 100))) 
-            : calculatedNavPrev; // ใช้ราคาเมื่อวานขัดตาทัพแทนราคา 3 เดือนก่อนถ้าไม่มีข้อมูล
+            : calculatedNavPrev;
 
-        // คืนค่าออบเจกต์กลับไปให้แอปใช้งาน (ปิดวงเล็บปีกกาและวงเล็บมนครบถ้วน)
         return {
             id: Number(item.id),
             code: String(item.code || ''),
@@ -582,10 +578,9 @@ function processPolicyData(dataList) {
             navYtd: calculatedNavYtd,
             return3m: final3mPercent,
             nav3m: calculatedNav3m
-        }; // ปิดวัตถุอย่างถูกต้อง
-    }); // ปิด .map อย่างถูกต้อง
+        };
+    });
 }
-
 async function loadMasterData() {
     let loadedFromCloud = false;
 
