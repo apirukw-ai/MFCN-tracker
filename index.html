@@ -587,59 +587,36 @@ function processPolicyData(dataList) {
 }
 
 async function loadMasterData() {
-    let hasCache = false;
-
-    // 1. [STALE] ดึง Cache ในเครื่องมาคำนวณและโชว์บนหน้าจอทันทีใน 0.01 วินาที
-    const cachedData = localStorage.getItem(CACHE_KEY);
-    if (cachedData) {
-        try {
-            const rawCache = JSON.parse(cachedData);
-            // ถ้าข้อมูลใน Cache ยังไม่ได้แปลง ให้ผ่านกระบวนการแปลงก่อน
-            policies = Array.isArray(rawCache) && rawCache[0]?.costNav !== undefined 
-                ? rawCache 
-                : processPolicyData(rawCache);
-            
-            renderTable();
-            hasCache = true;
-            console.log("⚡ [SWR] แสดงข้อมูลด่วนจาก Cache ในเครื่อง");
-        } catch (e) {
-            console.error("Error loading cache:", e);
-        }
-    }
-
-    // 2. [REVALIDATION] ดึงข้อมูลล่าสุดจาก Supabase มาอัปเดตเบื้องหลัง
     if (supabaseClient) {
         try {
             const { data, error } = await supabaseClient
                 .from('policies')
                 .select('*')
-                .eq('portfolio_type', 'mfc_fund') // ดึงเฉพาะกองทุน MFC
+                .eq('portfolio_type', 'mfc_fund')
                 .order('id', { ascending: true });
 
             if (error) throw error;
 
             if (data && data.length > 0) {
-                // คำนวณตัวเลขชุดใหม่สดๆ จาก Cloud
                 policies = processPolicyData(data);
-
-                // บันทึกข้อมูลที่คำนวณแล้วลง Cache
                 localStorage.setItem(CACHE_KEY, JSON.stringify(policies));
-
-                // วาด UI ใหม่ทันทีเพื่ออัปเดตตัวเลขล่าสุด
                 renderTable();
-                console.log("☁️ [SWR] อัปเดตข้อมูลสดใหม่จาก Supabase สำเร็จ");
+                console.log("☁️ ดึงข้อมูลสดจาก Supabase สำเร็จ");
+                return;
             }
         } catch (e) {
-            console.warn("⚠️ ไม่สามารถเชื่อมต่อ Cloud ได้:", e.message || e);
-            
-            // กรณีไม่มี Cache และ Cloud หลุด ค่อยไปใช้ Default
-            if (!hasCache) {
-                policies = [...initialDefaultData];
-                renderTable();
-            }
-            if (typeof showToast === 'function') {
-                showToast('ใช้งานโหมดออฟไลน์ (แสดงข้อมูลจากแคชในเครื่อง)', 'warning');
-            }
+            console.warn("⚠️ ไม่สามารถดึงข้อมูลจาก Cloud ได้:", e);
+        }
+    }
+
+    // ถ้าไม่มีข้อมูลจาก Cloud จริงๆ ค่อยดึงจาก Cache ในเครื่อง
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+        try {
+            policies = JSON.parse(cachedData);
+            renderTable();
+        } catch (e) {
+            console.error("Cache error:", e);
         }
     }
 }
