@@ -587,6 +587,9 @@ function processPolicyData(dataList) {
 }
 
 async function loadMasterData() {
+    let loadedFromCloud = false;
+
+    // 1. ดึงข้อมูลสดจาก Supabase เป็นหลักก่อนเสมอ
     if (supabaseClient) {
         try {
             const { data, error } = await supabaseClient
@@ -601,23 +604,38 @@ async function loadMasterData() {
                 policies = processPolicyData(data);
                 localStorage.setItem(CACHE_KEY, JSON.stringify(policies));
                 renderTable();
+                loadedFromCloud = true;
                 console.log("☁️ ดึงข้อมูลสดจาก Supabase สำเร็จ");
                 return;
             }
         } catch (e) {
-            console.warn("⚠️ ไม่สามารถดึงข้อมูลจาก Cloud ได้:", e);
+            console.warn("⚠️ ไม่สามารถดึงข้อมูลจาก Cloud ได้:", e.message || e);
         }
     }
 
-    // ถ้าไม่มีข้อมูลจาก Cloud จริงๆ ค่อยดึงจาก Cache ในเครื่อง
-    const cachedData = localStorage.getItem(CACHE_KEY);
-    if (cachedData) {
-        try {
-            policies = JSON.parse(cachedData);
-            renderTable();
-        } catch (e) {
-            console.error("Cache error:", e);
+    // 2. หากดึง Cloud ไม่ได้ ให้ถอยมาใช้ Cache ในเครื่อง
+    if (!loadedFromCloud) {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+            try {
+                const rawCache = JSON.parse(cachedData);
+                policies = Array.isArray(rawCache) && rawCache[0]?.costNav !== undefined 
+                    ? rawCache 
+                    : processPolicyData(rawCache);
+                renderTable();
+                console.log("⚡ แสดงข้อมูลจาก Cache ในเครื่อง");
+                return;
+            } catch (e) {
+                console.error("Cache parsing error:", e);
+            }
         }
+    }
+
+    // 3. หากไม่มีทั้งข้อมูลบน Cloud และ Cache จึงใช้ค่าเริ่มต้นสำรอง
+    if (!loadedFromCloud && policies.length === 0) {
+        policies = processPolicyData(initialDefaultData);
+        renderTable();
+        console.log("🛠️ ใช้งานค่าเริ่มต้นสำรอง (Default Data)");
     }
 }
         async function processPDFStatement(file) {
