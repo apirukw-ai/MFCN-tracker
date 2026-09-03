@@ -94,7 +94,24 @@ def fetch_and_update():
                 }).eq('id', policy['id']).execute()
                 print(f"ℹ️ {code} ราคาล่าสุด: {latest_nav if latest_nav else current_nav} (ไม่เปลี่ยนแปลง)")
 
-        print(f"🎉 อัปเดตข้อมูลเสร็จสิ้นเมื่อ: {now_thai}")
+        # บรรทัด 97 เดิม
+        print(f"✅ อัปเดตข้อมูลเสร็จสิ้นเมื่อ: {now_thai}")
+
+        # 📍 เพิ่มโค้ดส่วนนี้ต่อจากบรรทัด 97
+        try:
+            # ดึงมูลค่ารวมของ MFC ล่าสุดจากตาราง policies
+            mfc_policies = supabase.table('policies').select('*').execute().data
+            mfc_total = sum(float(p.get('nav', 0)) * float(p.get('units', 0)) for p in mfc_policies)
+
+            # บันทึก Snapshot ลงตาราง portfolio_history
+            from datetime import date
+            supabase.table('portfolio_history').insert({
+                'record_date': str(date.today()),
+                'mfc_val': mfc_total
+            }).execute()
+            print("📈 บันทึกประวัติ MFC ลง portfolio_history เรียบร้อย")
+        except Exception as hist_err:
+            print(f"⚠️ บันทึกประวัติไม่สำเร็จ: {hist_err}")
 
     except Exception as e:
         print(f"❌ Error: {e}")
