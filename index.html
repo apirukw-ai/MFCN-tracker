@@ -1167,21 +1167,20 @@ const overallProfitPct =
         ? (totalProfitAmt * 100) / totalCostSum
         : 0;
 
-// ส่ง MFC Summary ไป Firebase
-
-fetch(
-    'https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/mfc_summary/current.json',
-    {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            value: totalBalToday,
-            updatedAt: new Date().toISOString()
-        })
-    }
-).catch(err => console.error(err));
+// // ส่ง MFC Summary ไป Firebase
+// fetch(
+//     'https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/mfc_summary/current.json',
+//     {
+//         method: 'PUT',
+//         headers: {
+//             'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({
+//             value: totalBalToday,
+//             updatedAt: new Date().toISOString()
+//         })
+//     }
+// ).catch(err => console.error(err));
 
 // UI ต่อ
 document.getElementById('portfolioBalance').innerText =
