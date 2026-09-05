@@ -22,7 +22,7 @@ def get_nav_from_mfc_page(fund_code, fund_name, html_content):
     try:
         soup = BeautifulSoup(html_content, 'html.parser')
         
-        # ทำความสะอาดคำค้นหา (ตัดช่องว่างและเปลี่ยนเป็นตัวพิมพ์เล็ก)
+        # ทำความสะอาดคำค้นหา
         clean_code = fund_code.replace(' ', '').lower() if fund_code else ""
         clean_name = fund_name.replace(' ', '').lower() if fund_name else ""
 
@@ -30,7 +30,6 @@ def get_nav_from_mfc_page(fund_code, fund_name, html_content):
             row_text = row.get_text(strip=True)
             clean_row = row_text.replace(' ', '').lower()
             
-            # ตรวจสอบว่าในแถวนั้นมี รหัส หรือ ชื่อกองทุน ตรงกันหรือไม่
             is_match = False
             if clean_code and clean_code in clean_row:
                 is_match = True
@@ -38,7 +37,6 @@ def get_nav_from_mfc_page(fund_code, fund_name, html_content):
                 is_match = True
 
             if is_match:
-                # ดึงตัวเลขทศนิยม (NAV) จากแถวนั้น
                 numbers = re.findall(r'\d+\.\d{4}', row_text)
                 if numbers:
                     return float(numbers[0])
@@ -50,7 +48,11 @@ def fetch_and_update():
     try:
         # เวลาประเทศไทย (UTC+7)
         thai_tz = timezone(timedelta(hours=7))
-        now_thai = datetime.now(thai_tz).strftime('%d/%m/%Y %H:%M:%S')
+        now_thai_dt = datetime.now(thai_tz)
+        now_thai = now_thai_dt.strftime('%d/%m/%Y %H:%M:%S')
+        
+        # แปลงเวลาสำหรับ Firebase ISO Format (กรณีที่ UI Dashboard อ่าน ISO format)
+        iso_thai = now_thai_dt.isoformat()
 
         # 2. ดึงหน้า HTML จากเว็บ MFC
         target_url = "https://mfcfund.com/unit-value/"
@@ -71,13 +73,12 @@ def fetch_and_update():
 
         for policy in policies:
             code = policy.get('code', '')
-            name = policy.get('name', '')  # ดึงชื่อกองทุนจาก Supabase
+            name = policy.get('name', '')
             current_nav = float(policy.get('nav', 0))
             units = float(policy.get('units', 0))
 
             print(f"🔄 กำลังค้นหา NAV ของ {code} - {name}...")
 
-            # ค้นหา NAV โดยใช้ทั้ง Code และ Name
             latest_nav = get_nav_from_mfc_page(code, name, html_content)
 
             if latest_nav and latest_nav != current_nav:
@@ -96,15 +97,15 @@ def fetch_and_update():
 
         print(f"✅ อัปเดตข้อมูลเสร็จสิ้นเมื่อ: {now_thai}")
 
-        # 📍 4. บันทึก Snapshot รวมทุกพอร์ตลง portfolio_history
+        # 📍 4. บันทึก Snapshot รวมทุกพอร์ตลง Supabase portfolio_history
+        mfc_total = 0.0
         try:
             print("🔄 กำลังดึงมูลค่าพอร์ตอื่นๆ (GPF, SCB, DIME) จาก Firebase เพื่อรวมยอด...")
 
-            # 4.1 คำนวณมูลค่า MFC ล่าสุด
             mfc_policies = supabase.table('policies').select('*').execute().data
             mfc_total = sum(float(p.get('nav', 0)) * float(p.get('units', 0)) for p in mfc_policies)
 
-            # 4.2 ดึงอัตราแลกเปลี่ยน USD/THB
+            # ดึงอัตราแลกเปลี่ยน USD/THB
             fx_rate = 36.5
             try:
                 fx_res = requests.get('https://open.er-api.com/v6/latest/USD', timeout=10).json()
@@ -112,7 +113,7 @@ def fetch_and_update():
             except Exception as fx_err:
                 print(f"⚠️ ดึง FX Rate ไม่สำเร็จ ใช้ค่าเริ่มต้น {fx_rate}: {fx_err}")
 
-            # 4.3 ดึงยอด GPF จาก Firebase
+            # ดึง GPF
             gpf_val = 0.0
             try:
                 gpf_res = requests.get('https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/gpf_ports/my-gpf-4750131.json', timeout=10).json()
@@ -121,7 +122,7 @@ def fetch_and_update():
             except Exception as gpf_err:
                 print(f"⚠️ ดึงข้อมูล GPF ไม่สำเร็จ: {gpf_err}")
 
-            # 4.4 ดึงยอด SCB จาก Firebase
+            # ดึง SCB
             scb_val = 0.0
             try:
                 scb_res = requests.get('https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/ports/my-scb-port.json', timeout=10).json()
@@ -130,7 +131,7 @@ def fetch_and_update():
             except Exception as scb_err:
                 print(f"⚠️ ดึงข้อมูล SCB ไม่สำเร็จ: {scb_err}")
 
-            # 4.5 ดึงยอด DIME จาก Firebase (แปลง USD เป็น THB)
+            # ดึง DIME
             dime_val = 0.0
             try:
                 dime_res = requests.get('https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/dime_summary/current.json', timeout=10).json()
@@ -140,10 +141,9 @@ def fetch_and_update():
             except Exception as dime_err:
                 print(f"⚠️ ดึงข้อมูล DIME ไม่สำเร็จ: {dime_err}")
 
-            # 4.6 รวม Total Wealth ทั้งหมด
             total_wealth = mfc_total + gpf_val + scb_val + dime_val
 
-            # 4.7 บันทึก/อัปเดตลง Supabase portfolio_history
+            # บันทึก/อัปเดตลง Supabase
             record_payload = {
                 'record_date': str(date.today()),
                 'mfc_val': round(mfc_total, 2),
@@ -154,10 +154,22 @@ def fetch_and_update():
             }
 
             supabase.table('portfolio_history').upsert(record_payload, on_conflict='record_date').execute()
-            print(f"📈 บันทึกประวัติสมบูรณ์! Total Wealth: ฿{total_wealth:,.2f} (MFC: ฿{mfc_total:,.2f}, GPF: ฿{gpf_val:,.2f}, SCB: ฿{scb_val:,.2f}, DIME: ฿{dime_val:,.2f})")
+            print(f"📈 บันทึกประวัติสมบูรณ์! Total Wealth: ฿{total_wealth:,.2f}")
 
         except Exception as hist_err:
             print(f"⚠️ บันทึกประวัติลง portfolio_history ไม่สำเร็จ: {hist_err}")
+
+        # 📍 5. ส่งเวลาอัปเดตปัจจุบันลง Firebase เพื่อแก้ปัญหามุมขวาบนของ Dashboard ไม่เปลี่ยน
+        try:
+            firebase_mfc_url = "https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/mfc_summary/current.json"
+            mfc_payload = {
+                "updatedAt": iso_thai,
+                "value": round(mfc_total, 2)
+            }
+            requests.patch(firebase_mfc_url, json=mfc_payload, timeout=10)
+            print(f"📡 ซิงค์เวลาและมูลค่า MFC ลง Firebase เรียบร้อย: {iso_thai}")
+        except Exception as fb_err:
+            print(f"⚠️ ซิงค์ข้อมูลลง Firebase ไม่สำเร็จ: {fb_err}")
 
     except Exception as e:
         print(f"❌ Error: {e}")
