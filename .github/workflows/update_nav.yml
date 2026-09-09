@@ -22,9 +22,14 @@ jobs:
           pip install requests supabase beautifulsoup4 playwright
           playwright install chromium
 
-      - name: Run Fetch NAV Script
+      - name: Run Fetch MFC NAV
         env:
-          SEC_API_KEY: ${{ secrets.SEC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: python fetch_nav.py
+
+      - name: Run Fetch SCB NAV
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python fetch_scb_nav.py
