@@ -2,11 +2,9 @@ name: Auto Update NAV Daily
 
 on:
   schedule:
-    # 12:30 UTC = 19:30 น. ไทย (จันทร์-ศุกร์)
-    - cron: '30 12 * * 1-5'
-    # 13:00 UTC = 20:00 น. ไทย (จันทร์-ศุกร์)
+    # รันทุกวันจันทร์ - ศุกร์ เวลา 20:00 น. (เวลาไทย)
     - cron: '0 13 * * 1-5'
-  workflow_dispatch: # ปุ่มกดรันแบบ manual สำหรับทดสอบ
+  workflow_dispatch: # กดสั่งรันเองได้ผ่านหน้าเว็บ
 
 jobs:
   update-nav:
@@ -16,16 +14,17 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4  # แก้ไข setup-python ให้ถูกต้อง
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.10'
 
       - name: Install Dependencies
         run: |
-          pip install requests supabase beautifulsoup4
+          pip install requests supabase
 
-      - name: Run NAV Update Script
+      - name: Run Fetch NAV Script
         env:
+          SEC_API_KEY: ${{ secrets.SEC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: python update_nav.py
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python fetch_nav.py
