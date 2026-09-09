@@ -2,9 +2,9 @@ name: Auto Update NAV Daily
 
 on:
   schedule:
-    - cron: '0 13 * * 1-5'
+    - cron: '30 12 * * 1-5'  # 19:30 น. เวลาไทย (จันทร์-ศุกร์)
+    - cron: '30 13 * * 1-5'  # 20:30 น. เวลาไทย (จันทร์-ศุกร์)
   workflow_dispatch:
-
 jobs:
   update-nav:
     runs-on: ubuntu-latest
