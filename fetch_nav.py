@@ -17,43 +17,32 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# รายชื่อรหัสกองทุน MFC PVD ที่ต้องการอัปเดต
-TARGET_FUNDS = ['MPF07', 'MPF15', 'MPF18', 'MPF19', 'MPF23', 'MPF27']
+# ==========================================
+# 2. จับคู่รหัส PVD (MPFxx) -> ชื่อกองทุนหลักบนหน้าเว็บ
+# (สามารถเพิ่ม/แก้ไข ชื่อตัวเลือกใน List ของแต่ละ MPF ได้ตามจริง)
+# ==========================================
+FUND_MAP = {
+    'MPF07': ['IGOLD-G', 'IGOLD'],
+    'MPF15': ['MTECH', 'M-TECH'],
+    'MPF18': ['MVIET', 'M-VIET', 'MEMERGE'],
+    'MPF19': ['MPF19', 'M-PROP'],
+    'MPF23': ['MPF23', 'M-MIDSMALL'],
+    'MPF27': ['MPF27', 'MVIET']
+}
 
 def fetch_mfc_nav():
     url = "https://mfcfund.com/unit-value/"
     nav_results = {}
 
-    print(f"📡 กำลังเปิด Headless Browser จาก: {url}")
+    print(f"📡 กำลังเปิด Headless Browser เพื่อดึงข้อมูลจาก: {url}")
 
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
             
-            # เปิดหน้าเว็บและรอจนกว่า network จะนิ่ง
             page.goto(url, wait_until="networkidle", timeout=60000)
             page.wait_for_timeout(3000)
-
-            # 1. พยายามคลิกแถบ/ปุ่ม "กองทุนสำรองเลี้ยงชีพ" หากหน้าเว็บแยกหมวดหมู่ไว้
-            try:
-                pvd_element = page.locator("text='กองทุนสำรองเลี้ยงชีพ'").first
-                if pvd_element.is_visible():
-                    print("👆 พบหัวข้อ 'กองทุนสำรองเลี้ยงชีพ' กำลังคลิกเลือก...")
-                    pvd_element.click()
-                    page.wait_for_timeout(3000)
-            except Exception as e:
-                print(f"ℹ️ สกิปการคลิกเลือกหมวดหมู่: {e}")
-
-            # 2. พยายามพิมพ์คำว่า MPF ในช่องค้นหา (ถ้ามี)
-            try:
-                search_box = page.locator("input[type='text'], input[type='search'], input[placeholder*='ค้นหา']").first
-                if search_box.is_visible():
-                    print("🔍 พบช่องค้นหา กำลังพิมพ์ 'MPF'...")
-                    search_box.fill("MPF")
-                    page.wait_for_timeout(2000)
-            except Exception as e:
-                pass
 
             html_content = page.content()
             browser.close()
@@ -62,36 +51,30 @@ def fetch_mfc_nav():
         rows = soup.find_all('tr')
         print(f"ℹ️ พบแถวตาราง (tr) ทั้งหมด: {len(rows)} แถว")
 
-        # สแกนทีละแถว
         for row in rows:
             raw_text = row.get_text()
-            # ตัดช่องว่าง/เว้นวรรคออก และแปลงเป็นตัวพิมพ์ใหญ่ เพื่อเปรียบเทียบ (เช่น "MPF 27" -> "MPF27")
-            clean_text = re.sub(r'\s+', '', raw_text).upper()
+            # ตัดช่องว่าง ขีด และแปลงเป็นตัวพิมพ์ใหญ่ เพื่อเปรียบเทียบข้อความได้แม่นยำ
+            clean_text = re.sub(r'[\s\-]+', '', raw_text).upper()
 
-            for code in TARGET_FUNDS:
-                if code in clean_text and code not in nav_results:
-                    # ค้นหาตัวเลข NAV (ทศนิยม 4 ตำแหน่ง หรือ 2-4 ตำแหน่ง)
-                    matches = re.findall(r'\d[\d\,]*\.\d{4}', raw_text)
-                    if not matches:
-                        matches = re.findall(r'\d[\d\,]*\.\d{2,4}', raw_text)
+            for pvd_code, aliases in FUND_MAP.items():
+                if pvd_code in nav_results:
+                    continue  # หากเจอค่าของกองทุนนี้แล้ว ให้ข้ามไป
 
-                    for m in matches:
-                        try:
-                            val = float(m.replace(',', ''))
-                            if 1.0 <= val <= 500.0:
-                                nav_results[code] = val
-                                print(f"✅ เจอ {code} -> NAV: {val}")
-                                break
-                        except ValueError:
-                            continue
-
-        # หากสแกนตารางแล้วยังไม่เจอ พิมพ์ตัวอย่างข้อความในตารางออกมาเพื่อตรวจสอบ
-        if not nav_results and len(rows) > 0:
-            print("⚠️ ยังไม่พบรหัสกองทุนเป้าหมาย ตัวอย่างข้อความในตารางที่ดึงมาได้:")
-            for i, r in enumerate(rows[:8]):
-                txt = r.get_text().strip().replace('\n', ' ')
-                if txt:
-                    print(f"  [Row {i+1}]: {txt[:100]}")
+                for alias in aliases:
+                    clean_alias = re.sub(r'[\s\-]+', '', alias).upper()
+                    
+                    if clean_alias in clean_text:
+                        # ดึงตัวเลข NAV (ทศนิยม 4 ตำแหน่ง)
+                        matches = re.findall(r'\d[\d\,]*\.\d{4}', raw_text)
+                        if matches:
+                            try:
+                                nav_val = float(matches[0].replace(',', ''))
+                                if 1.0 <= nav_val <= 500.0:
+                                    nav_results[pvd_code] = nav_val
+                                    print(f"✅ เจอ {pvd_code} (จากชื่อบนเว็บ '{alias}') -> NAV: {nav_val}")
+                                    break
+                            except ValueError:
+                                continue
 
         return nav_results
 
