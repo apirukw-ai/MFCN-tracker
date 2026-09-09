@@ -18,16 +18,14 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ==========================================
-# 2. จับคู่รหัส PVD (MPFxx) -> ชื่อกองทุนหลักบนหน้าเว็บ
-# (สามารถเพิ่ม/แก้ไข ชื่อตัวเลือกใน List ของแต่ละ MPF ได้ตามจริง)
+# 2. ตั้งค่าการจับคู่: ชื่อกองทุนบนเว็บ -> asset_name ใน Supabase
 # ==========================================
 FUND_MAP = {
-    'MPF07': ['IGOLD-G', 'IGOLD'],
-    'MPF15': ['MTECH', 'M-TECH'],
-    'MPF18': ['MVIET', 'M-VIET', 'MEMERGE'],
-    'MPF19': ['MPF19', 'M-PROP'],
-    'MPF23': ['MPF23', 'M-MIDSMALL'],
-    'MPF27': ['MPF27', 'MVIET']
+    'IGOLD-G': ['IGOLD-G', 'IGOLD'],
+    'MGTECH': ['MGTECH', 'MTECH', 'M-TECH'],
+    'M-MIDSMALL': ['M-MIDSMALL', 'MMIDSMALL'],
+    'M-PROP': ['M-PROP', 'MPROP'],
+    'MVIET': ['MVIET', 'M-VIET']
 }
 
 def fetch_mfc_nav():
@@ -53,25 +51,23 @@ def fetch_mfc_nav():
 
         for row in rows:
             raw_text = row.get_text()
-            # ตัดช่องว่าง ขีด และแปลงเป็นตัวพิมพ์ใหญ่ เพื่อเปรียบเทียบข้อความได้แม่นยำ
             clean_text = re.sub(r'[\s\-]+', '', raw_text).upper()
 
-            for pvd_code, aliases in FUND_MAP.items():
-                if pvd_code in nav_results:
-                    continue  # หากเจอค่าของกองทุนนี้แล้ว ให้ข้ามไป
+            for asset_name, aliases in FUND_MAP.items():
+                if asset_name in nav_results:
+                    continue
 
                 for alias in aliases:
                     clean_alias = re.sub(r'[\s\-]+', '', alias).upper()
                     
                     if clean_alias in clean_text:
-                        # ดึงตัวเลข NAV (ทศนิยม 4 ตำแหน่ง)
                         matches = re.findall(r'\d[\d\,]*\.\d{4}', raw_text)
                         if matches:
                             try:
                                 nav_val = float(matches[0].replace(',', ''))
                                 if 1.0 <= nav_val <= 500.0:
-                                    nav_results[pvd_code] = nav_val
-                                    print(f"✅ เจอ {pvd_code} (จากชื่อบนเว็บ '{alias}') -> NAV: {nav_val}")
+                                    nav_results[asset_name] = nav_val
+                                    print(f"✅ เจอ {asset_name} (จากชื่อบนเว็บ '{alias}') -> NAV: {nav_val}")
                                     break
                             except ValueError:
                                 continue
@@ -84,25 +80,20 @@ def fetch_mfc_nav():
 
 def update_supabase(nav_data):
     if not nav_data:
-        print("⚠️ ไม่มีข้อมูล NAV ที่จะอัปเดต (nav_data เป็นค่าว่าง)")
+        print("⚠️ ไม่มีข้อมูล NAV ที่จะอัปเดต")
         return
 
-    today_str = datetime.date.today().isoformat()
-
-    for fund_code, nav in nav_data.items():
+    for asset_name, nav in nav_data.items():
         try:
-            # 💡 หมายเหตุ: ปรับชื่อตาราง "funds" และชื่อคอลัมน์ให้ตรงกับ Supabase ของคุณ
-            response = supabase.table("funds") \
-                .update({
-                    "nav": nav,
-                    "updated_at": today_str
-                }) \
-                .eq("fund_code", fund_code) \
+            # อัปเดตเข้าตาราง user_portfolios คอลัมน์ current_nav ให้ตรงกับ asset_name
+            response = supabase.table("user_portfolios") \
+                .update({"current_nav": nav}) \
+                .eq("asset_name", asset_name) \
                 .execute()
                 
-            print(f"💾 อัปเดต Supabase สำเร็จ: {fund_code} = {nav}")
+            print(f"💾 อัปเดต Supabase สำเร็จ: {asset_name} = {nav}")
         except Exception as e:
-            print(f"❌ อัปเดต Supabase ไม่สำเร็จ ({fund_code}): {e}")
+            print(f"❌ อัปเดต Supabase ไม่สำเร็จ ({asset_name}): {e}")
 
 if __name__ == "__main__":
     print("🚀 เริ่มต้นกระบวนการ Auto Update NAV...")
