@@ -1,6 +1,7 @@
 import os
 import re
 import requests
+from bs4 import BeautifulSoup
 from supabase import create_client, Client
 
 # ==========================================
@@ -27,7 +28,6 @@ FUND_MAP = {
 }
 
 def fetch_scb_nav():
-    # หน้าตารางแสดง NAV ประจำวันของ SCBAM โดยตรง
     url = "https://www.scbam.com/medias/inc/navmail.html"
     nav_results = {}
 
@@ -45,24 +45,34 @@ def fetch_scb_nav():
             print(f"❌ ดึงข้อมูลไม่สำเร็จ HTTP Status: {response.status_code}")
             return nav_results
 
-        html_content = response.text
+        # แปลงโครงสร้าง HTML เป็น BeautifulSoup Object
+        soup = BeautifulSoup(response.text, 'html.parser')
+        rows = soup.find_all(['tr', 'p', 'div'])
 
-        for asset_name, aliases in FUND_MAP.items():
-            for alias in aliases:
-                # ค้นหาชื่อสัญลักษณ์กองทุน แล้วกวาดหาตัวเลข NAV (ทศนิยม 4 ตำแหน่ง) ที่อยู่ถัดไป
-                pattern = re.compile(re.escape(alias) + r'[\s\S]{1,200}?(\d{1,3}\.\d{4})', re.IGNORECASE)
-                match = pattern.search(html_content)
+        for row in rows:
+            # ลบแท็ก HTML ออก เหลือเฉพาะข้อความบริสุทธิ์ของแถวนั้นๆ
+            raw_text = row.get_text()
+            clean_text = re.sub(r'\s+', '', raw_text).upper()
 
-                if match:
-                    try:
-                        nav_val = float(match.group(1))
-                        # ตรวจสอบค่า NAV ให้อยู่ในช่วงความเป็นจริง
-                        if 1.0 <= nav_val <= 500.0:
-                            nav_results[asset_name] = nav_val
-                            print(f"✅ เจอ {asset_name} (สัญลักษณ์ '{alias}') -> NAV: {nav_val}")
-                            break
-                    except ValueError:
-                        continue
+            for asset_name, aliases in FUND_MAP.items():
+                if asset_name in nav_results:
+                    continue
+
+                for alias in aliases:
+                    clean_alias = re.sub(r'\s+', '', alias).upper()
+
+                    if clean_alias in clean_text:
+                        # ดึงตัวเลขทศนิยม 4 ตำแหน่งจากข้อความในแถว
+                        matches = re.findall(r'\d[\d\,]*\.\d{4}', raw_text)
+                        if matches:
+                            try:
+                                nav_val = float(matches[0].replace(',', ''))
+                                if 1.0 <= nav_val <= 500.0:
+                                    nav_results[asset_name] = nav_val
+                                    print(f"✅ เจอ {asset_name} (สัญลักษณ์ '{alias}') -> NAV: {nav_val}")
+                                    break
+                            except ValueError:
+                                continue
 
         return nav_results
 
@@ -86,7 +96,7 @@ def update_supabase(nav_data):
             print(f"❌ อัปเดต Supabase ไม่สำเร็จ ({asset_name}): {e}")
 
 if __name__ == "__main__":
-    print("🚀 เริ่มต้นกระบวนการ Auto Update NAV (SCB Direct HTML)...")
+    print("🚀 เริ่มต้นกระบวนการ Auto Update NAV (SCB HTML + BeautifulSoup)...")
     nav_data = fetch_scb_nav()
     print(f"📊 สรุปข้อมูลที่ดึงได้ ({len(nav_data)} กองทุน): {nav_data}")
     update_supabase(nav_data)
