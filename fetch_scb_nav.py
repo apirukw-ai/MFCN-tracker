@@ -1,8 +1,7 @@
 import os
 import re
 import datetime
-from playwright.sync_api import sync_playwright
-from bs4 import BeautifulSoup
+import requests
 from supabase import create_client, Client
 
 # ==========================================
@@ -18,7 +17,7 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ==========================================
-# 2. จับคู่ asset_name ใน Supabase -> ชื่อสัญลักษณ์/คำค้นหาบนเว็บ SCBAM
+# 2. จับคู่ asset_name ใน Supabase -> ชื่อสัญลักษณ์บนเว็บ SCBAM
 # ==========================================
 FUND_MAP = {
     'SCBAXJ(E)':   ['SCBAXJ(E)', 'SCBAXJ-E', 'SCBAXJ'],
@@ -29,51 +28,46 @@ FUND_MAP = {
 }
 
 def fetch_scb_nav():
-    url = "https://www.scbam.com/th/fund/morningstar"
+    # URL API ตรงจากหน้าเว็บ SCB Morningstar
+    url = "https://www.scbam.com/medias/morning-star/scbam-morningstar.json"
     nav_results = {}
 
-    print(f"📡 กำลังเปิด Headless Browser เพื่อดึงข้อมูล NAV จาก SCBAM: {url}")
+    print(f"📡 กำลังดึงข้อมูลผ่าน API JSON โดยตรงจาก: {url}")
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'application/json'
+    }
 
     try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
-            
-            # เปิดหน้าเว็บและรอให้ JavaScript โหลดตารางราคาเสร็จ
-            page.goto(url, wait_until="networkidle", timeout=60000)
-            page.wait_for_timeout(4000)
+        # ใช้ requests ดึงข้อมูลตรงๆ ได้เลย ไม่ต้องใช้เบราว์เซอร์จำลอง
+        response = requests.get(url, headers=headers, timeout=20)
+        
+        if response.status_code != 200:
+            print(f"❌ ดึงข้อมูลไม่สำเร็จ HTTP Status: {response.status_code}")
+            return nav_results
 
-            html_content = page.content()
-            browser.close()
+        # โหลดข้อมูล JSON มาในรูปแบบตัวอักษร
+        data_text = response.text
 
-        soup = BeautifulSoup(html_content, 'html.parser')
-        rows = soup.find_all('tr')
-        print(f"ℹ️ พบแถวตาราง (tr) ทั้งหมด: {len(rows)} แถว")
-
-        for row in rows:
-            raw_text = row.get_text()
-            # ทำความสะอาดข้อความเพื่อเปรียบเทียบง่ายขึ้น (ลบช่องว่าง ขีด วงเล็บ และสัญลักษณ์พิเศษ)
-            clean_text = re.sub(r'[\s\-\(\)\&]+', '', raw_text).upper()
-
-            for asset_name, aliases in FUND_MAP.items():
-                if asset_name in nav_results:
-                    continue
-
-                for alias in aliases:
-                    clean_alias = re.sub(r'[\s\-\(\)\&]+', '', alias).upper()
-                    
-                    if clean_alias in clean_text:
-                        # ดึงตัวเลขทศนิยม 4 ตำแหน่ง
-                        matches = re.findall(r'\d[\d\,]*\.\d{4}', raw_text)
-                        if matches:
-                            try:
-                                nav_val = float(matches[0].replace(',', ''))
-                                if 1.0 <= nav_val <= 500.0:
-                                    nav_results[asset_name] = nav_val
-                                    print(f"✅ เจอ {asset_name} (จากชื่อบนเว็บ '{alias}') -> NAV: {nav_val}")
-                                    break
-                            except ValueError:
-                                continue
+        # ใช้ Regex สแกนหาชื่อกองทุนและตัวเลข NAV (ทศนิยม 4 ตำแหน่ง) ที่อยู่ใกล้เคียงกัน
+        for asset_name, aliases in FUND_MAP.items():
+            for alias in aliases:
+                # ป้องกันข้อผิดพลาดของสัญลักษณ์พิเศษด้วย re.escape
+                # ค้นหา alias ตามด้วยข้อความอะไรก็ได้ไม่เกิน 150 ตัวอักษร แล้วค่อยหาทศนิยม 4 ตำแหน่ง
+                pattern = re.compile(re.escape(alias) + r'[\s\S]{1,150}?(\d{1,4}\.\d{4})', re.IGNORECASE)
+                match = pattern.search(data_text)
+                
+                if match:
+                    try:
+                        nav_val = float(match.group(1))
+                        # ตรวจสอบความสมเหตุสมผลของ NAV
+                        if 1.0 <= nav_val <= 500.0:
+                            nav_results[asset_name] = nav_val
+                            print(f"✅ เจอ {asset_name} (จาก '{alias}') -> NAV: {nav_val}")
+                            break
+                    except ValueError:
+                        continue
 
         return nav_results
 
@@ -98,7 +92,7 @@ def update_supabase(nav_data):
             print(f"❌ อัปเดต Supabase ไม่สำเร็จ ({asset_name}): {e}")
 
 if __name__ == "__main__":
-    print("🚀 เริ่มต้นกระบวนการ Auto Update NAV (SCB)...")
+    print("🚀 เริ่มต้นกระบวนการ Auto Update NAV (SCB API)...")
     nav_data = fetch_scb_nav()
     print(f"📊 สรุปข้อมูลที่ดึงได้ ({len(nav_data)} กองทุน): {nav_data}")
     update_supabase(nav_data)
