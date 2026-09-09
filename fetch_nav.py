@@ -18,14 +18,15 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ==========================================
-# 2. ตั้งค่าการจับคู่: ชื่อกองทุนบนเว็บ -> asset_name ใน Supabase
+# 2. จับคู่ asset_name ใน Supabase -> ชื่อสัญลักษณ์บนเว็บ MFC
 # ==========================================
 FUND_MAP = {
-    'IGOLD-G': ['IGOLD-G', 'IGOLD'],
-    'MGTECH': ['MGTECH', 'MTECH', 'M-TECH'],
-    'M-MIDSMALL': ['M-MIDSMALL', 'MMIDSMALL'],
-    'M-PROP': ['M-PROP', 'MPROP'],
-    'MVIET': ['MVIET', 'M-VIET']
+    'IGOLD-G': ['IGOLD-G', 'IGOLD'],       # MPF07
+    'MGTECH':  ['MGTECH', 'MTECH', 'M-TECH'], # MPF15
+    'M-EM':    ['M-EM', 'MEM'],            # MPF18
+    'MEURO-G': ['MEURO-G', 'MEURO'],       # MPF19
+    'MGFPVD':  ['MGFPVD', 'MGF'],          # MPF23
+    'M-ASIA':  ['M-ASIA', 'MASIA']         # MPF27
 }
 
 def fetch_mfc_nav():
@@ -85,7 +86,6 @@ def update_supabase(nav_data):
 
     for asset_name, nav in nav_data.items():
         try:
-            # อัปเดตเข้าตาราง user_portfolios คอลัมน์ current_nav ให้ตรงกับ asset_name
             response = supabase.table("user_portfolios") \
                 .update({"current_nav": nav}) \
                 .eq("asset_name", asset_name) \
