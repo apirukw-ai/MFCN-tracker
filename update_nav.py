@@ -1,178 +1,34 @@
 import os
-import re
 import requests
-from bs4 import BeautifulSoup
-from datetime import datetime, timezone, timedelta, date
 from supabase import create_client, Client
 
-# 1. เชื่อมต่อ Supabase
-url = os.environ.get("SUPABASE_URL")
-key = os.environ.get("SUPABASE_KEY")
+# 1. ดึง Keys จาก Environment Variables
+SEC_API_KEY = os.environ.get("SEC_API_KEY")
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-if not url or not key:
-    print("❌ Missing Supabase Credentials")
-    exit(1)
+if not SEC_API_KEY:
+    raise ValueError("ไม่พบ SEC_API_KEY ในระบบ!")
 
-supabase: Client = create_client(url, key)
+# 2. ตั้งค่า Header สำหรับ SEC Open API
+headers = {
+    'Ocp-Apim-Subscription-Key': SEC_API_KEY,
+    'Content-Type': 'application/json'
+}
 
-def get_nav_from_mfc_page(fund_code, fund_name, html_content):
-    """ค้นหาตัวเลข NAV โดยใช้ทั้งรหัสกองทุน และ ชื่อกองทุน"""
-    if not html_content:
-        return None
-    try:
-        soup = BeautifulSoup(html_content, 'html.parser')
-        
-        # ทำความสะอาดคำค้นหา
-        clean_code = fund_code.replace(' ', '').lower() if fund_code else ""
-        clean_name = fund_name.replace(' ', '').lower() if fund_name else ""
+# 3. ยิง API ขอข้อมูลจาก ก.ล.ต.
+# ตัวอย่าง Endpoint ดึงข้อมูล บลจ. หรือ NAV
+url = "https://api.sec.or.th/v2/fund/general-info/amcs"
 
-        for row in soup.find_all('tr'):
-            row_text = row.get_text(strip=True)
-            clean_row = row_text.replace(' ', '').lower()
-            
-            is_match = False
-            if clean_code and clean_code in clean_row:
-                is_match = True
-            elif clean_name and clean_name in clean_row:
-                is_match = True
+try:
+    response = requests.get(url, headers=headers, timeout=15)
+    
+    if response.status_code == 200:
+        data = response.json()
+        print("เชื่อมต่อ SEC Open API สำเร็จ!")
+        # นำข้อมูลที่ได้ไปอัปเดตลง Supabase...
+    else:
+        print(f"เกิดข้อผิดพลาดจาก SEC API (Status {response.status_code}): {response.text}")
 
-            if is_match:
-                numbers = re.findall(r'\d+\.\d{4}', row_text)
-                if numbers:
-                    return float(numbers[0])
-    except Exception as e:
-        print(f"⚠️ เกิดข้อผิดพลาดในการแกะข้อมูล {fund_code} / {fund_name}: {e}")
-    return None
-
-def fetch_and_update():
-    try:
-        # เวลาประเทศไทย (UTC+7)
-        thai_tz = timezone(timedelta(hours=7))
-        now_thai_dt = datetime.now(thai_tz)
-        now_thai = now_thai_dt.strftime('%d/%m/%Y %H:%M:%S')
-        
-        # แปลงเวลาสำหรับ Firebase ISO Format (กรณีที่ UI Dashboard อ่าน ISO format)
-        iso_thai = now_thai_dt.isoformat()
-
-        # 2. ดึงหน้า HTML จากเว็บ MFC
-        target_url = "https://mfcfund.com/unit-value/"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-        
-        print("🌐 กำลังโหลดข้อมูลจาก https://mfcfund.com/unit-value/...")
-        res = requests.get(target_url, headers=headers, timeout=20)
-        html_content = res.text if res.status_code == 200 else ""
-
-        if res.status_code != 200:
-            print(f"❌ ไม่สามารถเข้าถึงหน้าเว็บ MFC ได้ Status Code: {res.status_code}")
-
-        # 3. ดึงรายการกองทุนทั้งหมดจาก Supabase
-        db_res = supabase.table('policies').select('*').execute()
-        policies = db_res.data
-
-        for policy in policies:
-            code = policy.get('code', '')
-            name = policy.get('name', '')
-            current_nav = float(policy.get('nav', 0))
-            units = float(policy.get('units', 0))
-
-            print(f"🔄 กำลังค้นหา NAV ของ {code} - {name}...")
-
-            latest_nav = get_nav_from_mfc_page(code, name, html_content)
-
-            if latest_nav and latest_nav != current_nav:
-                prev_amt = current_nav * units
-                supabase.table('policies').update({
-                    'nav': latest_nav,
-                    'prev_amt': prev_amt,
-                    'updated_at': now_thai
-                }).eq('id', policy['id']).execute()
-                print(f"✅ อัปเดตสำเร็จ {code}: {current_nav} ➔ {latest_nav}")
-            else:
-                supabase.table('policies').update({
-                    'updated_at': now_thai
-                }).eq('id', policy['id']).execute()
-                print(f"ℹ️ {code} ราคาล่าสุด: {latest_nav if latest_nav else current_nav} (ไม่เปลี่ยนแปลง)")
-
-        print(f"✅ อัปเดตข้อมูลเสร็จสิ้นเมื่อ: {now_thai}")
-
-        # 📍 4. บันทึก Snapshot รวมทุกพอร์ตลง Supabase portfolio_history
-        mfc_total = 0.0
-        try:
-            print("🔄 กำลังดึงมูลค่าพอร์ตอื่นๆ (GPF, SCB, DIME) จาก Firebase เพื่อรวมยอด...")
-
-            mfc_policies = supabase.table('policies').select('*').execute().data
-            mfc_total = sum(float(p.get('nav', 0)) * float(p.get('units', 0)) for p in mfc_policies)
-
-            # ดึงอัตราแลกเปลี่ยน USD/THB
-            fx_rate = 36.5
-            try:
-                fx_res = requests.get('https://open.er-api.com/v6/latest/USD', timeout=10).json()
-                fx_rate = float(fx_res.get('rates', {}).get('THB', 36.5))
-            except Exception as fx_err:
-                print(f"⚠️ ดึง FX Rate ไม่สำเร็จ ใช้ค่าเริ่มต้น {fx_rate}: {fx_err}")
-
-            # ดึง GPF
-            gpf_val = 0.0
-            try:
-                gpf_res = requests.get('https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/gpf_ports/my-gpf-4750131.json', timeout=10).json()
-                if gpf_res and 'funds' in gpf_res:
-                    gpf_val = sum(float(f.get('units', 0)) * float(f.get('currentNav', 0)) for f in gpf_res.get('funds', []))
-            except Exception as gpf_err:
-                print(f"⚠️ ดึงข้อมูล GPF ไม่สำเร็จ: {gpf_err}")
-
-            # ดึง SCB
-            scb_val = 0.0
-            try:
-                scb_res = requests.get('https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/ports/my-scb-port.json', timeout=10).json()
-                scb_funds = scb_res if isinstance(scb_res, list) else scb_res.get('funds', []) if isinstance(scb_res, dict) else []
-                scb_val = sum(float(f.get('units', 0)) * float(f.get('currentNav', 0)) for f in scb_funds if isinstance(f, dict))
-            except Exception as scb_err:
-                print(f"⚠️ ดึงข้อมูล SCB ไม่สำเร็จ: {scb_err}")
-
-            # ดึง DIME
-            dime_val = 0.0
-            try:
-                dime_res = requests.get('https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/dime_summary/current.json', timeout=10).json()
-                if dime_res:
-                    dime_usd = float(dime_res.get('value', 0))
-                    dime_val = dime_usd * fx_rate
-            except Exception as dime_err:
-                print(f"⚠️ ดึงข้อมูล DIME ไม่สำเร็จ: {dime_err}")
-
-            total_wealth = mfc_total + gpf_val + scb_val + dime_val
-
-            # บันทึก/อัปเดตลง Supabase
-            record_payload = {
-                'record_date': str(date.today()),
-                'mfc_val': round(mfc_total, 2),
-                'gpf_val': round(gpf_val, 2),
-                'scb_val': round(scb_val, 2),
-                'dime_val': round(dime_val, 2),
-                'total_wealth': round(total_wealth, 2)
-            }
-
-            supabase.table('portfolio_history').upsert(record_payload, on_conflict='record_date').execute()
-            print(f"📈 บันทึกประวัติสมบูรณ์! Total Wealth: ฿{total_wealth:,.2f}")
-
-        except Exception as hist_err:
-            print(f"⚠️ บันทึกประวัติลง portfolio_history ไม่สำเร็จ: {hist_err}")
-
-        # 📍 5. ส่งเวลาอัปเดตปัจจุบันลง Firebase เพื่อแก้ปัญหามุมขวาบนของ Dashboard ไม่เปลี่ยน
-        try:
-            firebase_mfc_url = "https://scb-e-class-default-rtdb.asia-southeast1.firebasedatabase.app/mfc_summary/current.json"
-            mfc_payload = {
-                "updatedAt": iso_thai,
-                "value": round(mfc_total, 2)
-            }
-            requests.patch(firebase_mfc_url, json=mfc_payload, timeout=10)
-            print(f"📡 ซิงค์เวลาและมูลค่า MFC ลง Firebase เรียบร้อย: {iso_thai}")
-        except Exception as fb_err:
-            print(f"⚠️ ซิงค์ข้อมูลลง Firebase ไม่สำเร็จ: {fb_err}")
-
-    except Exception as e:
-        print(f"❌ Error: {e}")
-
-if __name__ == "__main__":
-    fetch_and_update()
+except Exception as e:
+    print(f"Connection Error: {e}")
