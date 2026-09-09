@@ -5,7 +5,7 @@ from supabase import create_client, Client
 # 1. ดึง Keys จาก Environment Variables
 SEC_API_KEY = os.environ.get("SEC_API_KEY")
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
 if not SEC_API_KEY:
     raise ValueError("ไม่พบ SEC_API_KEY ในระบบ!")
