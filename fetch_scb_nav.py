@@ -29,7 +29,7 @@ FUND_MAP = {
 }
 
 def fetch_scb_nav():
-    url = "https://www.scbam.com/th/fund/fund-price"
+    url = "https://www.scbam.com/th/fund/morningstar"
     nav_results = {}
 
     print(f"📡 กำลังเปิด Headless Browser เพื่อดึงข้อมูล NAV จาก SCBAM: {url}")
