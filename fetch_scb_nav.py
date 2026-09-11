@@ -45,10 +45,12 @@ def fetch_scb_nav():
             print(f"❌ ดึงข้อมูลไม่สำเร็จ HTTP Status: {response.status_code}")
             return nav_results
 
+        # แปลงโครงสร้าง HTML เป็น BeautifulSoup Object
         soup = BeautifulSoup(response.text, 'html.parser')
         rows = soup.find_all(['tr', 'p', 'div'])
 
         for row in rows:
+            # ลบแท็ก HTML ออก เหลือเฉพาะข้อความบริสุทธิ์ของแถวนั้นๆ
             raw_text = row.get_text()
             clean_text = re.sub(r'\s+', '', raw_text).upper()
 
@@ -60,6 +62,7 @@ def fetch_scb_nav():
                     clean_alias = re.sub(r'\s+', '', alias).upper()
 
                     if clean_alias in clean_text:
+                        # ดึงตัวเลขทศนิยม 4 ตำแหน่งจากข้อความในแถว
                         matches = re.findall(r'\d[\d\,]*\.\d{4}', raw_text)
                         if matches:
                             try:
@@ -82,18 +85,15 @@ def update_supabase(nav_data):
         print("⚠️ ไม่มีข้อมูล NAV ที่จะอัปเดต")
         return
 
-    for asset_code, nav in nav_data.items():
+    for asset_name, nav in nav_data.items():
         try:
-            # 🟢 อัปเดตเฉพาะ current_nav โดยตรง ไม่แตะต้อง prev_nav
-            # แม้จะรันสคริปต์นี้กี่ครั้ง ค่า prev_nav ซึ่งเป็นฐานราคาของวันก่อนหน้าจะไม่ถูกเปลี่ยน
             supabase.table("user_portfolios") \
                 .update({"current_nav": nav}) \
-                .eq("asset_code", asset_code) \
+                .eq("asset_name", asset_name) \
                 .execute()
-                
-            print(f"💾 อัปเดต Supabase สำเร็จ: [{asset_code}] -> current_nav = {nav}")
+            print(f"💾 อัปเดต Supabase สำเร็จ: {asset_name} = {nav}")
         except Exception as e:
-            print(f"❌ อัปเดต Supabase ไม่สำเร็จ ({asset_code}): {e}")
+            print(f"❌ อัปเดต Supabase ไม่สำเร็จ ({asset_name}): {e}")
 
 if __name__ == "__main__":
     print("🚀 เริ่มต้นกระบวนการ Auto Update NAV (SCB HTML + BeautifulSoup)...")
