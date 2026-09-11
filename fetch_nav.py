@@ -86,20 +86,17 @@ def update_supabase(nav_data):
 
     for asset_name, nav in nav_data.items():
         try:
-            # 🟢 อัปเดตเฉพาะ current_nav โดยระบุทั้ง asset_name และ app_source
-            # ไม่แตะต้อง prev_nav เพื่อป้องกันเปอร์เซ็นต์กำไร/ขาดทุนประจำวันรวน
-            supabase.table("user_portfolios") \
+            response = supabase.table("user_portfolios") \
                 .update({"current_nav": nav}) \
-                .eq("app_source", "mfc_fund") \
                 .eq("asset_name", asset_name) \
                 .execute()
                 
-            print(f"💾 อัปเดต Supabase สำเร็จ: MFC [{asset_name}] -> current_nav = {nav}")
+            print(f"💾 อัปเดต Supabase สำเร็จ: {asset_name} = {nav}")
         except Exception as e:
             print(f"❌ อัปเดต Supabase ไม่สำเร็จ ({asset_name}): {e}")
 
 if __name__ == "__main__":
-    print("🚀 เริ่มต้นกระบวนการ Auto Update NAV (MFC Playwright)...")
+    print("🚀 เริ่มต้นกระบวนการ Auto Update NAV...")
     nav_data = fetch_mfc_nav()
     print(f"📊 สรุปข้อมูลที่ดึงได้ ({len(nav_data)} กองทุน): {nav_data}")
     update_supabase(nav_data)
